@@ -62,10 +62,10 @@ Apply without being asked when the signal is clear:
 2. Explicit vulnerability/audit/exploit language → \`ndv-secure\`
 3. Explicit performance/latency/slow language → \`ndv-optimize\`
 4. If still ambiguous: diagnose first with \`ndv-diagnose\`, then hand off
-5. \`ndv-honest\` is fallback-only. Never choose it when any specialist route matches.
+5. \`ndv-honest\` handles anything — it is a pure communication layer, not a router.
 
 Example: "500 error + NullPointerException stack trace in login endpoint" → \`ndv-diagnose\`
-Example: "Should we switch to pnpm?" (no specialist domain) → \`ndv-honest\`
+Example: "Should we switch to pnpm?" → \`ndv-honest\`
 
 ## How to Apply
 

@@ -15,7 +15,7 @@ This project uses the neurodiveragents fleet. Each agent embodies a distinct cog
 | Add logging, metrics, traces, health checks | `ndv-telemetry` (Pulse) |
 | System design, SOLID violations, architecture review | `ndv-architect` (Arc) |
 | Technical docs, API docs, session notes | `ndv-explain` (Patient) |
-| Any task — direct, no fluff, cross-domain judgment | `ndv-honest` (Honest) |
+| Any task — direct answer, no filler, cross-domain judgment | `ndv-honest` (Honest) |
 
 ## Proactive Application
 
