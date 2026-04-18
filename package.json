@@ -1,0 +1,39 @@
+{
+  "name": "neurodiveragents",
+  "version": "1.0.0",
+  "description": "A fleet of specialized AI agents for Claude Code, OpenCode, and Cursor — each one a distinct cognitive style",
+  "type": "module",
+  "bin": {
+    "ndv": "./bin/ndv.js"
+  },
+  "files": [
+    "agents/",
+    "bin/",
+    "install.sh",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/emb715/neurodiveragents.git"
+  },
+  "homepage": "https://github.com/emb715/neurodiveragents#readme",
+  "bugs": {
+    "url": "https://github.com/emb715/neurodiveragents/issues"
+  },
+  "author": "emb715",
+  "keywords": [
+    "ai",
+    "agents",
+    "claude",
+    "claude-code",
+    "opencode",
+    "cursor",
+    "copilot",
+    "llm",
+    "neurodivergent"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
