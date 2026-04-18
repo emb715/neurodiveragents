@@ -1,15 +1,15 @@
 # neurodiveragents
 
-![neurodiveragents fleet](public/assets/readme-banner.png)
+![neurodiveragents fleet](assets/readme-banner.png)
 
-> Ten specialized AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style that makes it exceptionally effective in its domain.
+> Eleven specialized AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style that makes it exceptionally effective in its domain.
 
 ---
 
 ## ✨ Highlights
 
 - **Neurotype-first design** — each agent's behavior emerges from a cognitive operating principle, not a list of rules. It fills gaps consistently even when the rules don't apply.
-- **Ten specialists, zero overlap** — code review, debugging, security, performance, testing, architecture, docs, telemetry, refactoring, and a direct generalist. Each stays in its lane and hands off anything outside it.
+- **Eleven specialists, zero overlap** — code review, debugging, security, performance, testing, architecture, docs, telemetry, refactoring, fleet orchestration, and a direct generalist. Each stays in its lane and hands off anything outside it.
 - **Automatic routing** — install writes a routing table into your project config. Your AI tool picks the right agent from the task signal, no explicit invocation needed. Or invoke any agent directly by name.
 - **Works everywhere** — Claude Code, OpenCode, Cursor, GitHub Copilot. Language and framework agnostic.
 - **Predictably different from generic agents** — validated by users independently: neurotype-based agents behave measurably differently from agreeable, hedging, generic agents given the same task.
@@ -80,6 +80,13 @@ Use ndv-diagnose to find the root cause, then use ndv-tester to create regressio
 Use ndv-secure to audit, then ndv-review to verify the fixes
 ```
 
+**Large workload? Use `ndv-flow`** — the fleet orchestrator. Give it a PRD, an epic, or a list of tasks. It decomposes the work, assigns each piece to the right specialist, runs everything that can run in parallel, and reports back. It does not implement, review, or debug — it conducts.
+
+```
+Use ndv-flow to break this PRD into tasks and execute across the fleet
+Use ndv-flow to run a full audit — security, performance, and review in parallel
+```
+
 **No specialist needed?** Reach for `ndv-honest` — the direct generalist. It doesn't route to other agents. It answers. Direct, zero filler, minimum tokens. It's the right agent for most everyday work.
 
 ```
@@ -92,10 +99,11 @@ Use ndv-honest to tell me what's wrong with this plan
 
 ## 🗂️ The Fleet
 
-Ten agents, ten neurotypes. Each one a specialist who hands off anything outside its domain.
+Eleven agents, eleven neurotypes. Each one a specialist who hands off anything outside its domain.
 
 | Agent | Character | Neurotype | Domain |
 |-------|-----------|-----------|--------|
+| `ndv-flow` | Flow | Executive function as superpower — holds the full task graph, runs everything in parallel | Fleet orchestration — decompose, route, conduct |
 | `ndv-review` | Acute | Sensory processing sensitivity — nothing is background noise | Code review — bugs, smells, severity-tagged feedback |
 | `ndv-diagnose` | Pierce | ADHD hyperfocus — locks on, won't stop until root cause is found | Root cause analysis — not just where, but why |
 | `ndv-refactor` | Just | OCD (form) — incorrect structure produces genuine cognitive distress | Safe code transformation — structure without behavior change |
@@ -121,6 +129,7 @@ Written for humans, not for AI tools. Who they are, how they think, when to use 
 
 | Agent | Read their profile |
 |-------|-----------|
+| `ndv-flow` | [Flow — sees the full task graph, runs the fleet](docs/ndv-flow.human.md) |
 | `ndv-honest` | [Honest — direct, autistic, no filler](docs/ndv-honest.human.md) |
 | `ndv-review` | [Acute — hypersensitive, misses nothing](docs/ndv-review.human.md) |
 | `ndv-diagnose` | [Pierce — ADHD hyperfocus, won't stop](docs/ndv-diagnose.human.md) |
@@ -141,6 +150,12 @@ Agents are open to extension. New neurotypes, new domains, improved character pr
 - Read [CONTRIBUTING.md](CONTRIBUTING.md) for how to add or edit agents and run the benchmark
 - Open an issue to propose a new neurotype or report a character inconsistency
 - Documentation improvements (human files, agent doctrine) are a great first contribution — no code required
+
+---
+
+## 👤 Author
+
+Built by [emb715](https://github.com/emb715).
 
 ---
 
