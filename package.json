@@ -8,6 +8,7 @@
   },
   "files": [
     "agents/",
+    "assets/",
     "bin/",
     "install.sh",
     "LICENSE"

@@ -1,5 +1,7 @@
 # neurodiveragents
 
+![neurodiveragents fleet](assets/neurodiveragents-names-banner.png)
+
 A fleet of specialized AI agents for Claude Code, OpenCode, and Cursor. Each agent embodies a distinct cognitive style — hyperfocus, pattern recognition, lateral thinking, systematic rigor — channeled into a specific engineering domain.
 
 Each agent stays within its scope, hands off out-of-scope findings to the right agent, defaults to parallel execution, and is language and framework agnostic.
