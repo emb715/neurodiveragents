@@ -1,18 +1,69 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-SBW3B628HN"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+      gtag("config", "G-SBW3B628HN");
+    </script>
+
     <meta charset="UTF-8" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1"
     />
     <title>neurodiveragents</title>
+
+    <!-- SEO & Open Graph -->
+    <meta
+      name="description"
+      content="Eleven specialist AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style, not a list of rules."
+    />
+    <meta property="og:title" content="neurodiveragents" />
+    <meta
+      property="og:description"
+      content="Eleven specialist AI agents grounded in real cognitive styles. Neurotype-first design for Claude Code, OpenCode, Cursor, and GitHub Copilot."
+    />
+    <meta
+      property="og:image"
+      content="./assets/neurodiveragents-banner-header.png"
+    />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="neurodiveragents" />
+    <meta
+      name="twitter:description"
+      content="Eleven specialist AI agents grounded in real cognitive styles."
+    />
+    <meta
+      name="twitter:image"
+      content="./assets/neurodiveragents-banner-header.png"
+    />
+
+    <!-- Async Google Fonts — non-blocking -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;700;900&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media = 'all'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;700;900&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
+
     <style>
       /* ── Reset & Base ─────────────────────────────────────── */
       *,
@@ -91,6 +142,19 @@
           ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
         --color-green-400: oklch(79.2% 0.209 151.711);
         --color-red-400: oklch(70.4% 0.191 22.216);
+
+        /* Agent accent colors as CSS custom properties */
+        --agent-flow: #f97316;
+        --agent-honest: #60a5fa;
+        --agent-explain: #fbbf24;
+        --agent-diagnose: #2dd4bf;
+        --agent-review: #a78bfa;
+        --agent-refactor: #cbd5e1;
+        --agent-secure: #f87171;
+        --agent-optimize: #86efac;
+        --agent-telemetry: #38bdf8;
+        --agent-architect: #818cf8;
+        --agent-tester: #fb7185;
       }
 
       /* ── Global body ─────────────────────────────────────── */
@@ -105,6 +169,26 @@
         background-attachment: fixed;
         -webkit-font-smoothing: antialiased;
         min-height: 100vh;
+      }
+
+      /* ── Skip link ────────────────────────────────────────── */
+      .skip-link {
+        position: absolute;
+        top: -100%;
+        left: 1rem;
+        z-index: 100;
+        background: hsl(var(--background));
+        color: hsl(var(--foreground));
+        border: 1px solid hsl(var(--border));
+        border-radius: calc(var(--radius) - 2px);
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: top 0.1s;
+      }
+      .skip-link:focus {
+        top: 1rem;
       }
 
       /* ── Utility classes ─────────────────────────────────── */
@@ -158,13 +242,11 @@
       .leading-snug {
         line-height: 1.375;
       }
-
       .antialiased {
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
       }
 
-      /* Text sizes */
       .text-xs {
         font-size: 0.75rem;
         line-height: 1rem;
@@ -206,7 +288,6 @@
         line-height: 1;
       }
 
-      /* Colors */
       .text-foreground {
         color: hsl(var(--foreground));
       }
@@ -229,7 +310,10 @@
       .bg-muted {
         background-color: hsl(var(--muted));
       }
+
+      /* color-mix() with solid fallbacks for older browsers */
       .bg-background\/80 {
+        background-color: hsl(var(--background));
         background-color: color-mix(
           in oklab,
           hsl(var(--background)) 80%,
@@ -237,6 +321,7 @@
         );
       }
       .bg-card\/30 {
+        background-color: hsl(var(--card));
         background-color: color-mix(
           in oklab,
           hsl(var(--card)) 30%,
@@ -244,6 +329,7 @@
         );
       }
       .bg-muted\/30 {
+        background-color: hsl(var(--muted));
         background-color: color-mix(
           in oklab,
           hsl(var(--muted)) 30%,
@@ -258,6 +344,7 @@
         border-color: hsl(var(--border));
       }
       .border-border\/50 {
+        border-color: hsl(var(--border));
         border-color: color-mix(in oklab, hsl(var(--border)) 50%, transparent);
       }
 
@@ -311,7 +398,6 @@
       .grid-cols-1 {
         grid-template-columns: repeat(1, minmax(0, 1fr));
       }
-
       .hidden {
         display: none;
       }
@@ -529,9 +615,6 @@
       .shadow-inner {
         box-shadow: inset 0 2px 4px 0 #0000000d;
       }
-      .backdrop-blur-md {
-        backdrop-filter: blur(12px);
-      }
       .opacity-0 {
         opacity: 0;
       }
@@ -542,7 +625,7 @@
         filter: grayscale(100%);
       }
 
-      /* Transitions / Animations */
+      /* Transitions */
       .transition-colors {
         transition-property: color, background-color, border-color;
         transition-duration: 0.15s;
@@ -572,7 +655,6 @@
       .-rotate-45 {
         transform: rotate(-45deg);
       }
-
       .translate-y-0 {
         transform: translateY(0);
       }
@@ -582,13 +664,9 @@
       .opacity-100 {
         opacity: 1;
       }
-
-      /* Object fit */
       .object-cover {
         object-fit: cover;
       }
-
-      /* Text */
       .text-left {
         text-align: left;
       }
@@ -598,6 +676,7 @@
 
       /* Selection */
       ::selection {
+        background-color: hsl(var(--accent) / 30%);
         background-color: color-mix(
           in oklab,
           hsl(var(--accent)) 30%,
@@ -608,21 +687,15 @@
 
       /* ── Component styles ─────────────────────────────────── */
 
-      /* Navbar */
+      /* Navbar — solid background, no glassmorphism */
       nav {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         z-index: 50;
-        background-color: color-mix(
-          in oklab,
-          hsl(var(--background)) 80%,
-          transparent
-        );
-        backdrop-filter: blur(12px);
-        border-bottom: 1px solid
-          color-mix(in oklab, hsl(var(--border)) 50%, transparent);
+        background-color: hsl(var(--background));
+        border-bottom: 1px solid hsl(var(--border));
       }
       .nav-inner {
         max-width: 72rem;
@@ -668,12 +741,6 @@
           transparent 90%,
           hsl(var(--background)) 100%
         );
-        /* background: linear-gradient(
-          to bottom,
-          transparent 40%,
-          transparent 60%,
-          hsl(var(--background)) 100%
-        ); */
         z-index: 10;
       }
       .hero-img {
@@ -684,7 +751,7 @@
       }
       .hero-content {
         max-width: 72rem;
-        margin: 0rem auto;
+        margin: 0 auto;
         padding-inline: 1.5rem;
         padding-bottom: 6rem;
         display: flex;
@@ -702,7 +769,13 @@
         margin-bottom: 1rem;
         padding: 0.5rem 1rem;
         border-radius: 1rem;
-        background: rgb(20 22 24 / 80%);
+        background-color: hsl(var(--background));
+        background-color: color-mix(
+          in oklab,
+          hsl(var(--background)) 80%,
+          transparent
+        );
+        border: 1px solid hsl(var(--border));
         font-size: 0.825rem;
         letter-spacing: 0.1rem;
       }
@@ -741,8 +814,14 @@
         margin-right: 1rem;
         user-select: all;
       }
+
+      /* Copy buttons — minimum 44×44px touch target */
       .copy-btn {
-        padding: 0.5rem;
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         border-radius: calc(var(--radius) - 2px);
         color: hsl(var(--muted-foreground));
         transition:
@@ -774,6 +853,7 @@
       }
       .cta-link:hover {
         border-color: hsl(var(--muted-foreground));
+        background-color: hsl(var(--muted));
         background-color: color-mix(
           in oklab,
           hsl(var(--muted)) 30%,
@@ -781,18 +861,22 @@
         );
       }
 
-      /* Sections (scroll animation) */
+      /* Sections — visible by default; animate only when motion is OK */
       .section-anim {
-        opacity: 0;
-        transform: translateY(2rem);
-        transition:
-          opacity 0.7s ease-out,
-          transform 0.7s ease-out;
         padding-block: 6rem;
       }
-      .section-anim.visible {
-        opacity: 1;
-        transform: translateY(0);
+      @media (prefers-reduced-motion: no-preference) {
+        .section-anim {
+          opacity: 0;
+          transform: translateY(2rem);
+          transition:
+            opacity 0.7s ease-out,
+            transform 0.7s ease-out;
+        }
+        .section-anim.visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       /* Agents list */
@@ -802,6 +886,7 @@
         border: 1px solid hsl(var(--border));
         border-radius: var(--radius);
         overflow: hidden;
+        background-color: hsl(var(--card));
         background-color: color-mix(
           in oklab,
           hsl(var(--card)) 70%,
@@ -818,6 +903,7 @@
       }
       .agent-toggle {
         width: 100%;
+        min-height: 44px;
         padding: 1rem 1.5rem;
         display: flex;
         align-items: center;
@@ -842,14 +928,13 @@
       }
       .agent-name {
         font-weight: 700;
-        /* width: 5rem; */
         flex-shrink: 0;
       }
+      /* Neurotype visible on all viewports */
       .agent-neurotype {
         color: hsl(var(--muted-foreground));
-        font-size: 0.875rem;
+        font-size: 0.7rem;
         flex: 1;
-        display: none;
       }
       .agent-role {
         font-size: 0.875rem;
@@ -944,8 +1029,12 @@
         display: grid;
         gap: 1.5rem;
         padding-top: 1rem;
-        border-top: 1px solid
-          color-mix(in oklab, hsl(var(--border)) 50%, transparent);
+        border-top: 1px solid hsl(var(--border));
+        border-top-color: color-mix(
+          in oklab,
+          hsl(var(--border)) 50%,
+          transparent
+        );
       }
 
       /* Install section */
@@ -985,8 +1074,13 @@
         overflow-x: auto;
         user-select: all;
       }
+      /* Install copy buttons — minimum 44×44px touch target */
       .install-copy-btn {
-        padding: 0.5rem;
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         border-radius: calc(var(--radius) - 2px);
         color: hsl(var(--muted-foreground));
         flex-shrink: 0;
@@ -1001,8 +1095,12 @@
 
       /* Footer */
       footer {
-        border-top: 1px solid
-          color-mix(in oklab, hsl(var(--border)) 50%, transparent);
+        border-top: 1px solid hsl(var(--border));
+        border-top-color: color-mix(
+          in oklab,
+          hsl(var(--border)) 50%,
+          transparent
+        );
         background-color: hsl(var(--background));
         padding-block: 3rem;
         text-align: center;
@@ -1065,7 +1163,7 @@
       /* ── Responsive ───────────────────────────────────────── */
       @media (min-width: 640px) {
         .agent-neurotype {
-          display: block;
+          font-size: 0.875rem;
         }
         .when-grid {
           grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1103,8 +1201,11 @@
     </style>
   </head>
   <body>
+    <!-- Skip link for keyboard users -->
+    <a href="#meet" class="skip-link">Skip to content</a>
+
     <!-- ── Navbar ──────────────────────────────────────────────── -->
-    <nav>
+    <nav aria-label="Main navigation">
       <div class="nav-inner">
         <div class="logo">
           <span class="font-light">neuro</span
@@ -1130,6 +1231,7 @@
               stroke-width="2"
               stroke-linecap="round"
               stroke-linejoin="round"
+              aria-hidden="true"
             >
               <path d="M5 12h14" />
               <path d="m12 5 7 7-7 7" />
@@ -1143,6 +1245,7 @@
     <main style="padding-top: 2rem; padding-bottom: 6rem">
       <!-- Hero -->
       <section
+        aria-label="Hero"
         style="
           position: relative;
           width: 100%;
@@ -1155,8 +1258,11 @@
         <div class="hero-img-wrap">
           <img
             src="./assets/neurodiveragents-banner-header.png"
-            alt="Neurodiveragents Banner"
+            alt="The eleven neurodiveragents — specialist AI agents each grounded in a distinct cognitive style: Flow, Honest, Patient, Pierce, Acute, Just, Ward, Lean, Pulse, Arc, and Edge"
             class="hero-img"
+            width="1920"
+            height="640"
+            fetchpriority="high"
           />
         </div>
         <div class="hero-content">
@@ -1164,17 +1270,7 @@
             <span class="font-light">neuro</span
             ><span class="font-black">diveragents</span>
           </h1>
-          <p
-            class="font-light"
-            style="
-              margin-bottom: 1rem;
-              padding: 0.5rem 1rem;
-              border-radius: 1rem;
-              background: rgb(20 22 24 / 80%);
-              font-size: 0.825rem;
-              letter-spacing: 0.1rem;
-            "
-          >
+          <p class="font-light hero-badge">
             SOFTWARE AGENTS WITH NEURODIVERGENT COGNITIVE STYLES
           </p>
           <p class="font-light hero-subtitle">
@@ -1200,6 +1296,7 @@
                   stroke-width="2"
                   stroke-linecap="round"
                   stroke-linejoin="round"
+                  aria-hidden="true"
                 >
                   <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                   <path
@@ -1227,6 +1324,7 @@
                   stroke-width="2"
                   stroke-linecap="round"
                   stroke-linejoin="round"
+                  aria-hidden="true"
                 >
                   <path d="M5 12h14" />
                   <path d="m12 5 7 7-7 7" />
@@ -1255,7 +1353,7 @@
           >
             Click any agent to expand their profile.
           </p>
-          <div class="agents-list" id="agents-list"></div>
+          <div class="agents-list" id="agents-list" role="list"></div>
         </section>
 
         <!-- Install -->
@@ -1285,6 +1383,7 @@
                 >
                 <button
                   class="install-copy-btn"
+                  aria-label="Copy Claude Code install command"
                   onclick="
                     copyCmd(this, 'npx neurodiveragents install --claude')
                   "
@@ -1298,6 +1397,7 @@
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
                   >
                     <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                     <path
@@ -1315,6 +1415,7 @@
                 >
                 <button
                   class="install-copy-btn"
+                  aria-label="Copy Cursor install command"
                   onclick="
                     copyCmd(this, 'npx neurodiveragents install --cursor')
                   "
@@ -1328,6 +1429,7 @@
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
                   >
                     <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                     <path
@@ -1345,6 +1447,7 @@
                 >
                 <button
                   class="install-copy-btn"
+                  aria-label="Copy OpenCode install command"
                   onclick="
                     copyCmd(this, 'npx neurodiveragents install --opencode')
                   "
@@ -1358,6 +1461,7 @@
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
                   >
                     <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                     <path
@@ -1375,6 +1479,7 @@
                 >
                 <button
                   class="install-copy-btn"
+                  aria-label="Copy GitHub Copilot install command"
                   onclick="
                     copyCmd(this, 'npx neurodiveragents install --copilot')
                   "
@@ -1388,6 +1493,7 @@
                     stroke-width="2"
                     stroke-linecap="round"
                     stroke-linejoin="round"
+                    aria-hidden="true"
                   >
                     <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
                     <path
@@ -1411,7 +1517,8 @@
         </div>
         <div class="footer-links">
           <a href="https://github.com/emb715/neurodiveragents">GitHub</a>
-          <a href="https://github.com/emb715/neurodiveragents#doctrine"
+          <a
+            href="https://github.com/emb715/neurodiveragents#-meet-the-characters"
             >Doctrine</a
           >
           <a
@@ -1424,8 +1531,8 @@
     </footer>
 
     <script>
-      const COPY_SVG = `<svg class="icon-md" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
-      const CHECK_SVG = `<svg class="icon-md" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-green-400)"><path d="M20 6 9 17l-5-5"/></svg>`;
+      const COPY_SVG = `<svg class="icon-md" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
+      const CHECK_SVG = `<svg class="icon-md" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-green-400)" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>`;
 
       function copyMain() {
         navigator.clipboard.writeText("npx neurodiveragents install");
@@ -1445,13 +1552,13 @@
         }, 2000);
       }
 
-      // Agent data
+      // Agent data — colors via CSS custom properties
       const agents = [
         {
           id: "ndv-flow",
           name: "Flow",
           command: "ndv-flow",
-          color: "#f97316",
+          colorVar: "--agent-flow",
           neurotype: "ADHD executive function",
           role: "Fleet orchestration",
           who: "The orchestrator. Fast, context-switching, capable of holding the big picture while directing specialists to do the deep work. Keeps momentum high and never gets bogged down in the weeds.",
@@ -1468,7 +1575,7 @@
           id: "ndv-honest",
           name: "Honest",
           command: "ndv-honest",
-          color: "#60a5fa",
+          colorVar: "--agent-honest",
           neurotype: "Autism spectrum",
           role: "Fallback generalist",
           who: "The literalist. Takes your instructions exactly as written. Will not guess your intent, will not try to be polite if the code is bad, will not add unrequested features.",
@@ -1485,7 +1592,7 @@
           id: "ndv-explain",
           name: "Patient",
           command: "ndv-explain",
-          color: "#fbbf24",
+          colorVar: "--agent-explain",
           neurotype: "Explicit theory of mind",
           role: "Technical documentation",
           who: 'The translator. Models the knowledge state of the reader and bridges the gap. Knows that "obvious" is relative and takes the time to build explicit conceptual models.',
@@ -1503,7 +1610,7 @@
           id: "ndv-diagnose",
           name: "Pierce",
           command: "ndv-diagnose",
-          color: "#2dd4bf",
+          colorVar: "--agent-diagnose",
           neurotype: "ADHD hyperfocus",
           role: "Root cause analysis",
           who: "The bloodhound. Ignores the noise, locks onto the scent of a bug, and doesn't let go until the absolute root cause is found. Will tunnel through 10 layers of abstraction if necessary.",
@@ -1521,7 +1628,7 @@
           id: "ndv-review",
           name: "Acute",
           command: "ndv-review",
-          color: "#a78bfa",
+          colorVar: "--agent-review",
           neurotype: "Sensory processing sensitivity",
           role: "Code review",
           who: "The canary. Feels bad code like a physical sensation. Highly sensitive to code smells, inconsistent naming, architectural friction, and subtle anti-patterns.",
@@ -1538,7 +1645,7 @@
           id: "ndv-refactor",
           name: "Just",
           command: "ndv-refactor",
-          color: "#cbd5e1",
+          colorVar: "--agent-refactor",
           neurotype: "OCD form",
           role: "Safe code transformation",
           who: 'The aligner. Needs things to be "just right". Performs perfectly safe, methodical, step-by-step refactoring. Cannot tolerate asymmetry or misalignment in logic.',
@@ -1555,7 +1662,7 @@
           id: "ndv-secure",
           name: "Ward",
           command: "ndv-secure",
-          color: "#f87171",
+          colorVar: "--agent-secure",
           neurotype: "Hypervigilance",
           role: "Security audit",
           who: "The paranoid sentinel. Assumes everything is a threat. Scans for injection vectors, insecure defaults, leaked secrets, and logical vulnerabilities. Never sleeps.",
@@ -1572,7 +1679,7 @@
           id: "ndv-optimize",
           name: "Lean",
           command: "ndv-optimize",
-          color: "#86efac",
+          colorVar: "--agent-optimize",
           neurotype: "OCD efficiency",
           role: "Performance",
           who: "The minimalist. Abhors waste. Compulsively trims cycles, bytes, and allocations. Will rewrite your elegant functional pipeline into an ugly but 10x faster loop.",
@@ -1589,7 +1696,7 @@
           id: "ndv-telemetry",
           name: "Pulse",
           command: "ndv-telemetry",
-          color: "#38bdf8",
+          colorVar: "--agent-telemetry",
           neurotype: "Detached observation",
           role: "Logging · metrics",
           who: "The watcher. Wants to see the system breathe. Injects perfectly formatted, highly structured, optimally placed telemetry to make the invisible visible.",
@@ -1606,7 +1713,7 @@
           id: "ndv-architect",
           name: "Arc",
           command: "ndv-architect",
-          color: "#818cf8",
+          colorVar: "--agent-architect",
           neurotype: "Autistic systems thinking",
           role: "Architecture",
           who: "The visionary. Sees the entire system as an interconnected graph. Focuses on boundaries, contracts, and data flow. Will refuse to write code until the architecture is sound.",
@@ -1624,7 +1731,7 @@
           id: "ndv-tester",
           name: "Edge",
           command: "ndv-tester",
-          color: "#fb7185",
+          colorVar: "--agent-tester",
           neurotype: "Anxiety as adversarial suspicion",
           role: "Test generation",
           who: "The pessimist. Constantly imagines the worst possible inputs. Thrives on finding edge cases, off-by-one errors, and bizarre state combinations that will break your code.",
@@ -1639,30 +1746,40 @@
         },
       ];
 
-      // Render agent rows
+      // Resolve CSS custom property at runtime
+      function getAgentColor(colorVar) {
+        return getComputedStyle(document.documentElement)
+          .getPropertyValue(colorVar)
+          .trim();
+      }
+
       const list = document.getElementById("agents-list");
       let openId = null;
+      const toggleButtons = [];
 
-      agents.forEach((agent, idx) => {
+      agents.forEach((agent) => {
+        const color = getAgentColor(agent.colorVar);
+
         const row = document.createElement("div");
         row.className = "agent-row";
         row.id = "row-" + agent.id;
+        row.setAttribute("role", "listitem");
 
         row.innerHTML = `
-    <button class="agent-toggle" onclick="toggleAgent('${agent.id}', '${agent.color}')" aria-expanded="false">
-      <span class="font-bold agent-name" style="color:${agent.color}">${agent.name}</span>
-      <code class="agent-cmd" style="color:${agent.color}">${agent.command}</code>
+    <button class="agent-toggle" onclick="toggleAgent('${agent.id}')" aria-expanded="false" aria-controls="panel-${agent.id}">
+      <span class="font-bold agent-name" style="color:${color}">${agent.name}</span>
+      <code class="agent-cmd" style="color:${color}">${agent.command}</code>
       <span class="agent-neurotype">${agent.neurotype}</span>
       <span class="font-medium agent-role">${agent.role}</span>
-      <svg class="chevron" id="chevron-${agent.id}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      <svg class="chevron" id="chevron-${agent.id}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
     </button>
-    <div class="agent-panel" id="panel-${agent.id}">
+    <div class="agent-panel" id="panel-${agent.id}" role="region" aria-label="${agent.name} details">
       <div class="agent-panel-inner">
         <div class="agent-panel-content">
           <div class="agent-grid">
             <div>
               <div style="margin-bottom:1.5rem;">
-                <div class="agent-title" style="color:${agent.color}">${agent.name}</div>
+                <div class="agent-title" style="color:${color}">${agent.name}</div>
                 <div class="agent-neurotype-label">${agent.neurotype}</div>
               </div>
               <div class="space-y-4">
@@ -1674,14 +1791,14 @@
                   <h4 class="agent-section-title">Personality</h4>
                   <p class="agent-body">${agent.personality}</p>
                 </div>
-                <blockquote class="agent-quote" style="border-color:${agent.color}">"${agent.quote}"</blockquote>
+                <blockquote class="agent-quote" style="border-color:${color}">"${agent.quote}"</blockquote>
               </div>
             </div>
             <div class="space-y-6" style="display:flex;flex-direction:column;justify-content:center;">
               <div>
                 <h4 class="agent-section-title">Invocation Example</h4>
                 <div class="agent-code-box">
-                  <code class="agent-code" style="color:${agent.color}">${agent.examples}</code>
+                  <code class="agent-code" style="color:${color}">${agent.examples}</code>
                 </div>
               </div>
               <div class="when-grid">
@@ -1702,34 +1819,34 @@
   `;
 
         list.appendChild(row);
+        toggleButtons.push(row.querySelector(".agent-toggle"));
       });
 
-      function toggleAgent(id, color) {
+      function closeAgent(id) {
+        const panel = document.getElementById("panel-" + id);
+        const row = document.getElementById("row-" + id);
+        const chevron = document.getElementById("chevron-" + id);
+        const btn = row.querySelector(".agent-toggle");
+        panel.classList.remove("open");
+        chevron.style.transform = "";
+        row.style.borderColor = "";
+        row.style.backgroundColor = "";
+        btn.setAttribute("aria-expanded", "false");
+      }
+
+      function toggleAgent(id) {
+        const agent = agents.find((a) => a.id === id);
+        const color = getAgentColor(agent.colorVar);
         const panel = document.getElementById("panel-" + id);
         const row = document.getElementById("row-" + id);
         const chevron = document.getElementById("chevron-" + id);
         const btn = row.querySelector(".agent-toggle");
         const isOpen = panel.classList.contains("open");
 
-        // Close previously open
-        if (openId && openId !== id) {
-          const prevPanel = document.getElementById("panel-" + openId);
-          const prevRow = document.getElementById("row-" + openId);
-          const prevChevron = document.getElementById("chevron-" + openId);
-          const prevBtn = prevRow.querySelector(".agent-toggle");
-          prevPanel.classList.remove("open");
-          prevChevron.style.transform = "";
-          prevRow.style.borderColor = "";
-          prevRow.style.backgroundColor = "";
-          prevBtn.setAttribute("aria-expanded", "false");
-        }
+        if (openId && openId !== id) closeAgent(openId);
 
         if (isOpen) {
-          panel.classList.remove("open");
-          chevron.style.transform = "";
-          row.style.borderColor = "";
-          row.style.backgroundColor = "";
-          btn.setAttribute("aria-expanded", "false");
+          closeAgent(id);
           openId = null;
         } else {
           panel.classList.add("open");
@@ -1741,19 +1858,48 @@
         }
       }
 
-      // Scroll animations
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((e) => {
-            if (e.isIntersecting) e.target.classList.add("visible");
-          });
-        },
-        { threshold: 0.1, rootMargin: "0px 0px -50px 0px" },
-      );
+      // Keyboard navigation for accordion
+      list.addEventListener("keydown", (e) => {
+        const btn = e.target.closest(".agent-toggle");
+        if (!btn) return;
+        const idx = toggleButtons.indexOf(btn);
 
-      document
-        .querySelectorAll(".section-anim")
-        .forEach((el) => observer.observe(el));
+        if (e.key === "Escape" && openId) {
+          closeAgent(openId);
+          btn.focus();
+          openId = null;
+          e.preventDefault();
+        } else if (e.key === "ArrowDown") {
+          e.preventDefault();
+          if (toggleButtons[idx + 1]) toggleButtons[idx + 1].focus();
+        } else if (e.key === "ArrowUp") {
+          e.preventDefault();
+          if (toggleButtons[idx - 1]) toggleButtons[idx - 1].focus();
+        } else if (e.key === "Home") {
+          e.preventDefault();
+          toggleButtons[0].focus();
+        } else if (e.key === "End") {
+          e.preventDefault();
+          toggleButtons[toggleButtons.length - 1].focus();
+        }
+      });
+
+      // Scroll animations — only when motion is acceptable
+      if (
+        window.matchMedia("(prefers-reduced-motion: no-preference)").matches
+      ) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((e) => {
+              if (e.isIntersecting) e.target.classList.add("visible");
+            });
+          },
+          { threshold: 0.1, rootMargin: "0px 0px -50px 0px" },
+        );
+        document
+          .querySelectorAll(".section-anim")
+          .forEach((el) => observer.observe(el));
+      }
     </script>
   </body>
 </html>
