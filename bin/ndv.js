@@ -153,14 +153,8 @@ function install(toolName) {
     writeFileSync(join(tool.dest, destName), destContent)
   }
 
-  console.log(`Agents installed to ${tool.dest}/`)
-  if (skipped.length > 0) {
-    for (const { agent, blockedTool } of skipped) {
-      console.log(`  Skipped ${agent} — requires "${blockedTool}" (not supported by ${toolName})`)
-    }
-  }
-
   // OpenCode: install ndv-flow as a subtask2-compatible slash command
+  const commandFallbacks = new Set()
   if (toolName === 'opencode') {
     const commandsDir = join(AGENTS_DIR, '..', 'commands', 'opencode')
     const destCommandsDir = '.opencode/commands'
@@ -169,12 +163,25 @@ function install(toolName) {
       const commands = readdirSync(commandsDir).filter(f => f.endsWith('.md'))
       for (const cmd of commands) {
         writeFileSync(join(destCommandsDir, cmd), readFileSync(join(commandsDir, cmd), 'utf8'))
+        commandFallbacks.add(cmd) // e.g. "ndv-flow.md"
       }
-      console.log(`  ndv-flow installed to ${destCommandsDir}/ as subtask2 command`)
-      console.log(`  Requires subtask2 for fleet orchestration:`)
-      console.log(`    https://github.com/spoons-and-mirrors/subtask2`)
-      console.log(`    Add to opencode.json: "plugins": ["@spoons-and-mirrors/subtask2@latest"]`)
     }
+  }
+
+  console.log(`Agents installed to ${tool.dest}/`)
+  if (skipped.length > 0) {
+    for (const { agent } of skipped) {
+      if (commandFallbacks.has(agent)) {
+        console.log(`  ${agent.replace('.md', '')} → installed as /ndv-flow slash command (subtask2)`)
+      } else {
+        console.log(`  Skipped ${agent} — not supported by ${toolName}`)
+      }
+    }
+  }
+  if (commandFallbacks.size > 0) {
+    console.log(`  Requires subtask2 for fleet orchestration:`)
+    console.log(`    https://github.com/spoons-and-mirrors/subtask2`)
+    console.log(`    Add to opencode.json: "plugins": ["@spoons-and-mirrors/subtask2@latest"]`)
   }
 
   writeRouting(tool.routingFile)
