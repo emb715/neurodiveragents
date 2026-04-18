@@ -1,13 +1,44 @@
 #!/usr/bin/env bash
 # neurodiveragents install script
-# Usage: ./install.sh [tool]
-# Tools: claude (default), opencode, cursor, copilot
+# Usage: curl ... | bash -s [claude|opencode|cursor|copilot]
+# Or:    ./install.sh [claude|opencode|cursor|copilot]
 
 set -e
 
-AGENTS_DIR="$(cd "$(dirname "$0")/agents" && pwd)"
-TOOL="${1:-claude}"
+REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
+AGENTS_DIR="$REPO_DIR/agents"
+COMMANDS_DIR="$REPO_DIR/commands"
+TOOL="${1:-}"
+SUBTASK2="@spoons-and-mirrors/subtask2@latest"
 
+# ── Agents that require Task tool (Claude Code only) ─────────────────────────
+TASK_AGENTS="ndv-flow"
+
+requires_task() {
+  local name="$1"
+  for a in $TASK_AGENTS; do
+    [ "$a" = "$name" ] && return 0
+  done
+  return 1
+}
+
+# ── Transform Claude Code frontmatter → OpenCode frontmatter ─────────────────
+# Strips the YAML list tools: block, injects mode: subagent
+transform_for_opencode() {
+  local src="$1" dest="$2"
+  # Remove tools: list block (lines starting with "  - ") after "tools:"
+  # Then inject mode: subagent before closing ---
+  awk '
+    /^tools:/ { in_tools=1; next }
+    in_tools && /^  - / { next }
+    in_tools { in_tools=0 }
+    /^---/ && found_first { print "mode: subagent"; found_first=0 }
+    /^---/ { found_first=1; print; next }
+    { print }
+  ' "$src" > "$dest"
+}
+
+# ── Routing block ─────────────────────────────────────────────────────────────
 NDV_BLOCK='<!-- ndv:start -->
 # neurodiveragents
 
@@ -63,6 +94,9 @@ All agents default to parallel execution for 4-8 independent files/items.
 
 write_routing() {
   local file="$1"
+  local dir
+  dir="$(dirname "$file")"
+  [ "$dir" != "." ] && mkdir -p "$dir"
 
   if [ -f "$file" ]; then
     if grep -q "ndv:start" "$file"; then
@@ -73,15 +107,106 @@ write_routing() {
     echo "  Appended ndv routing block to existing $file"
   else
     printf '%s\n' "$NDV_BLOCK" > "$file"
-    echo "  Created $file with ndv routing block"
+    echo "  Created $file"
   fi
 }
 
+# ── inject subtask2 into opencode.json ───────────────────────────────────────
+inject_subtask2() {
+  local file="opencode.json"
+  if [ -f "$file" ]; then
+    if grep -q "subtask2" "$file"; then
+      echo "  subtask2 already in $file — skipping"
+      return
+    fi
+    # Use node if available to safely merge JSON
+    if command -v node >/dev/null 2>&1; then
+      node -e "
+        const fs = require('fs');
+        const cfg = JSON.parse(fs.readFileSync('$file', 'utf8'));
+        cfg.plugin = [...(cfg.plugin || []), '$SUBTASK2'];
+        fs.writeFileSync('$file', JSON.stringify(cfg, null, 2) + '\n');
+      "
+    else
+      # Fallback: naive append before last }
+      sed -i.bak 's/}$/,\n  "plugin": ["'"$SUBTASK2"'"]\n}/' "$file" && rm -f "$file.bak"
+    fi
+    echo "  subtask2 added to $file"
+  else
+    printf '{\n  "plugin": ["%s"]\n}\n' "$SUBTASK2" > "$file"
+    echo "  Created $file with subtask2 plugin"
+  fi
+}
+
+# ── install claude ────────────────────────────────────────────────────────────
+install_claude() {
+  local dest=".claude/agents"
+  mkdir -p "$dest"
+  for f in "$AGENTS_DIR"/*.md; do
+    cp "$f" "$dest/"
+  done
+  echo "Agents installed to $dest/"
+  write_routing "CLAUDE.md"
+  echo "Done. The full neurodiveragents fleet is ready."
+}
+
+# ── install opencode ──────────────────────────────────────────────────────────
+install_opencode() {
+  local dest=".opencode/agents"
+  mkdir -p "$dest"
+
+  for f in "$AGENTS_DIR"/*.md; do
+    local name
+    name="$(basename "${f%.md}")"
+    if requires_task "$name"; then
+      # install as subtask2 command instead
+      local cmd_src="$COMMANDS_DIR/opencode/${name}.md"
+      if [ -f "$cmd_src" ]; then
+        mkdir -p ".opencode/commands"
+        cp "$cmd_src" ".opencode/commands/${name}.md"
+        echo "  $name → installed as /${name} slash command (subtask2)"
+      fi
+    else
+      transform_for_opencode "$f" "$dest/${name}.md"
+    fi
+  done
+
+  echo "Agents installed to $dest/"
+
+  # subtask2 for fleet orchestration
+  inject_subtask2
+  echo "  Requires subtask2 for fleet orchestration:"
+  echo "    https://github.com/spoons-and-mirrors/subtask2"
+  echo "    Add to opencode.json: \"plugin\": [\"$SUBTASK2\"]"
+
+  write_routing ".opencode/AGENTS.md"
+  echo "Done. The full neurodiveragents fleet is ready."
+}
+
+# ── install cursor ────────────────────────────────────────────────────────────
+install_cursor() {
+  local dest=".cursor/rules"
+  mkdir -p "$dest"
+  for f in "$AGENTS_DIR"/*.md; do
+    local name
+    name="$(basename "${f%.md}")"
+    if requires_task "$name"; then
+      echo "  Skipped $name — not supported by cursor"
+    else
+      cp "$f" "$dest/${name}.mdc"
+    fi
+  done
+  echo "Agents installed to $dest/"
+  write_routing ".cursor/rules/ndv.mdc"
+  echo "Done. The full neurodiveragents fleet is ready."
+}
+
+# ── install copilot ───────────────────────────────────────────────────────────
 install_copilot() {
   mkdir -p .github
-  OUTFILE=".github/copilot-instructions.md"
+  local outfile=".github/copilot-instructions.md"
 
-  cat > "$OUTFILE" <<'HEADER'
+  cat > "$outfile" <<'HEADER'
 # neurodiveragents — Copilot Instructions
 
 This project uses the neurodiveragents fleet. When a task matches an agent domain, apply that agent's patterns directly.
@@ -106,44 +231,32 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 HEADER
 
   for f in "$AGENTS_DIR"/*.md; do
+    local name
     name="$(basename "${f%.md}")"
-    # strip YAML frontmatter (lines between first and second ---)
+    # strip YAML frontmatter
+    local content
     content="$(awk '/^---/{n++; if(n==2){found=1; next}} found' "$f")"
-    printf '# Agent: %s\n\n%s\n\n---\n\n' "$name" "$content" >> "$OUTFILE"
+    printf '# Agent: %s\n\n%s\n\n---\n\n' "$name" "$content" >> "$outfile"
   done
 
-  echo "Copilot instructions written to $OUTFILE"
+  echo "Copilot instructions written to $outfile"
+  echo "Done. The full neurodiveragents fleet is ready."
 }
 
+# ── dispatch ──────────────────────────────────────────────────────────────────
 case "$TOOL" in
-  claude)
-    DEST=".claude/agents"
-    mkdir -p "$DEST"
-    cp "$AGENTS_DIR"/*.md "$DEST/"
-    echo "Agents installed to $DEST/"
-    write_routing "CLAUDE.md"
-    echo "Done. The full neurodiveragents fleet is ready."
-    ;;
-  opencode)
-    DEST=".opencode/agents"
-    mkdir -p "$DEST"
-    cp "$AGENTS_DIR"/*.md "$DEST/"
-    echo "Agents installed to $DEST/"
-    write_routing ".opencode/AGENTS.md"
-    echo "Done. The full neurodiveragents fleet is ready."
-    ;;
-  cursor)
-    DEST=".cursor/rules"
-    mkdir -p "$DEST"
-    for f in "$AGENTS_DIR"/*.md; do
-      cp "$f" "$DEST/$(basename "${f%.md}.mdc")"
-    done
-    echo "Agents installed to $DEST/ (converted to .mdc)"
-    write_routing ".cursor/rules/ndv.mdc"
-    echo "Done. The full neurodiveragents fleet is ready."
-    ;;
-  copilot)
-    install_copilot
+  claude)   install_claude   ;;
+  opencode) install_opencode ;;
+  cursor)   install_cursor   ;;
+  copilot)  install_copilot  ;;
+  "")
+    echo "Usage: ./install.sh [claude|opencode|cursor|copilot]"
+    echo ""
+    echo "  claude      Claude Code  →  .claude/agents/ + CLAUDE.md"
+    echo "  opencode    OpenCode     →  .opencode/agents/ + .opencode/AGENTS.md"
+    echo "  cursor      Cursor       →  .cursor/rules/ + .cursor/rules/ndv.mdc"
+    echo "  copilot     GitHub Copilot → .github/copilot-instructions.md"
+    exit 1
     ;;
   *)
     echo "Unknown tool: $TOOL"

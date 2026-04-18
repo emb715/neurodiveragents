@@ -165,6 +165,22 @@ function install(toolName) {
         writeFileSync(join(destCommandsDir, cmd), readFileSync(join(commandsDir, cmd), 'utf8'))
         commandFallbacks.add(cmd) // e.g. "ndv-flow.md"
       }
+
+      // Inject subtask2 into project opencode.json (create if absent)
+      const opencodeJson = 'opencode.json'
+      const SUBTASK2 = '@spoons-and-mirrors/subtask2@latest'
+      let config = {}
+      if (existsSync(opencodeJson)) {
+        try { config = JSON.parse(readFileSync(opencodeJson, 'utf8')) } catch {}
+      }
+      const plugins = config.plugin ?? []
+      if (!plugins.includes(SUBTASK2)) {
+        config.plugin = [...plugins, SUBTASK2]
+        writeFileSync(opencodeJson, JSON.stringify(config, null, 2) + '\n')
+        console.log(`  subtask2 added to opencode.json`)
+      } else {
+        console.log(`  subtask2 already in opencode.json — skipping`)
+      }
     }
   }
 
@@ -181,7 +197,7 @@ function install(toolName) {
   if (commandFallbacks.size > 0) {
     console.log(`  Requires subtask2 for fleet orchestration:`)
     console.log(`    https://github.com/spoons-and-mirrors/subtask2`)
-    console.log(`    Add to opencode.json: "plugins": ["@spoons-and-mirrors/subtask2@latest"]`)
+    console.log(`    Add to opencode.json: "plugin": ["@spoons-and-mirrors/subtask2@latest"]`)
   }
 
   writeRouting(tool.routingFile)
