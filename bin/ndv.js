@@ -1,11 +1,38 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync, appendFileSync, readdirSync } from 'fs'
-import { join, dirname, basename } from 'path'
+import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, readdirSync } from 'fs'
+import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { createInterface } from 'readline'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const AGENTS_DIR = join(__dirname, '..', 'agents')
+
+// Tools not supported by each target platform.
+// Agents that require any of these tools are skipped on install for that platform.
+const UNSUPPORTED_TOOLS = {
+  opencode: new Set(['Task']),
+  cursor: new Set(['Task']),
+}
+
+// Extract the YAML list of tools from Claude Code frontmatter
+function parseAgentTools(content) {
+  const match = content.match(/^tools:\s*\n((?:  - .+\n?)+)/m)
+  return match
+    ? match[1].match(/- (.+)/g).map(l => l.replace('- ', '').trim())
+    : []
+}
+
+// Rewrite frontmatter for OpenCode:
+// - Remove the Claude Code tools list (unknown field, causes validation error)
+// - Add mode: subagent so agents appear in @ autocomplete
+function transformForOpenCode(content) {
+  // Strip the tools: list block entirely
+  const withoutTools = content.replace(/^tools:\s*\n((?:  - .+\n?)+)/m, '')
+  // Inject mode: subagent before the closing --- of the frontmatter
+  // Match: opening ---, any frontmatter fields, then closing ---
+  return withoutTools.replace(/(^---\n[\s\S]*?)(^---)/m, '$1mode: subagent\n$2')
+}
 
 const TOOLS = {
   claude: {
@@ -106,14 +133,32 @@ function install(toolName) {
 
   mkdirSync(tool.dest, { recursive: true })
 
+  const unsupported = UNSUPPORTED_TOOLS[toolName] ?? new Set()
   const agents = readdirSync(AGENTS_DIR).filter(f => f.endsWith('.md'))
+  const skipped = []
+
   for (const agent of agents) {
     const src = join(AGENTS_DIR, agent)
+    const content = readFileSync(src, 'utf8')
+
+    const agentTools = parseAgentTools(content)
+    const blockedTool = agentTools.find(t => unsupported.has(t))
+    if (blockedTool) {
+      skipped.push({ agent, blockedTool })
+      continue
+    }
+
     const destName = agent.replace('.md', tool.ext)
-    copyFileSync(src, join(tool.dest, destName))
+    const destContent = toolName === 'opencode' ? transformForOpenCode(content) : content
+    writeFileSync(join(tool.dest, destName), destContent)
   }
 
   console.log(`Agents installed to ${tool.dest}/`)
+  if (skipped.length > 0) {
+    for (const { agent, blockedTool } of skipped) {
+      console.log(`  Skipped ${agent} — requires "${blockedTool}" (not supported by ${toolName})`)
+    }
+  }
   writeRouting(tool.routingFile)
   console.log(`Done. The full neurodiveragents fleet is ready.`)
 }
@@ -200,21 +245,68 @@ function help() {
   `)
 }
 
+const TOOL_OPTIONS = [
+  { key: '1', name: 'claude',   label: 'Claude Code',    signals: ['.claude', 'CLAUDE.md'] },
+  { key: '2', name: 'opencode', label: 'OpenCode',       signals: ['.opencode', 'opencode.json'] },
+  { key: '3', name: 'cursor',   label: 'Cursor',         signals: ['.cursor'] },
+  { key: '4', name: 'copilot',  label: 'GitHub Copilot', signals: ['.github/copilot-instructions.md'] },
+]
+
+function detectTools() {
+  return TOOL_OPTIONS.filter(o => o.signals.some(s => existsSync(join(process.cwd(), s))))
+}
+
+async function promptTool() {
+  const detected = detectTools()
+
+  console.log('\n  Which AI tool are you installing for?\n')
+  if (detected.length > 0) {
+    console.log('  Detected in this project:')
+    for (const { key, label, name } of TOOL_OPTIONS) {
+      if (detected.some(d => d.name === name)) {
+        console.log(`    ${key})  ${label}  ✓`)
+      }
+    }
+    console.log()
+    console.log('  Other options:')
+    for (const { key, label, name } of TOOL_OPTIONS) {
+      if (!detected.some(d => d.name === name)) {
+        console.log(`    ${key})  ${label}`)
+      }
+    }
+  } else {
+    for (const { key, label } of TOOL_OPTIONS) {
+      console.log(`    ${key})  ${label}`)
+    }
+  }
+  console.log()
+
+  const rl = createInterface({ input: process.stdin, output: process.stdout })
+  return new Promise((resolve) => {
+    rl.question('  Enter number: ', (answer) => {
+      rl.close()
+      const choice = TOOL_OPTIONS.find(o => o.key === answer.trim())
+      if (!choice) {
+        console.error(`\n  Invalid choice: "${answer.trim()}"`)
+        process.exit(1)
+      }
+      resolve(choice.name)
+    })
+  })
+}
+
 const [,, cmd, arg] = process.argv
 
 switch (cmd) {
-  case 'install':
-    if (!arg) {
-      console.error('Specify a tool: claude, opencode, cursor, or copilot')
-      console.error('Example: npx neurodiveragents install claude')
-      process.exit(1)
-    }
-    if (arg === 'copilot') {
+  case 'install': {
+    const tool = arg ?? await promptTool()
+    if (tool === 'copilot') {
       installCopilot()
     } else {
-      install(arg)
+      install(tool)
     }
     break
+  }
   case 'list':
     list()
     break

@@ -4,11 +4,11 @@
   "description": "A fleet of specialized AI agents for Claude Code, OpenCode, and Cursor — each one a distinct cognitive style",
   "type": "module",
   "bin": {
-    "ndv": "./bin/ndv.js"
+    "ndv": "./bin/ndv.js",
+    "neurodiveragents": "./bin/ndv.js"
   },
   "files": [
     "agents/",
-    "assets/",
     "bin/",
     "install.sh",
     "LICENSE"
@@ -33,6 +33,11 @@
     "llm",
     "neurodivergent"
   ],
+  "scripts": {
+    "test": "node --test test/install.test.js test/validate-agents.test.js",
+    "test:install": "node --test test/install.test.js",
+    "test:validate": "node --test test/validate-agents.test.js"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=18"

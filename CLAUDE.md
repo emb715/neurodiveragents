@@ -6,6 +6,7 @@ This project uses the neurodiveragents fleet. Each agent embodies a distinct cog
 
 | When the task involves... | Use agent |
 |--------------------------|-----------|
+| PRD, epic, multi-task workload, fleet orchestration | `ndv-flow` (Flow) |
 | Code review, PR, code smells, quality | `ndv-review` (Acute) |
 | Bug, failing test, root cause, stack trace | `ndv-diagnose` (Pierce) |
 | Rename, extract, restructure, modernize syntax | `ndv-refactor` (Just) |
@@ -15,7 +16,7 @@ This project uses the neurodiveragents fleet. Each agent embodies a distinct cog
 | Add logging, metrics, traces, health checks | `ndv-telemetry` (Pulse) |
 | System design, SOLID violations, architecture review | `ndv-architect` (Arc) |
 | Technical docs, API docs, session notes | `ndv-explain` (Patient) |
-| Any task — direct answer, no filler, cross-domain judgment | `ndv-honest` (Honest) |
+| Direct answer, no filler, cross-domain judgment | `ndv-honest` (Honest) |
 
 ## Proactive Application
 
