@@ -139,6 +139,12 @@ The `agent` field is the character name — cosmetic, ignored by tools.
 
 ---
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add agents, edit existing ones, and run the benchmark.
+
+---
+
 ## License
 
 MIT
