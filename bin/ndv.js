@@ -159,6 +159,24 @@ function install(toolName) {
       console.log(`  Skipped ${agent} — requires "${blockedTool}" (not supported by ${toolName})`)
     }
   }
+
+  // OpenCode: install ndv-flow as a subtask2-compatible slash command
+  if (toolName === 'opencode') {
+    const commandsDir = join(AGENTS_DIR, '..', 'commands', 'opencode')
+    const destCommandsDir = '.opencode/commands'
+    if (existsSync(commandsDir)) {
+      mkdirSync(destCommandsDir, { recursive: true })
+      const commands = readdirSync(commandsDir).filter(f => f.endsWith('.md'))
+      for (const cmd of commands) {
+        writeFileSync(join(destCommandsDir, cmd), readFileSync(join(commandsDir, cmd), 'utf8'))
+      }
+      console.log(`  ndv-flow installed to ${destCommandsDir}/ as subtask2 command`)
+      console.log(`  Requires subtask2 for fleet orchestration:`)
+      console.log(`    https://github.com/spoons-and-mirrors/subtask2`)
+      console.log(`    Add to opencode.json: "plugins": ["@spoons-and-mirrors/subtask2@latest"]`)
+    }
+  }
+
   writeRouting(tool.routingFile)
   console.log(`Done. The full neurodiveragents fleet is ready.`)
 }

@@ -10,6 +10,7 @@
   "files": [
     "agents/",
     "bin/",
+    "commands/",
     "install.sh",
     "LICENSE"
   ],
