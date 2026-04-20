@@ -4,8 +4,8 @@
   "description": "A fleet of specialized AI agents for Claude Code, OpenCode, and Cursor — each one a distinct cognitive style",
   "type": "module",
   "bin": {
-    "ndv": "./bin/ndv.js",
-    "neurodiveragents": "./bin/ndv.js"
+    "ndv": "bin/ndv.js",
+    "neurodiveragents": "bin/ndv.js"
   },
   "files": [
     "agents/",
@@ -16,7 +16,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/emb715/neurodiveragents.git"
+    "url": "git+https://github.com/emb715/neurodiveragents.git"
   },
   "homepage": "https://github.com/emb715/neurodiveragents#readme",
   "bugs": {
