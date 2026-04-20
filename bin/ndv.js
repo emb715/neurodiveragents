@@ -2,6 +2,7 @@
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, readdirSync } from 'fs'
 import { join, dirname } from 'path'
+import { homedir } from 'os'
 import { fileURLToPath } from 'url'
 import { createInterface } from 'readline'
 
@@ -34,21 +35,38 @@ function transformForOpenCode(content) {
   return withoutTools.replace(/(^---\n[\s\S]*?)(^---)/m, '$1mode: subagent\n$2')
 }
 
+const HOME = homedir()
+
 const TOOLS = {
   claude: {
     dest: '.claude/agents',
     ext: '.md',
     routingFile: 'CLAUDE.md',
+    global: {
+      dest: join(HOME, '.claude', 'agents'),
+      ext: '.md',
+      routingFile: null, // Claude Code has no global routing file — agents dir is enough
+    },
   },
   opencode: {
     dest: '.opencode/agents',
     ext: '.md',
     routingFile: '.opencode/AGENTS.md',
+    global: {
+      dest: join(HOME, '.config', 'opencode', 'agents'),
+      ext: '.md',
+      routingFile: join(HOME, '.config', 'opencode', 'opencode.json'),
+    },
   },
   cursor: {
     dest: '.cursor/rules',
     ext: '.mdc',
     routingFile: '.cursor/rules/ndv.mdc',
+    global: {
+      dest: join(HOME, '.cursor', 'rules'),
+      ext: '.mdc',
+      routingFile: null,
+    },
   },
 }
 
@@ -123,7 +141,30 @@ function writeRouting(routingFile) {
   }
 }
 
-function install(toolName) {
+// For opencode global: inject ndv routing into ~/.config/opencode/opencode.json
+// instead of a markdown file — opencode.json is the global config entry point
+function writeRoutingGlobalOpenCode(jsonPath) {
+  let config = {}
+  if (existsSync(jsonPath)) {
+    try { config = JSON.parse(readFileSync(jsonPath, 'utf8')) } catch {}
+    if (config.instructions && config.instructions.some(i => i.includes('ndv'))) {
+      console.log(`  ndv already in ${jsonPath} — skipping`)
+      return
+    }
+  }
+  // OpenCode supports `instructions` array pointing to rule files
+  // We write the routing block to a standalone file and reference it
+  const rulesDir = join(HOME, '.config', 'opencode', 'rules')
+  const rulesFile = join(rulesDir, 'ndv.md')
+  mkdirSync(rulesDir, { recursive: true })
+  writeFileSync(rulesFile, NDV_BLOCK + '\n')
+  config.instructions = [...(config.instructions ?? []), `${rulesFile}`]
+  writeFileSync(jsonPath, JSON.stringify(config, null, 2) + '\n')
+  console.log(`  ndv routing written to ${rulesFile}`)
+  console.log(`  Referenced in ${jsonPath}`)
+}
+
+function install(toolName, isGlobal = false) {
   const tool = TOOLS[toolName]
   if (!tool) {
     console.error(`Unknown tool: ${toolName}`)
@@ -131,7 +172,16 @@ function install(toolName) {
     process.exit(1)
   }
 
-  mkdirSync(tool.dest, { recursive: true })
+  const target = isGlobal ? tool.global : tool
+  if (isGlobal && !target) {
+    console.error(`Global install not supported for ${toolName}`)
+    process.exit(1)
+  }
+
+  const scope = isGlobal ? 'global' : 'project'
+  console.log(`\n  Installing ${toolName} agents (${scope})...\n`)
+
+  mkdirSync(target.dest, { recursive: true })
 
   const unsupported = UNSUPPORTED_TOOLS[toolName] ?? new Set()
   const agents = readdirSync(AGENTS_DIR).filter(f => f.endsWith('.md'))
@@ -148,27 +198,31 @@ function install(toolName) {
       continue
     }
 
-    const destName = agent.replace('.md', tool.ext)
+    const destName = agent.replace('.md', target.ext)
     const destContent = toolName === 'opencode' ? transformForOpenCode(content) : content
-    writeFileSync(join(tool.dest, destName), destContent)
+    writeFileSync(join(target.dest, destName), destContent)
   }
 
   // OpenCode: install ndv-flow as a subtask2-compatible slash command
   const commandFallbacks = new Set()
   if (toolName === 'opencode') {
     const commandsDir = join(AGENTS_DIR, '..', 'commands', 'opencode')
-    const destCommandsDir = '.opencode/commands'
+    const destCommandsDir = isGlobal
+      ? join(HOME, '.config', 'opencode', 'commands')
+      : '.opencode/commands'
     if (existsSync(commandsDir)) {
       mkdirSync(destCommandsDir, { recursive: true })
       const commands = readdirSync(commandsDir).filter(f => f.endsWith('.md'))
       for (const cmd of commands) {
         writeFileSync(join(destCommandsDir, cmd), readFileSync(join(commandsDir, cmd), 'utf8'))
-        commandFallbacks.add(cmd) // e.g. "ndv-flow.md"
+        commandFallbacks.add(cmd)
       }
 
-      // Inject subtask2 into project opencode.json (create if absent)
-      const opencodeJson = 'opencode.json'
+      // Inject subtask2 into the right opencode.json
       const SUBTASK2 = '@spoons-and-mirrors/subtask2@latest'
+      const opencodeJson = isGlobal
+        ? join(HOME, '.config', 'opencode', 'opencode.json')
+        : 'opencode.json'
       let config = {}
       if (existsSync(opencodeJson)) {
         try { config = JSON.parse(readFileSync(opencodeJson, 'utf8')) } catch {}
@@ -177,18 +231,18 @@ function install(toolName) {
       if (!plugins.includes(SUBTASK2)) {
         config.plugin = [...plugins, SUBTASK2]
         writeFileSync(opencodeJson, JSON.stringify(config, null, 2) + '\n')
-        console.log(`  subtask2 added to opencode.json`)
+        console.log(`  subtask2 added to ${opencodeJson}`)
       } else {
-        console.log(`  subtask2 already in opencode.json — skipping`)
+        console.log(`  subtask2 already present — skipping`)
       }
     }
   }
 
-  console.log(`Agents installed to ${tool.dest}/`)
+  console.log(`Agents installed to ${target.dest}/`)
   if (skipped.length > 0) {
     for (const { agent } of skipped) {
       if (commandFallbacks.has(agent)) {
-        console.log(`  ${agent.replace('.md', '')} → installed as /ndv-flow slash command (subtask2)`)
+        console.log(`  ${agent.replace('.md', '')} → installed as /${agent.replace('.md', '')} slash command (subtask2)`)
       } else {
         console.log(`  Skipped ${agent} — not supported by ${toolName}`)
       }
@@ -197,11 +251,20 @@ function install(toolName) {
   if (commandFallbacks.size > 0) {
     console.log(`  Requires subtask2 for fleet orchestration:`)
     console.log(`    https://github.com/spoons-and-mirrors/subtask2`)
-    console.log(`    Add to opencode.json: "plugin": ["@spoons-and-mirrors/subtask2@latest"]`)
   }
 
-  writeRouting(tool.routingFile)
-  console.log(`Done. The full neurodiveragents fleet is ready.`)
+  // Routing
+  if (isGlobal && toolName === 'opencode') {
+    writeRoutingGlobalOpenCode(target.routingFile)
+  } else if (!isGlobal && target.routingFile) {
+    writeRouting(target.routingFile)
+  }
+  // cursor and claude global: agents dir is enough, no routing file needed
+
+  console.log(`\nDone. Fleet installed ${isGlobal ? 'globally' : 'for this project'}.`)
+  if (isGlobal) {
+    console.log(`Agents available in every ${toolName} project automatically.`)
+  }
 }
 
 function installCopilot() {
@@ -267,21 +330,26 @@ function help() {
   ndv — neurodiveragents fleet installer
 
   Usage:
-    npx neurodiveragents install [tool]    Install agents into your project
-    npx neurodiveragents install copilot   Generate .github/copilot-instructions.md
-    npx neurodiveragents list              List available agents
-    npx neurodiveragents help              Show this help
+    npx neurodiveragents install [tool] [--global]
+    npx neurodiveragents list
+    npx neurodiveragents help
 
   Tools:
-    claude      Claude Code  →  .claude/agents/ + CLAUDE.md
-    opencode    OpenCode     →  .opencode/agents/ + .opencode/AGENTS.md
-    cursor      Cursor       →  .cursor/rules/ + .cursor/rules/ndv.mdc
-    copilot     GitHub Copilot → .github/copilot-instructions.md
+    claude      Claude Code    →  .claude/agents/ + CLAUDE.md
+    opencode    OpenCode       →  .opencode/agents/ + .opencode/AGENTS.md
+    cursor      Cursor         →  .cursor/rules/ + .cursor/rules/ndv.mdc
+    copilot     GitHub Copilot →  .github/copilot-instructions.md
+
+  Flags:
+    --global, -g   Install into your home config dir — available in every project
+                   claude   → ~/.claude/agents/
+                   opencode → ~/.config/opencode/agents/
+                   cursor   → ~/.cursor/rules/
 
   Examples:
     npx neurodiveragents install claude
-    npx neurodiveragents install opencode
-    npx neurodiveragents install cursor
+    npx neurodiveragents install opencode --global
+    npx neurodiveragents install cursor --global
     npx neurodiveragents install copilot
   `)
 }
@@ -336,15 +404,21 @@ async function promptTool() {
   })
 }
 
-const [,, cmd, arg] = process.argv
+const [,, cmd, ...rest] = process.argv
+const isGlobal = rest.includes('--global') || rest.includes('-g')
+const arg = rest.find(a => !a.startsWith('-'))
 
 switch (cmd) {
   case 'install': {
     const tool = arg ?? await promptTool()
     if (tool === 'copilot') {
+      if (isGlobal) {
+        console.error('Global install not supported for copilot — copilot has no global config location.')
+        process.exit(1)
+      }
       installCopilot()
     } else {
-      install(tool)
+      install(tool, isGlobal)
     }
     break
   }

@@ -39,6 +39,14 @@ npx neurodiveragents install cursor      # Cursor
 npx neurodiveragents install copilot     # GitHub Copilot
 ```
 
+Add `--global` to install once and have the fleet available in every project automatically:
+
+```bash
+npx neurodiveragents install claude --global    # ~/.claude/agents/
+npx neurodiveragents install opencode --global  # ~/.config/opencode/agents/
+npx neurodiveragents install cursor --global    # ~/.cursor/rules/
+```
+
 <details>
 <summary>Install via curl</summary>
 
