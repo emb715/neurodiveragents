@@ -58,11 +58,11 @@ function transformForOpenCode(content) {
 
   // Strip tools: block
   fm = fm.replace(/^tools:\s*\n((?:  - .+\n?)+)/m, '')
-  // Strip effort: (Claude Code only)
+  // Strip Claude Code-only keys: name (filename is the agent ID in OpenCode),
+  // effort (not a valid OpenCode key), model (Claude Code format; provider prefix
+  // unknown at install time — subagents inherit from the invoking primary agent)
+  fm = fm.replace(/^name:.*\n/m, '')
   fm = fm.replace(/^effort:.*\n/m, '')
-  // Strip model: — OpenCode subagents inherit model from the invoking primary agent.
-  // The source model ID is Claude Code format; the correct provider prefix is unknown
-  // at install time and varies per user. Omitting it is always safe.
   fm = fm.replace(/^model:.*\n/m, '')
   // Inject mode (preserve source value if present, default to subagent) and permission
   const hasMode = /^mode:\s*.+$/m.test(fm)
