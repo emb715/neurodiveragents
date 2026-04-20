@@ -47,24 +47,6 @@ npx neurodiveragents install opencode --global  # ~/.config/opencode/agents/
 npx neurodiveragents install cursor --global    # ~/.cursor/rules/
 ```
 
-<details>
-<summary>Install via curl</summary>
-
-```bash
-# Claude Code
-curl -fsSL https://raw.githubusercontent.com/emb715/neurodiveragents/main/install.sh | bash -s claude
-
-# OpenCode
-curl -fsSL https://raw.githubusercontent.com/emb715/neurodiveragents/main/install.sh | bash -s opencode
-
-# Cursor
-curl -fsSL https://raw.githubusercontent.com/emb715/neurodiveragents/main/install.sh | bash -s cursor
-
-# GitHub Copilot
-curl -fsSL https://raw.githubusercontent.com/emb715/neurodiveragents/main/install.sh | bash -s copilot
-```
-
-</details>
 
 Install copies the agent files into your tool's agents directory and writes a routing table into your project config (`CLAUDE.md`, `.opencode/AGENTS.md`, `.cursor/rules/ndv.mdc`, or `.github/copilot-instructions.md`). Running it again is safe — it detects the existing block and skips it.
 

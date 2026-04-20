@@ -11,7 +11,6 @@
     "agents/",
     "bin/",
     "commands/",
-    "install.sh",
     "LICENSE"
   ],
   "repository": {
