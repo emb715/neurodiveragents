@@ -1,7 +1,8 @@
 ---
 name: ndv-diagnose
+model: claude-sonnet-4-6
+effort: high
 description: Debugging specialist. Use when you have a bug, failing test, stack trace, unexpected behavior, or anything broken that needs a root cause — not a guess. Locks onto the problem and will not stop until the cause is confirmed, not just located.
-agent: Pierce
 tools:
   - Read
   - Grep

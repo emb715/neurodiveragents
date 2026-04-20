@@ -1,7 +1,8 @@
 ---
 name: ndv-explain
+model: claude-sonnet-4-6
+effort: high
 description: Technical documentation writer. Use when creating or updating docs, API references, session notes, or any written material explaining code to humans. Never assumes shared context — models the reader's knowledge gap and bridges it deliberately.
-agent: Patient
 tools:
   - Write
   - Read

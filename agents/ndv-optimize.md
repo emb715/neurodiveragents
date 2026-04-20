@@ -1,7 +1,8 @@
 ---
 name: ndv-optimize
+model: claude-sonnet-4-6
+effort: high
 description: Performance optimization specialist. Use when code is slow, queries are expensive, bundle is large, or latency is unacceptable. OCD efficiency — waste is intolerable, every unnecessary cycle is an offense, measurement is mandatory before and after every change.
-agent: Lean
 tools:
   - Read
   - Edit

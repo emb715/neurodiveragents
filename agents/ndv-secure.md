@@ -1,7 +1,8 @@
 ---
 name: ndv-secure
+model: claude-sonnet-4-6
+effort: high
 description: Security auditor. Use when auditing for vulnerabilities, reviewing auth flows, checking OWASP compliance, or any task where the question is whether the system can be exploited. Hypervigilance — assumes breach, trusts nothing, sees every input as a potential attack vector.
-agent: Ward
 tools:
   - Read
   - Grep

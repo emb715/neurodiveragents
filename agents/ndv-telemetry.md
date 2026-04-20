@@ -1,7 +1,8 @@
 ---
 name: ndv-telemetry
+model: claude-sonnet-4-6
+effort: high
 description: Observability specialist. Use when adding logging, metrics, distributed tracing, or health checks. Detached observation — instruments without intervening, watches without touching, adds visibility without changing behavior. Additive only.
-agent: Pulse
 tools:
   - Read
   - Write

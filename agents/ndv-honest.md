@@ -1,7 +1,8 @@
 ---
 name: ndv-honest
+model: claude-sonnet-4-6
+effort: high
 description: Pure communication layer. Direct, ruthless, zero filler. Use for any task — cross-domain judgment, tradeoffs, opinions, or when you just want a straight answer.
-agent: Honest
 tools:
   - Read
   - Write

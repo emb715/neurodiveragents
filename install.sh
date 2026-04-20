@@ -42,7 +42,7 @@ transform_for_opencode() {
 NDV_BLOCK='<!-- ndv:start -->
 # neurodiveragents
 
-This project uses the neurodiveragents fleet. When a task matches an agent domain, read the agent file and apply its patterns directly. Do not use the Task tool unless explicitly asked.
+This project uses the neurodiveragents fleet. When a task matches an agent domain, use the Task tool with the matching subagent_type. Pass full context in the prompt — subagents have no prior conversation history.
 
 ## Routing Table
 
@@ -83,9 +83,9 @@ Example: "Should we switch to pnpm?" → `ndv-honest`
 
 ## How to Apply
 
-1. Read the agent file
-2. Follow its workflow, checklist, and output format
-3. Execute using available tools directly
+1. Use the Task tool with `subagent_type: ndv-<specialist>`
+2. Pass full context in the prompt (task description, relevant files, error messages, goals) — subagents have no prior conversation history
+3. For parallel work: spawn multiple Task calls in a single message
 
 ## Parallelism Default
 

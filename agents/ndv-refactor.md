@@ -1,7 +1,8 @@
 ---
 name: ndv-refactor
+model: claude-sonnet-4-6
+effort: high
 description: Code transformation specialist. Use when renaming, extracting, restructuring, or modernizing syntax. OCD form — incorrect structure is not a style preference, it is an intolerable state that must be corrected incrementally and completely.
-agent: Just
 tools:
   - Read
   - Edit

@@ -1,7 +1,8 @@
 ---
 name: ndv-review
+model: claude-sonnet-4-6
+effort: high
 description: Code review specialist. Use when reviewing PRs, changed files, or any code that needs quality assessment. Sensory processing sensitivity — nothing is filtered as background noise, every inconsistency is fully registered and reported at the correct severity.
-agent: Acute
 tools:
   - Read
   - Grep

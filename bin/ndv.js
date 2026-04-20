@@ -24,15 +24,52 @@ function parseAgentTools(content) {
     : []
 }
 
-// Rewrite frontmatter for OpenCode:
-// - Remove the Claude Code tools list (unknown field, causes validation error)
-// - Add mode: subagent so agents appear in @ autocomplete
+// Derive OpenCode permission block from Claude Code tools list.
+// Claude Code tools → OpenCode permission semantics:
+//   Write or Edit present → edit: allow   (absent → edit: deny)
+//   Bash present          → bash: allow   (absent → bash: deny)
+//   webfetch present      → webfetch: allow
+// Task is stripped (handled as skipped agent upstream).
+function deriveOpenCodePermissions(tools) {
+  const hasEdit = tools.includes('Write') || tools.includes('Edit')
+  const hasBash = tools.includes('Bash')
+  const hasWebfetch = tools.includes('WebFetch')
+  const lines = []
+  lines.push(`  edit: ${hasEdit ? 'allow' : 'deny'}`)
+  lines.push(`  bash: ${hasBash ? 'allow' : 'deny'}`)
+  if (hasWebfetch) lines.push(`  webfetch: allow`)
+  return `permission:\n${lines.join('\n')}`
+}
+
+// Rewrite frontmatter for OpenCode native agents:
+// - Strip tools: list (Claude Code only, causes OpenCode validation error)
+// - Strip effort: (Claude Code only, unknown key in OpenCode)
+// - Rewrite model: to anthropic/<model> provider-prefixed format
+// - Inject mode: subagent and permission: block derived from tools
 function transformForOpenCode(content) {
-  // Strip the tools: list block entirely
-  const withoutTools = content.replace(/^tools:\s*\n((?:  - .+\n?)+)/m, '')
-  // Inject mode: subagent before the closing --- of the frontmatter
-  // Match: opening ---, any frontmatter fields, then closing ---
-  return withoutTools.replace(/(^---\n[\s\S]*?)(^---)/m, '$1mode: subagent\n$2')
+  const tools = parseAgentTools(content)
+
+  // Extract frontmatter block
+  const fmMatch = content.match(/^(---\n)([\s\S]*?)(^---\n)/m)
+  if (!fmMatch) return content
+
+  let fm = fmMatch[2]
+  const body = content.slice(fmMatch[0].length)
+
+  // Strip tools: block
+  fm = fm.replace(/^tools:\s*\n((?:  - .+\n?)+)/m, '')
+  // Strip effort: line
+  fm = fm.replace(/^effort:.*\n/m, '')
+  // Rewrite model: bare name → anthropic/<name>
+  fm = fm.replace(/^(model:\s*)(.+)$/m, (_, prefix, val) => {
+    const v = val.trim()
+    return `${prefix}${v.includes('/') ? v : `anthropic/${v}`}`
+  })
+  // Inject mode and permission before closing ---
+  const permissions = deriveOpenCodePermissions(tools)
+  fm = fm.trimEnd() + `\nmode: subagent\n${permissions}\n`
+
+  return `---\n${fm}---\n${body}`
 }
 
 const HOME = homedir()
@@ -73,7 +110,7 @@ const TOOLS = {
 const NDV_BLOCK = `<!-- ndv:start -->
 # neurodiveragents
 
-This project uses the neurodiveragents fleet. When a task matches an agent domain, read the agent file and apply its patterns directly. Do not use the Task tool unless explicitly asked.
+This project uses the neurodiveragents fleet. When a task matches an agent domain, use the Task tool with the matching subagent_type. Pass full context in the prompt — subagents have no prior conversation history.
 
 ## Routing Table
 
@@ -114,9 +151,9 @@ Example: "Should we switch to pnpm?" → \`ndv-honest\`
 
 ## How to Apply
 
-1. Read the agent file
-2. Follow its workflow, checklist, and output format
-3. Execute using available tools directly
+1. Use the Task tool with \`subagent_type: ndv-<specialist>\`
+2. Pass full context in the prompt (task description, relevant files, error messages, goals) — subagents have no prior conversation history
+3. For parallel work: spawn multiple Task calls in a single message
 
 ## Parallelism Default
 
@@ -311,14 +348,14 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 function list() {
   const agents = readdirSync(AGENTS_DIR).filter(f => f.endsWith('.md'))
   const rows = [
-    ['Agent', 'Character'],
-    ['-----', '---------'],
+    ['Agent', 'Description'],
+    ['-----', '-----------'],
   ]
   for (const agent of agents) {
     const content = readFileSync(join(AGENTS_DIR, agent), 'utf8')
-    const match = content.match(/^agent:\s*(.+)$/m)
-    const character = match ? match[1].trim() : '—'
-    rows.push([agent.replace('.md', ''), character])
+    const match = content.match(/^description:\s*(.+)$/m)
+    const description = match ? match[1].trim().slice(0, 60) + (match[1].trim().length > 60 ? '…' : '') : '—'
+    rows.push([agent.replace('.md', ''), description])
   }
   for (const [a, b] of rows) {
     console.log(`  ${a.padEnd(20)} ${b}`)

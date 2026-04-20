@@ -1,7 +1,8 @@
 ---
 name: ndv-flow
+model: claude-sonnet-4-6
+effort: high
 description: Fleet orchestrator. Use when the work is too large for one agent — PRDs, epics, multi-task workloads, anything that needs decomposition, parallel execution, and routing across the fleet. Does not implement. Does not review. Decomposes, routes, and conducts.
-agent: Flow
 tools:
   - Read
   - Glob

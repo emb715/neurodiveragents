@@ -132,11 +132,24 @@ describe('agent files (agents/*.md)', () => {
         )
       })
 
-      test('frontmatter: agent (character name) present and non-empty', () => {
+      test('frontmatter: model field present and non-empty', () => {
         const { get } = parseFrontmatter(agent.content, agent.file)
-        const character = get('agent')
-        assert.ok(character, `${agent.file}: frontmatter missing "agent" (character name) field`)
-        assert.ok(character.length > 0, `${agent.file}: "agent" field is empty`)
+        const model = get('model')
+        assert.ok(model, `${agent.file}: frontmatter missing "model" field`)
+        assert.ok(model.length > 0, `${agent.file}: "model" field is empty`)
+      })
+
+      test('frontmatter: effort field present and non-empty', () => {
+        const { get } = parseFrontmatter(agent.content, agent.file)
+        const effort = get('effort')
+        assert.ok(effort, `${agent.file}: frontmatter missing "effort" field`)
+        assert.ok(effort.length > 0, `${agent.file}: "effort" field is empty`)
+      })
+
+      test('frontmatter: no "agent" field (invalid Claude Code key, must be absent)', () => {
+        const { get } = parseFrontmatter(agent.content, agent.file)
+        const agentField = get('agent')
+        assert.equal(agentField, null, `${agent.file}: "agent" field must be removed — it is not a valid Claude Code frontmatter key`)
       })
 
       test('frontmatter: tools list present and non-empty', () => {
@@ -179,13 +192,14 @@ describe('agent files (agents/*.md)', () => {
         assert.deepEqual(todos, [], `${agent.file}: unresolved ${todos.join(', ')} in agent body (outside code blocks)`)
       })
 
-      test('body: uses character name in first paragraph (identity anchor for LLM)', () => {
-        const { body, get } = parseFrontmatter(agent.content, agent.file)
-        const character = get('agent') ?? ''
+      test('body: uses bold character name in first paragraph (identity anchor for LLM)', () => {
+        const { body } = parseFrontmatter(agent.content, agent.file)
         const firstPara = body.split('\n\n')[0]
+        // Character name is embedded as **Name** in the first paragraph
+        const boldMatch = firstPara.match(/\*\*([^*]+)\*\*/)
         assert.ok(
-          firstPara.includes(`**${character}**`) || firstPara.includes(character),
-          `${agent.file}: character name "${character}" not found in first paragraph — LLM needs identity anchor`
+          boldMatch,
+          `${agent.file}: no bold name found in first paragraph — LLM needs identity anchor like "You are **Name**."`
         )
       })
 
@@ -315,23 +329,26 @@ describe('symmetry: every agent file must have a human file and vice versa', () 
     )
   })
 
-  test('character name in human H1 matches agent frontmatter "agent" field', () => {
+  test('character name in human H1 matches bold name in agent body', () => {
     for (const agent of agentFiles()) {
       const humanPath = join(DOCS_DIR, `${agent.name}.human.md`)
-      // Skip if human file missing — caught by symmetry test above
       try {
         const humanContent = readFileSync(humanPath, 'utf8')
         const h1 = humanContent.match(/^# (.+)/m)
         if (!h1) continue
 
         const characterInH1 = h1[1].split(' — ')[0].trim()
-        const { get } = parseFrontmatter(agent.content, agent.file)
-        const characterInAgent = get('agent')
+
+        // Extract character from first bold in agent body ("You are **Name**.")
+        const { body } = parseFrontmatter(agent.content, agent.file)
+        const firstPara = body.split('\n\n')[0]
+        const boldMatch = firstPara.match(/\*\*([^*]+)\*\*/)
+        if (!boldMatch) continue // caught by identity anchor test above
 
         assert.equal(
           characterInH1,
-          characterInAgent,
-          `Character mismatch: ${agent.file} says agent="${characterInAgent}" but ${agent.name}.human.md H1 says "${characterInH1}"`
+          boldMatch[1],
+          `Character mismatch: ${agent.file} body says "${boldMatch[1]}" but ${agent.name}.human.md H1 says "${characterInH1}"`
         )
       } catch (e) {
         if (e.code === 'ENOENT') continue // caught by symmetry test
