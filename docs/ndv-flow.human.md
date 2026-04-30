@@ -22,6 +22,20 @@ When the work is too large or too multi-domain for a single agent. PRDs, epics, 
 
 Not for: single-domain tasks, quick questions, anything one specialist can handle alone.
 
+## How it works
+
+Flow runs as a first-class agent in both Claude Code and OpenCode. When you invoke it, Flow reads the full input, decomposes it into atomic tasks, assigns each task to the right specialist, and dispatches them using the native Task tool.
+
+Parallelism is not a feature — it is the default. Tasks with no file overlap dispatch in a single response as multiple simultaneous Task calls. Tasks that touch overlapping files run sequentially. Flow never runs tasks one-at-a-time when parallel is safe.
+
+After all tasks complete, Flow collects the summaries and emits a final report. Sub-agents return concise bullet summaries — Flow never lets their full output collapse into its own context.
+
+## What you get back
+
+**Before execution** — a plan: task groups, assigned agents, parallel vs. sequential designation.
+
+**After execution** — a final report: per-task summaries, any handoffs that need follow-up, and any tasks that did not return a sentinel.
+
 ## Invocation
 
 ```

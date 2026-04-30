@@ -1,6 +1,6 @@
 # ndv-temporal
 
-> Extracted from: ndv-evolve (proposed) — emergent from Lehman's Laws, Lindy Effect, Hype Cycle / Amara's Law, Technical Debt trajectory analysis
+> Extracted from: ndv-evolve (proposed) — emergent from Lehman's Laws, Lindy Effect, Hype Cycle (Gartner/Fenn, 1995), Amara's Law (Roy Amara, SRI), Technical Debt trajectory analysis
 > Use in: architecture reviews of long-running systems, dependency audits, technology selection, any phase where the direction of change matters as much as the current state
 
 ## Cognitive Frame

@@ -64,7 +64,7 @@ Not derived from any single agent. Patterns that emerged from observing how all 
 | `ndv-bounded` | All agents' out-of-scope sections | Scope as a wall, not a suggestion | Scope decisions, mid-task discipline |
 | `ndv-incremental` | refactor + optimize + tester | Build on verified ground only | Multi-step implementation |
 | `ndv-parallel-safe` | ndv-build (merge surface protocol) | Adversarial toward assumed parallelism | Any phase with parallel file writes |
-| `ndv-temporal` | Lehman's Laws, Lindy, Hype Cycle | Trajectory over snapshot | Architecture reviews, dependency audits, tech selection |
+| `ndv-temporal` | Lehman's Laws, Lindy, Hype Cycle, Amara's Law | Trajectory over snapshot | Architecture reviews, dependency audits, tech selection |
 
 ## Module Structure
 
