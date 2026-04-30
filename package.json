@@ -1,6 +1,6 @@
 {
   "name": "neurodiveragents",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "description": "A fleet of specialized AI agents for Claude Code, OpenCode, and Cursor — each one a distinct cognitive style",
   "type": "module",
   "bin": {
@@ -11,6 +11,7 @@
     "agents/",
     "bin/",
     "commands/",
+    "skills/",
     "LICENSE"
   ],
   "repository": {
@@ -41,5 +42,9 @@
   "license": "MIT",
   "engines": {
     "node": ">=18"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.3.0",
+    "picocolors": "^1.1.1"
   }
 }

@@ -47,6 +47,11 @@ npx neurodiveragents install opencode --global  # ~/.config/opencode/agents/
 npx neurodiveragents install cursor --global    # ~/.cursor/rules/
 ```
 
+Running in CI or a script? Pass `--all` to skip all prompts:
+
+```bash
+npx neurodiveragents install claude --all
+```
 
 Install copies the agent files into your tool's agents directory and writes a routing table into your project config (`CLAUDE.md`, `.opencode/AGENTS.md`, `.cursor/rules/ndv.mdc`, or `.github/copilot-instructions.md`). Running it again is safe — it detects the existing block and skips it.
 
@@ -84,6 +89,33 @@ Use ndv-honest to review this approach
 Use ndv-honest to decide between these two options
 Use ndv-honest to tell me what's wrong with this plan
 ```
+
+---
+
+## 🧩 Cognitive Modules (Skills)
+
+The agent cognitive styles are also packaged as **loadable skills** — composable fragments you can inject into any workflow you already own.
+
+A planning step that loads `ndv-structural` approaches codebase investigation differently from one running with default model behavior. A review step that loads `ndv-total-perception` registers everything before sorting — nothing filtered during the read. Same workflow, different cognitive orientation, measurably different output.
+
+```bash
+# Interactive TUI — arrow keys, all modules pre-selected
+npx neurodiveragents install-skills claude
+npx neurodiveragents install-skills opencode --global
+
+# Non-interactive — install everything, no prompts
+npx neurodiveragents install-skills claude --all
+```
+
+Then add one line to any skill step:
+
+```markdown
+Load the `ndv-skeptical` skill and the `ndv-bounded` skill. Apply both throughout this step.
+```
+
+**12 modules:** `ndv-skeptical`, `ndv-structural`, `ndv-precise`, `ndv-total-perception`, `ndv-adversarial`, `ndv-vigilant`, `ndv-efficient`, `ndv-direct`, `ndv-contextual`, `ndv-bounded`, `ndv-incremental`, `ndv-temporal`
+
+→ **[Full guide: docs/ndv-skills.md](docs/ndv-skills.md)** — catalog, composition patterns, sub-agent injection, lifecycle.
 
 ---
 
