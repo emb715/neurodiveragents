@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <!-- Google tag (gtag.js) -->
     <script
@@ -16,10 +16,7 @@
     </script>
 
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>neurodiveragents</title>
 
     <!-- SEO & Open Graph -->
@@ -34,7 +31,7 @@
     />
     <meta
       property="og:image"
-      content="https://emb715.github.io/neurodiveragents/assets/neurodiveragents-banner-header.png"
+      content="https://emb715.github.io/neurodiveragents/assets/neurodiveragents-banner-darker.png"
     />
     <meta property="og:image:width" content="1920" />
     <meta property="og:image:height" content="640" />
@@ -55,7 +52,7 @@
     />
     <meta
       name="twitter:image"
-      content="https://emb715.github.io/neurodiveragents/assets/neurodiveragents-banner-header.png"
+      content="https://emb715.github.io/neurodiveragents/assets/neurodiveragents-banner-darker.png"
     />
     <meta
       name="twitter:image:alt"
@@ -78,1142 +75,729 @@
       />
     </noscript>
 
-    <style>
-      /* ── Reset & Base ─────────────────────────────────────── */
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        border: 0 solid;
-      }
-      html {
-        -webkit-text-size-adjust: 100%;
-        tab-size: 4;
-        line-height: 1.5;
-        font-family: var(--app-font-sans);
-      }
-      a {
-        color: inherit;
-        text-decoration: inherit;
-      }
-      b,
-      strong {
-        font-weight: bolder;
-      }
-      code,
-      kbd,
-      pre {
-        font-family: var(--app-font-mono);
-        font-size: 1em;
-      }
-      button {
-        font: inherit;
-        color: inherit;
-        background: none;
-        border-radius: 0;
-        appearance: button;
-        cursor: pointer;
-      }
-      img {
-        max-width: 100%;
-        height: auto;
-        display: block;
-        vertical-align: middle;
-      }
-      h1,
-      h2,
-      h3,
-      h4,
-      h5,
-      h6 {
-        font-size: inherit;
-        font-weight: inherit;
-      }
-      [hidden] {
-        display: none !important;
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet" />
+    <style type="text/tailwindcss">
+      @import "tailwindcss";
+
+      /* ── Theme mapping ─────────────────────────────────── */
+      @theme {
+        --color-background: var(--background);
+        --color-foreground: var(--foreground);
+        --color-border: var(--border);
+        --color-card: var(--card);
+        --color-card-foreground: var(--card-foreground);
+        --color-muted: var(--muted);
+        --color-muted-foreground: var(--muted-foreground);
+        --color-accent: var(--accent);
+        --color-accent-foreground: var(--accent-foreground);
+        --color-primary: var(--primary);
+        --color-primary-foreground: var(--primary-foreground);
+        --color-green-400: var(--color-green-400-raw);
+        --color-red-400: var(--color-red-400-raw);
+        --font-sans: var(--app-font-sans);
+        --font-mono: var(--app-font-mono);
+        --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+        --radius: 0.5rem;
+        --spacing: 0.25rem;
       }
 
-      /* ── Theme tokens ─────────────────────────────────────── */
+      /* ── Base tokens ─────────────────────────────────────── */
       :root {
-        --background: 217 7% 12%;
-        --foreground: 60 2% 90%;
-        --border: 220 5% 18%;
-        --card: 222 8% 15%;
-        --card-foreground: 60 2% 90%;
-        --muted: 220 5% 25%;
-        --muted-foreground: 60 2% 60%;
-        --accent: 25 95% 53%;
-        --accent-foreground: 60 2% 90%;
-        --primary: 60 2% 90%;
-        --primary-foreground: 217 7% 12%;
-        --radius: 0.5rem;
+        --background: oklch(17% 0.008 245);
+        --foreground: oklch(91% 0.005 90);
+        --border: oklch(24% 0.006 245);
+        --card: oklch(20% 0.009 245);
+        --card-foreground: oklch(91% 0.005 90);
+        --muted: oklch(30% 0.007 245);
+        --muted-foreground: oklch(63% 0.007 90);
+        --accent: oklch(68% 0.18 40);
+        --accent-foreground: oklch(91% 0.005 90);
+        --primary: oklch(91% 0.005 90);
+        --primary-foreground: oklch(17% 0.008 245);
         --app-font-sans: "Raleway", sans-serif;
         --app-font-mono: "Courier New", Courier, monospace;
-        --spacing: 0.25rem;
-        --font-serif:
-          ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-        --color-green-400: oklch(79.2% 0.209 151.711);
-        --color-red-400: oklch(70.4% 0.191 22.216);
+        --color-green-400-raw: oklch(79% 0.19 150);
+        --color-red-400-raw: oklch(70% 0.18 22);
 
-        /* Agent accent colors as CSS custom properties */
-        --agent-flow: #f97316;
-        --agent-honest: #60a5fa;
-        --agent-explain: #fbbf24;
-        --agent-diagnose: #2dd4bf;
-        --agent-review: #a78bfa;
-        --agent-refactor: #cbd5e1;
-        --agent-secure: #f87171;
-        --agent-optimize: #86efac;
-        --agent-telemetry: #38bdf8;
-        --agent-architect: #818cf8;
-        --agent-tester: #fb7185;
-        --agent-build: #34d399;
-        --agent-scope: #94a3b8;
-        --agent-forecast: #fdba74;
-        --agent-signal: #e879f9;
+        /* Agent accent colors — OKLCH, consistent lightness 68%, varied hue */
+        --agent-flow: oklch(68% 0.18 40);
+        --agent-honest: oklch(68% 0.15 230);
+        --agent-explain: oklch(78% 0.17 80);
+        --agent-diagnose: oklch(72% 0.14 185);
+        --agent-review: oklch(68% 0.14 290);
+        --agent-refactor: oklch(80% 0.04 245);
+        --agent-secure: oklch(68% 0.17 15);
+        --agent-optimize: oklch(75% 0.17 145);
+        --agent-telemetry: oklch(72% 0.14 215);
+        --agent-architect: oklch(66% 0.14 270);
+        --agent-tester: oklch(68% 0.17 5);
+        --agent-build: oklch(72% 0.16 165);
+        --agent-scope: oklch(72% 0.05 245);
+        --agent-forecast: oklch(76% 0.15 55);
+        --agent-signal: oklch(68% 0.19 315);
       }
 
-      /* ── Global body ─────────────────────────────────────── */
-      body {
-        font-family: var(--app-font-sans);
-        color: hsl(var(--foreground));
-        background-color: hsl(var(--background));
-        background-image:
-          linear-gradient(90deg, #ffffff08 1px, #0000 1px),
-          linear-gradient(#ffffff08 1px, #0000 1px);
-        background-size: 48px 48px;
-        background-attachment: fixed;
-        -webkit-font-smoothing: antialiased;
-        min-height: 100vh;
-      }
-
-      /* ── Skip link ────────────────────────────────────────── */
-      .skip-link {
-        position: absolute;
-        top: -100%;
-        left: 1rem;
-        z-index: 100;
-        background: hsl(var(--background));
-        color: hsl(var(--foreground));
-        border: 1px solid hsl(var(--border));
-        border-radius: calc(var(--radius) - 2px);
-        padding: 0.5rem 1rem;
-        font-size: 0.875rem;
-        font-weight: 700;
-        text-decoration: none;
-        transition: top 0.1s;
-      }
-      .skip-link:focus {
-        top: 1rem;
-      }
-
-      /* ── Utility classes ─────────────────────────────────── */
-      .font-light {
-        font-weight: 300;
-      }
-      .font-black {
-        font-weight: 900;
-      }
-      .font-bold {
-        font-weight: 700;
-      }
-      .font-medium {
-        font-weight: 500;
-      }
-      .font-mono {
-        font-family: var(--app-font-mono);
-      }
-      .font-serif {
-        font-family: var(--font-serif);
-      }
-      .italic {
-        font-style: italic;
-      }
-      .uppercase {
-        text-transform: uppercase;
-      }
-      .select-all {
-        user-select: all;
-      }
-
-      .tracking-tight {
-        letter-spacing: -0.025em;
-      }
-      .tracking-tighter {
-        letter-spacing: -0.05em;
-      }
-      .tracking-wide {
-        letter-spacing: 0.025em;
-      }
-      .tracking-wider {
-        letter-spacing: 0.05em;
-      }
-      .tracking-widest {
-        letter-spacing: 0.1em;
-      }
-
-      .leading-relaxed {
-        line-height: 1.625;
-      }
-      .leading-snug {
-        line-height: 1.375;
-      }
-      .antialiased {
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
-
-      .text-xs {
-        font-size: 0.75rem;
-        line-height: 1rem;
-      }
-      .text-sm {
-        font-size: 0.875rem;
-        line-height: 1.25rem;
-      }
-      .text-base {
-        font-size: 1rem;
-        line-height: 1.5rem;
-      }
-      .text-lg {
-        font-size: 1.125rem;
-        line-height: 1.75rem;
-      }
-      .text-xl {
-        font-size: 1.25rem;
-        line-height: 1.75rem;
-      }
-      .text-2xl {
-        font-size: 1.5rem;
-        line-height: 2rem;
-      }
-      .text-3xl {
-        font-size: 1.875rem;
-        line-height: 2.25rem;
-      }
-      .text-4xl {
-        font-size: 2.25rem;
-        line-height: 2.5rem;
-      }
-      .text-5xl {
-        font-size: 3rem;
-        line-height: 1;
-      }
-      .text-7xl {
-        font-size: 4.5rem;
-        line-height: 1;
-      }
-
-      .text-foreground {
-        color: hsl(var(--foreground));
-      }
-      .text-muted-foreground {
-        color: hsl(var(--muted-foreground));
-      }
-      .text-green-400 {
-        color: var(--color-green-400);
-      }
-      .text-red-400 {
-        color: var(--color-red-400);
-      }
-
-      .bg-background {
-        background-color: hsl(var(--background));
-      }
-      .bg-card {
-        background-color: hsl(var(--card));
-      }
-      .bg-muted {
-        background-color: hsl(var(--muted));
-      }
-
-      /* color-mix() with solid fallbacks for older browsers */
-      .bg-background\/80 {
-        background-color: hsl(var(--background));
-        background-color: color-mix(
-          in oklab,
-          hsl(var(--background)) 80%,
-          transparent
-        );
-      }
-      .bg-card\/30 {
-        background-color: hsl(var(--card));
-        background-color: color-mix(
-          in oklab,
-          hsl(var(--card)) 30%,
-          transparent
-        );
-      }
-      .bg-muted\/30 {
-        background-color: hsl(var(--muted));
-        background-color: color-mix(
-          in oklab,
-          hsl(var(--muted)) 30%,
-          transparent
-        );
-      }
-      .bg-white\/\[0\.03\] {
-        background-color: #ffffff08;
-      }
-
-      .border-border {
-        border-color: hsl(var(--border));
-      }
-      .border-border\/50 {
-        border-color: hsl(var(--border));
-        border-color: color-mix(in oklab, hsl(var(--border)) 50%, transparent);
-      }
-
-      /* Layout */
-      .flex {
-        display: flex;
-      }
-      .flex-col {
-        flex-direction: column;
-      }
-      .flex-1 {
-        flex: 1;
-      }
-      .items-center {
-        align-items: center;
-      }
-      .justify-between {
-        justify-content: space-between;
-      }
-      .justify-center {
-        justify-content: center;
-      }
-      .gap-1 {
-        gap: calc(var(--spacing) * 1);
-      }
-      .gap-2 {
-        gap: calc(var(--spacing) * 2);
-      }
-      .gap-4 {
-        gap: calc(var(--spacing) * 4);
-      }
-      .gap-6 {
-        gap: calc(var(--spacing) * 6);
-      }
-      .gap-8 {
-        gap: calc(var(--spacing) * 8);
-      }
-      .gap-12 {
-        gap: calc(var(--spacing) * 12);
-      }
-      .space-y-4 > * + * {
-        margin-top: 1rem;
-      }
-      .space-y-6 > * + * {
-        margin-top: 1.5rem;
-      }
-
-      .grid {
-        display: grid;
-      }
-      .grid-cols-1 {
-        grid-template-columns: repeat(1, minmax(0, 1fr));
-      }
-      .hidden {
-        display: none;
-      }
-      .block {
-        display: block;
-      }
-
-      /* Sizing */
-      .w-full {
-        width: 100%;
-      }
-      .w-3 {
-        width: calc(var(--spacing) * 3);
-      }
-      .w-4 {
-        width: calc(var(--spacing) * 4);
-      }
-      .w-20 {
-        width: 5rem;
-      }
-      .w-52 {
-        width: 13rem;
-      }
-      .h-auto {
-        height: auto;
-      }
-      .h-4 {
-        height: calc(var(--spacing) * 4);
-      }
-      .h-16 {
-        height: 4rem;
-      }
-      .h-3 {
-        height: calc(var(--spacing) * 3);
-      }
-      .max-w-3xl {
-        max-width: 48rem;
-      }
-      .max-w-2xl {
-        max-width: 42rem;
-      }
-      .max-w-6xl {
-        max-width: 72rem;
-      }
-      .mx-auto {
-        margin-left: auto;
-        margin-right: auto;
-      }
-      .ml-auto {
-        margin-left: auto;
-      }
-      .shrink-0 {
-        flex-shrink: 0;
-      }
-      .overflow-hidden {
-        overflow: hidden;
-      }
-      .overflow-x-auto {
-        overflow-x: auto;
-      }
-
-      /* Spacing */
-      .p-1 {
-        padding: 0.25rem;
-      }
-      .p-2 {
-        padding: 0.5rem;
-      }
-      .p-4 {
-        padding: 1rem;
-      }
-      .p-6 {
-        padding: 1.5rem;
-      }
-      .px-1 {
-        padding-inline: 0.25rem;
-      }
-      .px-2 {
-        padding-inline: 0.5rem;
-      }
-      .px-6 {
-        padding-inline: 1.5rem;
-      }
-      .py-1 {
-        padding-block: 0.25rem;
-      }
-      .py-2 {
-        padding-block: 0.5rem;
-      }
-      .py-2\.5 {
-        padding-block: 0.625rem;
-      }
-      .py-4 {
-        padding-block: 1rem;
-      }
-      .py-12 {
-        padding-block: 3rem;
-      }
-      .py-24 {
-        padding-block: 6rem;
-      }
-      .pt-16 {
-        padding-top: 4rem;
-      }
-      .pt-2 {
-        padding-top: 0.5rem;
-      }
-      .pb-24 {
-        padding-bottom: 6rem;
-      }
-      .pb-6 {
-        padding-bottom: 1.5rem;
-      }
-      .pr-1 {
-        padding-right: 0.25rem;
-      }
-      .pl-3 {
-        padding-left: 0.75rem;
-      }
-      .pl-4 {
-        padding-left: 1rem;
-      }
-      .mb-2 {
-        margin-bottom: 0.5rem;
-      }
-      .mb-4 {
-        margin-bottom: 1rem;
-      }
-      .mb-6 {
-        margin-bottom: 1.5rem;
-      }
-      .mb-8 {
-        margin-bottom: 2rem;
-      }
-      .mb-12 {
-        margin-bottom: 3rem;
-      }
-      .mb-16 {
-        margin-bottom: 4rem;
-      }
-      .mb-0 {
-        margin-bottom: 0;
-      }
-      .my-6 {
-        margin-block: 1.5rem;
-      }
-      .mr-4 {
-        margin-right: 1rem;
-      }
-
-      /* Borders */
-      .rounded {
-        border-radius: calc(var(--radius) - 2px);
-      }
-      .rounded-md {
-        border-radius: calc(var(--radius) - 2px);
-      }
-      .rounded-lg {
-        border-radius: var(--radius);
-      }
-      .border {
-        border-width: 1px;
-        border-style: solid;
-      }
-      .border-t {
-        border-top-width: 1px;
-        border-top-style: solid;
-      }
-      .border-l-4 {
-        border-left-width: 4px;
-        border-left-style: solid;
-      }
-      .pl-4.border-l-4 {
-        padding-left: 1rem;
-      }
-      .py-1.border-l-4 {
-        padding-block: 0.25rem;
-      }
-
-      /* Position */
-      .fixed {
-        position: fixed;
-      }
-      .relative {
-        position: relative;
-      }
-      .absolute {
-        position: absolute;
-      }
-      .inset-0 {
-        inset: 0;
-      }
-      .top-0 {
-        top: 0;
-      }
-      .left-0 {
-        left: 0;
-      }
-      .right-0 {
-        right: 0;
-      }
-      .z-10 {
-        z-index: 10;
-      }
-      .z-50 {
-        z-index: 50;
-      }
-
-      /* Effects */
-      .shadow-lg {
-        box-shadow:
-          0 10px 15px -3px #0000001a,
-          0 4px 6px -4px #0000001a;
-      }
-      .shadow-inner {
-        box-shadow: inset 0 2px 4px 0 #0000000d;
-      }
-      .opacity-0 {
-        opacity: 0;
-      }
-      .opacity-50 {
-        opacity: 0.5;
-      }
-      .grayscale {
-        filter: grayscale(100%);
-      }
-
-      /* Transitions */
-      .transition-colors {
-        transition-property: color, background-color, border-color;
-        transition-duration: 0.15s;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-      }
-      .transition-all {
-        transition-property: all;
-        transition-duration: 0.15s;
-        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-      }
-      .duration-300 {
-        transition-duration: 0.3s;
-      }
-      .duration-500 {
-        transition-duration: 0.5s;
-      }
-      .duration-700 {
-        transition-duration: 0.7s;
-      }
-      .ease-out {
-        transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
-      }
-
-      .rotate-180 {
-        transform: rotate(180deg);
-      }
-      .-rotate-45 {
-        transform: rotate(-45deg);
-      }
-      .translate-y-0 {
-        transform: translateY(0);
-      }
-      .translate-y-8 {
-        transform: translateY(2rem);
-      }
-      .opacity-100 {
-        opacity: 1;
-      }
-      .object-cover {
-        object-fit: cover;
-      }
-      .text-left {
-        text-align: left;
-      }
-      .text-center {
-        text-align: center;
-      }
-
-      /* Selection */
-      ::selection {
-        background-color: hsl(var(--accent) / 30%);
-        background-color: color-mix(
-          in oklab,
-          hsl(var(--accent)) 30%,
-          transparent
-        );
-        color: hsl(var(--accent-foreground));
-      }
-
-      /* ── Component styles ─────────────────────────────────── */
-
-      /* Navbar — solid background, no glassmorphism */
-      nav {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 50;
-        background-color: hsl(var(--background));
-        border-bottom: 1px solid hsl(var(--border));
-      }
-      .nav-inner {
-        max-width: 72rem;
-        margin: 0 auto;
-        padding-inline: 1.5rem;
-        height: 4rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-      }
-      .logo {
-        display: flex;
-        align-items: center;
-        font-size: 1.25rem;
-        letter-spacing: -0.025em;
-      }
-      .nav-links {
-        display: none;
-        align-items: center;
-        gap: 2rem;
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: hsl(var(--muted-foreground));
-      }
-      .nav-links a {
-        transition: color 0.15s;
-      }
-      .nav-links a:hover {
-        color: hsl(var(--foreground));
-      }
-
-      /* Hero */
-      .hero-img-wrap {
-        width: 100%;
-        position: relative;
-      }
-      .hero-img-wrap::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(
-          to bottom,
-          transparent 90%,
-          hsl(var(--background)) 100%
-        );
-        z-index: 10;
-      }
-      .hero-img {
-        width: 100%;
-        height: auto;
-        object-fit: cover;
-        display: block;
-      }
-      .hero-content {
-        max-width: 72rem;
-        margin: 0 auto;
-        padding-inline: 1.5rem;
-        padding-bottom: 6rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-      .hero-title {
-        font-size: 3rem;
-        line-height: 1;
-        letter-spacing: -0.05em;
-        margin-bottom: 1.5rem;
-        text-align: center;
-      }
-      .hero-badge {
-        margin-bottom: 1rem;
-        padding: 0.5rem 1rem;
-        border-radius: 1rem;
-        background-color: hsl(var(--background));
-        background-color: color-mix(
-          in oklab,
-          hsl(var(--background)) 80%,
-          transparent
-        );
-        border: 1px solid hsl(var(--border));
-        font-size: 0.825rem;
-        letter-spacing: 0.1rem;
-      }
-      .hero-subtitle {
-        font-size: 1.25rem;
-        color: hsl(var(--muted-foreground));
-        max-width: 48rem;
-        margin-bottom: 3rem;
-        font-weight: 300;
-        line-height: 1.625;
-        text-align: center;
-      }
-      .hero-cta {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 4rem;
-      }
-      .install-box {
-        display: flex;
-        align-items: center;
-        background-color: hsl(var(--card));
-        border: 1px solid hsl(var(--border));
-        border-radius: calc(var(--radius) - 2px);
-        padding-left: 1rem;
-        padding-right: 0.25rem;
-        padding-block: 0.25rem;
-        overflow: hidden;
-        box-shadow: 0 10px 15px -3px #0000001a;
-      }
-      .install-code {
-        font-family: var(--app-font-mono);
-        font-size: 0.875rem;
-        color: hsl(var(--foreground));
-        margin-right: 1rem;
-        user-select: all;
-      }
-
-      /* Copy buttons — minimum 44×44px touch target */
-      .copy-btn {
-        min-width: 44px;
-        min-height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: calc(var(--radius) - 2px);
-        color: hsl(var(--muted-foreground));
-        transition:
-          color 0.15s,
-          background-color 0.15s;
-        flex-shrink: 0;
-      }
-      .copy-btn:hover {
-        background-color: hsl(var(--muted));
-        color: hsl(var(--foreground));
-      }
-      .cta-links {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-      }
-      .cta-link {
-        padding: 0.625rem 1.5rem;
-        border-radius: calc(var(--radius) - 2px);
-        border: 1px solid hsl(var(--border));
-        font-weight: 500;
-        font-size: 0.875rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition:
-          border-color 0.15s,
-          background-color 0.15s;
-      }
-      .cta-link:hover {
-        border-color: hsl(var(--muted-foreground));
-        background-color: hsl(var(--muted));
-        background-color: color-mix(
-          in oklab,
-          hsl(var(--muted)) 30%,
-          transparent
-        );
-      }
-
-      /* Sections — visible by default; animate only when motion is OK */
-      .section-anim {
-        padding-block: 6rem;
-      }
-      @media (prefers-reduced-motion: no-preference) {
-        .section-anim {
-          opacity: 0;
-          transform: translateY(2rem);
-          transition:
-            opacity 0.7s ease-out,
-            transform 0.7s ease-out;
+      /* ── Base overrides ──────────────────────────────────── */
+      @layer base {
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border: 0 solid; }
+        html { -webkit-text-size-adjust: 100%; tab-size: 4; line-height: 1.5; font-family: var(--app-font-sans); }
+        a { color: inherit; text-decoration: inherit; }
+        b, strong { font-weight: bolder; }
+        code, kbd, pre { font-family: var(--app-font-mono); font-size: 1em; }
+        button { font: inherit; color: inherit; background: none; border-radius: 0; appearance: button; cursor: pointer; }
+        img { max-width: 100%; height: auto; display: block; vertical-align: middle; }
+        h1, h2, h3, h4, h5, h6 { font-size: inherit; font-weight: inherit; }
+        [hidden] { display: none !important; }
+        nav {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 50;
+          background-color: var(--background);
+          border-bottom: 1px solid var(--border);
         }
-        .section-anim.visible {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      /* Agents list */
-      .agents-list {
-        display: flex;
-        flex-direction: column;
-        border: 1px solid hsl(var(--border));
-        border-radius: var(--radius);
-        overflow: hidden;
-        background-color: hsl(var(--card));
-        background-color: color-mix(
-          in oklab,
-          hsl(var(--card)) 70%,
-          transparent
-        );
-      }
-      .agent-row {
-        transition:
-          background-color 0.15s,
-          border-color 0.15s;
-      }
-      .agent-row + .agent-row {
-        border-top: 1px solid hsl(var(--border));
-      }
-      .agent-toggle {
-        width: 100%;
-        min-height: 44px;
-        padding: 1rem 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        text-align: left;
-        transition: background-color 0.15s;
-        background: none;
-        border: none;
-        cursor: pointer;
-      }
-      .agent-toggle:hover {
-        background-color: #ffffff08;
-      }
-      .agent-cmd {
-        font-family: var(--app-font-mono);
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: calc(var(--radius) - 2px);
-        background-color: hsl(var(--background));
-        border: 1px solid hsl(var(--border));
-        flex-shrink: 0;
-      }
-      .agent-name {
-        font-weight: 700;
-        flex-shrink: 0;
-      }
-      /* Neurotype visible on all viewports */
-      .agent-neurotype {
-        color: hsl(var(--muted-foreground));
-        font-size: 0.7rem;
-        flex: 1;
-      }
-      .agent-role {
-        font-size: 0.875rem;
-        font-weight: 500;
-        display: none;
-        width: 13rem;
-        flex-shrink: 0;
-      }
-      .chevron {
-        width: 1rem;
-        height: 1rem;
-        color: hsl(var(--muted-foreground));
-        flex-shrink: 0;
-        margin-left: auto;
-        transition: transform 0.3s;
-      }
-
-      /* Agent expanded content */
-      .agent-panel {
-        display: grid;
-        grid-template-rows: 0fr;
-        transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-      .agent-panel.open {
-        grid-template-rows: 1fr;
-      }
-      .agent-panel-inner {
-        overflow: hidden;
-      }
-      .agent-panel-content {
-        padding: 0.5rem 1.5rem 1.5rem;
-      }
-      .agent-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 3rem;
-      }
-      .agent-title {
-        font-size: 2.25rem;
-        font-weight: 900;
-        margin-bottom: 0.5rem;
-      }
-      .agent-neurotype-label {
-        font-size: 0.75rem;
-        font-weight: 500;
-        letter-spacing: 0.05em;
-        text-transform: uppercase;
-        color: hsl(var(--muted-foreground));
-      }
-      .agent-section-title {
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 0.5rem;
-        color: hsl(var(--foreground) / 80%);
-      }
-      .agent-section-title-green {
-        color: var(--color-green-400);
-      }
-      .agent-section-title-red {
-        color: var(--color-red-400);
-      }
-      .agent-body {
-        color: hsl(var(--muted-foreground));
-        line-height: 1.625;
-        font-size: 0.875rem;
-      }
-      .agent-quote {
-        border-left: 4px solid;
-        padding-left: 1rem;
-        padding-block: 0.25rem;
-        font-style: italic;
-        color: hsl(var(--muted-foreground));
-        font-family: var(--font-serif);
-        margin-block: 1.5rem;
-      }
-      .agent-code-box {
-        background-color: hsl(var(--background));
-        border: 1px solid hsl(var(--border));
-        border-radius: calc(var(--radius) - 2px);
-        padding: 1rem;
-        overflow-x: auto;
-        box-shadow: inset 0 2px 4px #0000000d;
-      }
-      .agent-code {
-        font-family: var(--app-font-mono);
-        font-size: 0.875rem;
-        line-height: 1.625;
-      }
-      .when-grid {
-        display: grid;
-        gap: 1.5rem;
-        padding-top: 1rem;
-        border-top: 1px solid hsl(var(--border));
-        border-top-color: color-mix(
-          in oklab,
-          hsl(var(--border)) 50%,
-          transparent
-        );
-      }
-
-      /* Install section */
-      .install-grid {
-        display: grid;
-        gap: 1.5rem;
-      }
-      .install-card {
-        background-color: hsl(var(--card));
-        border: 1px solid hsl(var(--border));
-        border-radius: var(--radius);
-        padding: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
-      .install-card-title {
-        font-weight: 700;
-        font-size: 1.125rem;
-        margin-bottom: 1rem;
-      }
-      .install-cmd-box {
-        display: flex;
-        align-items: center;
-        background-color: hsl(var(--background));
-        border: 1px solid hsl(var(--border));
-        border-radius: calc(var(--radius) - 2px);
-        padding-left: 0.75rem;
-        padding-right: 0.25rem;
-        padding-block: 0.25rem;
-      }
-      .install-cmd-code {
-        font-family: var(--app-font-mono);
-        font-size: 0.75rem;
-        color: hsl(var(--muted-foreground));
-        flex: 1;
-        overflow-x: auto;
-        user-select: all;
-      }
-      /* Install copy buttons — minimum 44×44px touch target */
-      .install-copy-btn {
-        min-width: 44px;
-        min-height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: calc(var(--radius) - 2px);
-        color: hsl(var(--muted-foreground));
-        flex-shrink: 0;
-        transition:
-          color 0.15s,
-          background-color 0.15s;
-      }
-      .install-copy-btn:hover {
-        background-color: hsl(var(--muted));
-        color: hsl(var(--foreground));
-      }
-
-      /* Footer */
-      footer {
-        border-top: 1px solid hsl(var(--border));
-        border-top-color: color-mix(
-          in oklab,
-          hsl(var(--border)) 50%,
-          transparent
-        );
-        background-color: hsl(var(--background));
-        padding-block: 3rem;
-        text-align: center;
-        font-size: 0.875rem;
-        color: hsl(var(--muted-foreground));
-      }
-      .footer-inner {
-        max-width: 72rem;
-        margin: 0 auto;
-        padding-inline: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-      .footer-logo {
-        font-size: 1.5rem;
-        letter-spacing: -0.025em;
-        margin-bottom: 1.5rem;
-        opacity: 0.5;
-        filter: grayscale(100%);
-        transition:
-          opacity 0.5s,
-          filter 0.5s;
-      }
-      .footer-logo:hover {
-        opacity: 1;
-        filter: grayscale(0);
-      }
-      .footer-links {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-      }
-      .footer-links a {
-        transition: color 0.15s;
-      }
-      .footer-links a:hover {
-        color: hsl(var(--foreground));
-      }
-      .footer-tagline {
-        opacity: 0.5;
-      }
-
-      /* SVG icons */
-      svg {
-        display: inline-block;
-        vertical-align: middle;
-      }
-      .icon-sm {
-        width: 0.75rem;
-        height: 0.75rem;
-      }
-      .icon-md {
-        width: 1rem;
-        height: 1rem;
-      }
-
-      /* ── Responsive ───────────────────────────────────────── */
-      @media (min-width: 640px) {
-        .agent-neurotype {
+        footer {
+          border-top: 1px solid
+            color-mix(in oklch, var(--border) 50%, transparent);
+          background-color: var(--background);
+          padding-block: 3rem;
+          text-align: center;
           font-size: 0.875rem;
+          color: var(--muted-foreground);
         }
-        .when-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        svg {
+          display: inline-block;
+          vertical-align: middle;
+        }
+        body {
+          font-family: var(--app-font-sans);
+          color: var(--foreground);
+          background-color: var(--background);
+          background-image:
+            linear-gradient(90deg, oklch(100% 0 0 / 3%) 1px, #0000 1px),
+            linear-gradient(oklch(100% 0 0 / 3%) 1px, #0000 1px);
+          background-size: 48px 48px;
+          -webkit-font-smoothing: antialiased;
+          min-height: 100vh;
+        }
+        ::selection {
+          background-color: color-mix(in oklch, var(--accent) 25%, transparent);
+          color: var(--accent-foreground);
         }
       }
-      @media (min-width: 768px) {
-        .hero-title {
-          font-size: 4.5rem;
+
+      /* ── Component classes (used by JS or complex enough to need scoping) ── */
+      @layer components {
+
+        /* Opacity-variant color utilities (cannot be replaced with standard Tailwind) */
+        .bg-background\/80 {
+          background-color: color-mix(in oklch, var(--background) 80%, transparent);
         }
-        .hero-badge {
-          font-size: 0.725rem;
+        .bg-card\/30 {
+          background-color: color-mix(in oklch, var(--card) 30%, transparent);
         }
-        .hero-subtitle {
-          font-size: 1.5rem;
+        .bg-muted\/30 {
+          background-color: color-mix(in oklch, var(--muted) 30%, transparent);
         }
-        .hero-cta {
-          flex-direction: row;
+        .bg-white\/\[0\.03\] {
+          background-color: oklch(100% 0 0 / 3%);
+        }
+        .border-border {
+          border-color: var(--border);
+        }
+        .border-border\/50 {
+          border-color: color-mix(in oklch, var(--border) 50%, transparent);
+        }
+
+        /* Skip link */
+        .skip-link {
+          position: absolute;
+          top: -100%;
+          left: 1rem;
+          z-index: 100;
+          background: var(--background);
+          color: var(--foreground);
+          border: 1px solid var(--border);
+          border-radius: calc(var(--radius) - 2px);
+          padding: 0.5rem 1rem;
+          font-size: 0.875rem;
+          font-weight: 700;
+          text-decoration: none;
+          transition: top 0.1s;
+        }
+        .skip-link:focus {
+          top: 1rem;
+        }
+
+        /* Navbar — solid background, no glassmorphism */
+        .nav-inner {
+          max-width: 72rem;
+          margin: 0 auto;
+          padding-inline: 1.5rem;
+          height: 4rem;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .logo {
+          display: flex;
+          align-items: center;
+          font-size: 1.25rem;
+          letter-spacing: -0.025em;
         }
         .nav-links {
+          display: none;
+          align-items: center;
+          gap: 2rem;
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--muted-foreground);
+        }
+        .nav-links a {
+          transition: color 0.15s;
+        }
+        .nav-links a:hover {
+          color: var(--foreground);
+        }
+
+        .nav-hamburger {
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: 5px;
+          width: 44px;
+          height: 44px;
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: var(--muted-foreground);
+          transition: color 0.15s;
+        }
+        .nav-hamburger:hover {
+          color: var(--foreground);
+        }
+        .nav-hamburger span {
+          display: block;
+          width: 20px;
+          height: 1.5px;
+          background: currentColor;
+          transition:
+            transform 0.2s ease-out,
+            opacity 0.2s;
+          border-radius: 1px;
+        }
+        .nav-hamburger.open span:nth-child(1) {
+          transform: translateY(6.5px) rotate(45deg);
+        }
+        .nav-hamburger.open span:nth-child(2) {
+          opacity: 0;
+        }
+        .nav-hamburger.open span:nth-child(3) {
+          transform: translateY(-6.5px) rotate(-45deg);
+        }
+
+        /* Mobile nav drawer */
+        .nav-mobile {
+          display: none;
+          flex-direction: column;
+          gap: 0;
+          background: var(--background);
+          border-bottom: 1px solid var(--border);
+          padding: 0.5rem 1.5rem 1rem;
+        }
+        .nav-mobile.open {
           display: flex;
         }
-        .agent-role {
+        .nav-mobile a {
+          padding: 0.75rem 0;
+          font-size: 0.875rem;
+          font-weight: 500;
+          color: var(--muted-foreground);
+          border-bottom: 1px solid
+            color-mix(in oklch, var(--border) 50%, transparent);
+          transition: color 0.15s;
+        }
+        .nav-mobile a:last-child {
+          border-bottom: none;
+        }
+        .nav-mobile a:hover {
+          color: var(--foreground);
+        }
+
+        /* Hero */
+        .hero-img-wrap {
+          width: 100%;
+          position: relative;
+        }
+        .hero-img-wrap::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(
+            to bottom,
+            transparent 90%,
+            var(--background) 100%
+          );
+          z-index: 10;
+        }
+        .hero-img {
+          width: 100%;
+          height: auto;
+          object-fit: cover;
           display: block;
         }
-        .agent-grid {
-          flex-direction: row;
+        .hero-content {
+          max-width: 72rem;
+          margin: 0 auto;
+          padding-inline: 1.5rem;
+          padding-bottom: 6rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
-        .agent-grid > * {
+        .hero-title {
+          font-size: 3rem;
+          line-height: 1;
+          letter-spacing: -0.05em;
+          margin-bottom: 1.5rem;
+          text-align: center;
+        }
+        .hero-badge {
+          margin-bottom: 1rem;
+          padding: 0.5rem 1rem;
+          border-radius: 1rem;
+          background-color: color-mix(
+            in oklch,
+            var(--background) 80%,
+            transparent
+          );
+          border: 1px solid var(--border);
+          font-size: 0.825rem;
+          letter-spacing: 0.1rem;
+        }
+        .hero-subtitle {
+          font-size: 1.25rem;
+          color: var(--muted-foreground);
+          max-width: 48rem;
+          margin-bottom: 3rem;
+          font-weight: 300;
+          line-height: 1.625;
+          text-align: center;
+        }
+        .hero-cta {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 1rem;
+          margin-bottom: 4rem;
+        }
+        .install-box {
+          display: flex;
+          align-items: center;
+          background-color: var(--card);
+          border: 1px solid var(--border);
+          border-radius: calc(var(--radius) - 2px);
+          padding-left: 1rem;
+          padding-right: 0.25rem;
+          padding-block: 0.25rem;
+          overflow: hidden;
+          box-shadow: 0 10px 15px -3px #0000001a;
+        }
+        .install-code {
+          font-family: var(--app-font-mono);
+          font-size: 0.875rem;
+          color: var(--foreground);
+          margin-right: 1rem;
+          user-select: all;
+        }
+
+        /* Copy buttons — minimum 44×44px touch target */
+        .copy-btn {
+          min-width: 44px;
+          min-height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: calc(var(--radius) - 2px);
+          color: var(--muted-foreground);
+          transition:
+            color 0.15s,
+            background-color 0.15s;
+          flex-shrink: 0;
+          will-change: background-color;
+        }
+        .copy-btn:hover {
+          background-color: var(--muted);
+          color: var(--foreground);
+        }
+        .cta-links {
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+        }
+        .cta-link {
+          padding: 0.625rem 1.5rem;
+          border-radius: calc(var(--radius) - 2px);
+          border: 1px solid var(--border);
+          font-weight: 500;
+          font-size: 0.875rem;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          transition:
+            border-color 0.15s,
+            background-color 0.15s,
+            transform 0.15s cubic-bezier(0, 0, 0.2, 1);
+        }
+        .cta-link:hover {
+          border-color: var(--muted-foreground);
+          background-color: color-mix(in oklch, var(--muted) 30%, transparent);
+          transform: translateY(-1px);
+        }
+
+        /* Sections — visible by default; animate only when motion is OK */
+        .section-anim {
+          padding-block: 6rem;
+        }
+        @media (prefers-reduced-motion: no-preference) {
+          .section-anim {
+            opacity: 0;
+            transform: translateY(1.5rem);
+            transition:
+              opacity 0.6s cubic-bezier(0, 0, 0.2, 1),
+              transform 0.6s cubic-bezier(0, 0, 0.2, 1);
+          }
+          .section-anim.visible {
+            opacity: 1;
+            transform: translateY(0);
+          }
+          /* Staggered agent rows */
+          .agent-row {
+            opacity: 0;
+            transform: translateX(-0.5rem);
+            transition:
+              opacity 0.4s cubic-bezier(0, 0, 0.2, 1),
+              transform 0.4s cubic-bezier(0, 0, 0.2, 1),
+              background-color 0.15s,
+              border-color 0.15s;
+          }
+          .agent-row.visible,
+          .no-js .agent-row {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        /* Agents list */
+        .agents-list {
+          display: flex;
+          flex-direction: column;
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          overflow: hidden;
+          background-color: color-mix(in oklch, var(--card) 70%, transparent);
+        }
+        .agent-row {
+          transition:
+            background-color 0.15s,
+            border-color 0.15s;
+        }
+        .agent-row + .agent-row {
+          border-top: 1px solid var(--border);
+        }
+        .agent-toggle {
+          width: 100%;
+          min-height: 44px;
+          padding: 1rem 1.5rem;
+          display: flex;
+          align-items: center;
+          gap: 1rem;
+          text-align: left;
+          transition: background-color 0.15s;
+          background: none;
+          border: none;
+          cursor: pointer;
+        }
+        .agent-toggle:hover {
+          background-color: oklch(100% 0 0 / 3%);
+        }
+        .agent-cmd {
+          font-family: var(--app-font-mono);
+          font-size: 0.75rem;
+          padding: 0.25rem 0.5rem;
+          border-radius: calc(var(--radius) - 2px);
+          background-color: var(--background);
+          border: 1px solid var(--border);
+          flex-shrink: 0;
+        }
+        .agent-name {
+          font-weight: 700;
+          flex-shrink: 0;
+        }
+        /* Neurotype visible on all viewports */
+        .agent-neurotype {
+          color: var(--muted-foreground);
+          font-size: 0.75rem;
           flex: 1;
         }
+        .agent-role {
+          font-size: 0.875rem;
+          font-weight: 500;
+          display: none;
+          width: 13rem;
+          flex-shrink: 0;
+        }
+        .chevron {
+          width: 1rem;
+          height: 1rem;
+          color: var(--muted-foreground);
+          flex-shrink: 0;
+          margin-left: auto;
+          transition: transform 0.3s;
+        }
+
+        /* Agent expanded content */
+        .agent-panel {
+          display: grid;
+          grid-template-rows: 0fr;
+          transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .agent-panel.open {
+          grid-template-rows: 1fr;
+        }
+        .agent-panel-inner {
+          overflow: hidden;
+        }
+        .agent-panel-content {
+          padding: 0.5rem 1.5rem 1.5rem;
+        }
+        .agent-grid {
+          display: flex;
+          flex-direction: column;
+          gap: 3rem;
+        }
+        .agent-title {
+          font-size: 2.25rem;
+          font-weight: 900;
+          margin-bottom: 0.5rem;
+        }
+        .agent-neurotype-label {
+          font-size: 0.75rem;
+          font-weight: 500;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+          color: var(--muted-foreground);
+        }
+        .agent-section-title {
+          font-size: 0.75rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          margin-bottom: 0.5rem;
+          color: color-mix(in oklch, var(--foreground) 80%, transparent);
+        }
+        .agent-section-title-green {
+          color: var(--color-green-400);
+        }
+        .agent-section-title-red {
+          color: var(--color-red-400);
+        }
+        .agent-body {
+          color: var(--muted-foreground);
+          line-height: 1.625;
+          font-size: 0.875rem;
+        }
+        .agent-quote {
+          padding: 0.875rem 1.25rem;
+          border-radius: var(--radius);
+          border: 1px solid;
+          border-color: var(--border); /* fallback if JS hasn't run */
+          background-color: color-mix(
+            in oklch,
+            var(--border) 30%,
+            transparent
+          ); /* fallback */
+          font-style: italic;
+          color: var(--muted-foreground);
+          font-family: var(--font-serif);
+          margin-block: 1.5rem;
+          line-height: 1.625;
+        }
+        .agent-code-box {
+          background-color: var(--background);
+          border: 1px solid var(--border);
+          border-radius: calc(var(--radius) - 2px);
+          padding: 1rem;
+          overflow-x: auto;
+          box-shadow: inset 0 2px 4px #0000000d;
+        }
+        .agent-code {
+          font-family: var(--app-font-mono);
+          font-size: 0.875rem;
+          line-height: 1.625;
+        }
+        .when-grid {
+          display: grid;
+          gap: 1.5rem;
+          padding-top: 1rem;
+          border-top: 1px solid
+            color-mix(in oklch, var(--border) 50%, transparent);
+        }
+
+        /* Install section */
         .install-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+          display: grid;
+          gap: 1.5rem;
+        }
+        .install-card {
+          background-color: var(--card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+        }
+        .install-card-title {
+          font-weight: 700;
+          font-size: 1.125rem;
+          margin-bottom: 1rem;
+        }
+        .install-cmd-box {
+          display: flex;
+          align-items: center;
+          background-color: var(--background);
+          border: 1px solid var(--border);
+          border-radius: calc(var(--radius) - 2px);
+          padding-left: 0.75rem;
+          padding-right: 0.25rem;
+          padding-block: 0.25rem;
+        }
+        .install-cmd-code {
+          font-family: var(--app-font-mono);
+          font-size: 0.75rem;
+          color: var(--muted-foreground);
+          flex: 1;
+          overflow-x: auto;
+          user-select: all;
+        }
+        /* Install copy buttons — minimum 44×44px touch target */
+        .install-copy-btn {
+          min-width: 44px;
+          min-height: 44px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: calc(var(--radius) - 2px);
+          color: var(--muted-foreground);
+          flex-shrink: 0;
+          transition:
+            color 0.15s,
+            background-color 0.15s;
+          will-change: background-color;
+        }
+        .install-copy-btn:hover {
+          background-color: var(--muted);
+          color: var(--foreground);
+        }
+
+        /* Footer */
+        .footer-inner {
+          max-width: 72rem;
+          margin: 0 auto;
+          padding-inline: 1.5rem;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+        .footer-logo {
+          font-size: 1.5rem;
+          letter-spacing: -0.025em;
+          margin-bottom: 1.5rem;
+          opacity: 0.5;
+          filter: grayscale(100%);
+          transition:
+            opacity 0.5s,
+            filter 0.5s;
+        }
+        .footer-logo:hover {
+          opacity: 1;
+          filter: grayscale(0);
+        }
+        .footer-links {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 1.5rem;
+          margin-bottom: 2rem;
+        }
+        .footer-links a {
+          transition: color 0.15s;
+        }
+        .footer-links a:hover {
+          color: var(--foreground);
+        }
+        .footer-tagline {
+          opacity: 0.5;
+        }
+
+        /* SVG icons */
+        .icon-sm {
+          width: 0.75rem;
+          height: 0.75rem;
+        }
+        .icon-md {
+          width: 1rem;
+          height: 1rem;
+        }
+
+        /* ── Responsive ───────────────────────────────────────── */
+        @media (max-width: 639px) {
+          .modules-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+        @media (min-width: 640px) {
+          .agent-neurotype {
+            font-size: 0.875rem;
+          }
+          .when-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+        }
+        @media (min-width: 768px) {
+          .hero-title {
+            font-size: 4.5rem;
+          }
+          .hero-badge {
+            font-size: 0.725rem;
+          }
+          .hero-subtitle {
+            font-size: 1.5rem;
+          }
+          .hero-cta {
+            flex-direction: row;
+          }
+          .nav-links {
+            display: flex;
+          }
+          .nav-hamburger {
+            display: none;
+          }
+          .agent-role {
+            display: block;
+          }
+          .agent-grid {
+            flex-direction: row;
+          }
+          .agent-grid > * {
+            flex: 1;
+          }
+          .install-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
         }
       }
     </style>
@@ -1231,6 +815,7 @@
         </div>
         <div class="nav-links">
           <a href="#meet">Agents</a>
+          <a href="#modules">Modules</a>
           <a href="#install">Install</a>
           <a
             href="https://github.com/emb715/neurodiveragents"
@@ -1256,6 +841,28 @@
             </svg>
           </a>
         </div>
+        <button
+          class="nav-hamburger"
+          id="nav-hamburger"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+          aria-controls="nav-mobile"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+      <div class="nav-mobile" id="nav-mobile" aria-label="Mobile navigation">
+        <a href="#meet" onclick="closeMobileNav()">Agents</a>
+        <a href="#modules" onclick="closeMobileNav()">Modules</a>
+        <a href="#install" onclick="closeMobileNav()">Install</a>
+        <a
+          href="https://github.com/emb715/neurodiveragents"
+          target="_blank"
+          rel="noreferrer"
+          >GitHub ↗</a
+        >
       </div>
     </nav>
 
@@ -1275,7 +882,7 @@
       >
         <div class="hero-img-wrap">
           <img
-            src="./assets/neurodiveragents-banner-header.png"
+            src="./assets/neurodiveragents-banner-darker.png"
             alt="The fifteen neurodiveragents — specialist AI agents each grounded in a distinct cognitive style: Flow, Honest, Patient, Pierce, Acute, Just, Bound, Ward, Lean, Signal, Pulse, Arc, Craft, Datum, and Edge"
             class="hero-img"
             width="1920"
@@ -1289,7 +896,7 @@
             ><span class="font-black">diveragents</span>
           </h1>
           <p class="font-light hero-badge">
-            SOFTWARE AGENTS WITH NEURODIVERGENT COGNITIVE STYLES
+            15 SPECIALIST AGENTS · NEUROTYPE-FIRST DESIGN
           </p>
           <p class="font-light hero-subtitle">
             Fifteen specialist AI agents for Claude Code, OpenCode, Cursor, and
@@ -1324,7 +931,7 @@
               </button>
             </div>
             <div class="cta-links">
-              <a href="#install" class="cta-link">All tools ↓</a>
+              <a href="#meet" class="cta-link">Meet the agents ↓</a>
               <a
                 href="https://github.com/emb715/neurodiveragents"
                 target="_blank"
@@ -1350,6 +957,16 @@
               </a>
             </div>
           </div>
+          <p
+            style="
+              font-size: 0.75rem;
+              color: var(--muted-foreground, oklch(63% 0.007 90));
+              margin-top: -2rem;
+              opacity: 0.7;
+            "
+          >
+            One command installs everything. Detects your tools automatically.
+          </p>
         </div>
       </section>
 
@@ -1364,7 +981,7 @@
           </h2>
           <p
             style="
-              color: hsl(var(--muted-foreground));
+              color: var(--muted-foreground);
               margin-bottom: 2rem;
               font-size: 0.875rem;
             "
@@ -1372,6 +989,207 @@
             Click any agent to expand their profile.
           </p>
           <div class="agents-list" id="agents-list" role="list"></div>
+        </section>
+
+        <!-- Cognitive Modules -->
+        <section id="modules" class="section-anim">
+          <h2
+            style="font-size: 1.875rem; font-weight: 700; margin-bottom: 0.5rem"
+          >
+            Cognitive Modules
+          </h2>
+          <p
+            style="
+              color: var(--muted-foreground);
+              margin-bottom: 1.5rem;
+              max-width: 42rem;
+              line-height: 1.625;
+            "
+          >
+            Agents are full specialists you route tasks to. Modules are
+            cognitive fragments — loadable thinking styles you inject into any
+            workflow you already own.
+          </p>
+
+          <blockquote
+            style="
+              border: 1px solid var(--border);
+              background: color-mix(in oklch, var(--accent) 5%, transparent);
+              padding: 1rem 1.25rem;
+              border-radius: var(--radius);
+              font-style: italic;
+              font-family: var(--font-serif);
+              margin-block: 1.5rem;
+              line-height: 1.625;
+              color: var(--muted-foreground);
+            "
+          >
+            "Same engine, different vehicle. An agent uses its cognitive style
+            for everything it does. A module injects that style into one phase
+            of a larger workflow."
+          </blockquote>
+
+          <!-- Unified module list -->
+          <div class="rounded-lg border border-base-content/10 overflow-hidden mb-8" style="border-color: var(--border);">
+            <div class="flex items-center gap-4 px-4 py-2 border-b" style="border-color: var(--border); background: color-mix(in oklch, var(--muted) 30%, transparent);">
+              <span class="text-xs font-bold uppercase tracking-widest" style="color: var(--muted-foreground); width: 11rem; flex-shrink: 0;">Module</span>
+              <span class="text-xs font-bold uppercase tracking-widest" style="color: var(--muted-foreground);">Cognitive posture</span>
+            </div>
+            <div style="display: flex; flex-direction: column;">
+              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
+                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-skeptical</kbd>
+                <span class="text-sm font-medium" style="color: var(--foreground);">assumption-hostile</span>
+              </div>
+              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
+                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-structural</kbd>
+                <span class="text-sm font-medium" style="color: var(--foreground);">dependency-aware</span>
+              </div>
+              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
+                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-precise</kbd>
+                <span class="text-sm font-medium" style="color: var(--foreground);">minimal-change</span>
+              </div>
+              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
+                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-total-perception</kbd>
+                <span class="text-sm font-medium" style="color: var(--foreground);">everything registers</span>
+              </div>
+              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
+                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-direct</kbd>
+                <span class="text-sm font-medium" style="color: var(--foreground);">zero filler</span>
+              </div>
+              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
+                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-adversarial</kbd>
+                <span class="text-sm font-medium" style="color: var(--foreground);">assumes failure</span>
+              </div>
+              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
+                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-vigilant</kbd>
+                <span class="text-sm font-medium" style="color: var(--foreground);">threat-detection on</span>
+              </div>
+              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
+                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-efficient</kbd>
+                <span class="text-sm font-medium" style="color: var(--foreground);">waste is intolerable</span>
+              </div>
+              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
+                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-contextual</kbd>
+                <span class="text-sm font-medium" style="color: var(--foreground);">models the reader</span>
+              </div>
+              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
+                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-bounded</kbd>
+                <span class="text-sm font-medium" style="color: var(--foreground);">scope as a wall</span>
+              </div>
+              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
+                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-incremental</kbd>
+                <span class="text-sm font-medium" style="color: var(--foreground);">build on verified ground</span>
+              </div>
+              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
+                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-parallel-safe</kbd>
+                <span class="text-sm font-medium" style="color: var(--foreground);">adversarial toward assumed parallelism</span>
+              </div>
+              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]">
+                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-temporal</kbd>
+                <span class="text-sm font-medium" style="color: var(--foreground);">trajectory over snapshot</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Usage example -->
+          <p class="agent-section-title" style="margin-bottom: 0.5rem">
+            Usage example
+          </p>
+          <div class="agent-code-box" style="margin-bottom: 1.5rem">
+            <code class="agent-code"
+              >Load the `ndv-skeptical` and `ndv-bounded` skills. Apply both
+              throughout this step.</code
+            >
+          </div>
+
+          <!-- Install commands -->
+          <p class="agent-section-title" style="margin-bottom: 0.75rem">
+            Install modules
+          </p>
+          <div
+            style="
+              display: flex;
+              flex-direction: column;
+              gap: 0.5rem;
+              margin-bottom: 1.5rem;
+            "
+          >
+            <div class="install-cmd-box">
+              <code class="install-cmd-code"
+                >npx neurodiveragents install-skills claude</code
+              >
+              <button
+                class="install-copy-btn"
+                aria-label="Copy install-skills claude command"
+                onclick="
+                  copyCmd(this, 'npx neurodiveragents install-skills claude')
+                "
+              >
+                <svg
+                  class="icon-md"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                  <path
+                    d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
+                  />
+                </svg>
+              </button>
+            </div>
+            <div class="install-cmd-box">
+              <code class="install-cmd-code"
+                >npx neurodiveragents install-skills opencode --global</code
+              >
+              <button
+                class="install-copy-btn"
+                aria-label="Copy install-skills opencode --global command"
+                onclick="
+                  copyCmd(
+                    this,
+                    'npx neurodiveragents install-skills opencode --global',
+                  )
+                "
+              >
+                <svg
+                  class="icon-md"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                  <path
+                    d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Full guide link -->
+          <p style="font-size: 0.875rem; color: var(--muted-foreground)">
+            →
+            <a
+              href="https://github.com/emb715/neurodiveragents/blob/main/docs/ndv-skills.md"
+              target="_blank"
+              rel="noreferrer"
+              style="transition: color 0.15s"
+              onmouseover="this.style.color = 'var(--foreground)'"
+              onmouseout="this.style.color = ''"
+              >Full guide: docs/ndv-skills.md</a
+            >
+          </p>
         </section>
 
         <!-- Install -->
@@ -1383,14 +1201,98 @@
           </h2>
           <p
             style="
-              color: hsl(var(--muted-foreground));
-              margin-bottom: 2rem;
+              color: var(--muted-foreground, oklch(63% 0.007 90));
+              margin-bottom: 2.5rem;
               max-width: 42rem;
             "
           >
-            The installer will detect your AI coding assistants and configure
-            the custom agent prompts automatically. No global state, pure local
-            configuration.
+            One command auto-detects your AI coding assistants and configures
+            all agent prompts. No global state — pure local configuration.
+          </p>
+
+          <!-- Primary install — full width -->
+          <div
+            style="
+              background: var(--card, oklch(20% 0.009 245));
+              border: 1px solid var(--border, oklch(24% 0.006 245));
+              border-radius: var(--radius);
+              padding: 1.5rem 2rem;
+              margin-bottom: 1.5rem;
+              display: flex;
+              flex-direction: column;
+              gap: 1rem;
+            "
+          >
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                flex-wrap: wrap;
+                gap: 1rem;
+              "
+            >
+              <div>
+                <span
+                  style="
+                    font-size: 0.65rem;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.1em;
+                    color: var(--accent, oklch(68% 0.18 40));
+                  "
+                  >Recommended</span
+                >
+                <h3
+                  style="
+                    font-size: 1.25rem;
+                    font-weight: 700;
+                    margin-top: 0.25rem;
+                  "
+                >
+                  All Tools (Auto-detect)
+                </h3>
+              </div>
+            </div>
+            <div class="install-cmd-box">
+              <code class="install-cmd-code">npx neurodiveragents install</code>
+              <button
+                class="install-copy-btn"
+                aria-label="Copy universal install command"
+                onclick="copyCmd(this, 'npx neurodiveragents install')"
+              >
+                <svg
+                  class="icon-md"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                  <path
+                    d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tool-specific — 2-column grid, visually subordinate -->
+          <p
+            style="
+              font-size: 0.75rem;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+              color: var(--muted-foreground, oklch(63% 0.007 90));
+              margin-bottom: 1rem;
+            "
+          >
+            Or install for a specific tool
           </p>
           <div class="install-grid">
             <div class="install-card">
@@ -1548,17 +1450,39 @@
       const COPY_SVG = `<svg class="icon-md" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>`;
       const CHECK_SVG = `<svg class="icon-md" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-green-400)" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>`;
 
-      function copyMain() {
-        navigator.clipboard.writeText("npx neurodiveragents install");
+      async function copyMain() {
+        const text = "npx neurodiveragents install";
         const btn = document.getElementById("hero-copy-btn");
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch {
+          // fallback: select the code element
+          const code = btn.previousElementSibling;
+          const range = document.createRange();
+          range.selectNode(code);
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
         btn.innerHTML = CHECK_SVG;
         setTimeout(() => {
           btn.innerHTML = COPY_SVG;
         }, 2000);
       }
 
-      function copyCmd(btn, text) {
-        navigator.clipboard.writeText(text);
+      async function copyCmd(btn, text) {
+        try {
+          await navigator.clipboard.writeText(text);
+        } catch {
+          const code = btn.previousElementSibling;
+          if (code) {
+            const range = document.createRange();
+            range.selectNode(code);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        }
         const orig = btn.innerHTML;
         btn.innerHTML = CHECK_SVG;
         setTimeout(() => {
@@ -1664,7 +1588,8 @@
           role: "Safe code transformation",
           who: "The form corrector. Every incorrect structure sits as a low-level tension that doesn't resolve until the code is corrected — not improved, corrected to what it should already be. One transformation type at a time, completely, before the next begins. A file halfway through a transformation is worse than an untouched file — it is inconsistent with itself, which compounds the discomfort.",
           personality: "Tightly wound, compulsive, complete.",
-          quote: "Half-transformed is worse than untouched. Finish before you start anything else.",
+          quote:
+            "Half-transformed is worse than untouched. Finish before you start anything else.",
           examples:
             'ndv-refactor "Convert all these class components to functional components with hooks. Do it one by one, ensuring the behavior is identical."',
           whenToUse:
@@ -1857,7 +1782,7 @@
     <button class="agent-toggle" onclick="toggleAgent('${agent.id}')" aria-expanded="false" aria-controls="panel-${agent.id}">
       <span class="font-bold agent-name" style="color:${color}">${agent.name}</span>
       <code class="agent-cmd" style="color:${color}">${agent.command}</code>
-      <span class="agent-neurotype">${agent.neurotype}</span>
+      <span class="agent-neurotype" style="color:color-mix(in oklch, ${color} 70%, transparent)">${agent.neurotype}</span>
       <span class="font-medium agent-role">${agent.role}</span>
       <svg class="chevron" id="chevron-${agent.id}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
     </button>
@@ -1868,7 +1793,7 @@
             <div>
               <div style="margin-bottom:1.5rem;">
                 <div class="agent-title" style="color:${color}">${agent.name}</div>
-                <div class="agent-neurotype-label">${agent.neurotype}</div>
+                <div class="agent-neurotype-label" style="color:color-mix(in oklch, ${color} 80%, transparent)">${agent.neurotype}</div>
               </div>
               <div class="space-y-4">
                 <div>
@@ -1879,7 +1804,7 @@
                   <h4 class="agent-section-title">Personality</h4>
                   <p class="agent-body">${agent.personality}</p>
                 </div>
-                <blockquote class="agent-quote" style="border-color:${color}">"${agent.quote}"</blockquote>
+                <blockquote class="agent-quote" style="border-color:color-mix(in oklch, ${color} 25%, transparent);background:color-mix(in oklch, ${color} 3%, transparent)">"${agent.quote}"</blockquote>
               </div>
             </div>
             <div class="space-y-6" style="display:flex;flex-direction:column;justify-content:center;">
@@ -1939,12 +1864,38 @@
         } else {
           panel.classList.add("open");
           chevron.style.transform = "rotate(180deg)";
-          row.style.borderColor = color + "30";
-          row.style.backgroundColor = color + "08";
+          row.style.borderColor = `color-mix(in oklch, ${color} 19%, transparent)`;
+          row.style.backgroundColor = `color-mix(in oklch, ${color} 3%, transparent)`;
           btn.setAttribute("aria-expanded", "true");
           openId = id;
         }
       }
+
+      function toggleMobileNav() {
+        const hamburger = document.getElementById("nav-hamburger");
+        const mobile = document.getElementById("nav-mobile");
+        const isOpen = mobile.classList.contains("open");
+        mobile.classList.toggle("open");
+        hamburger.classList.toggle("open");
+        hamburger.setAttribute("aria-expanded", String(!isOpen));
+        hamburger.setAttribute(
+          "aria-label",
+          isOpen ? "Open navigation menu" : "Close navigation menu",
+        );
+      }
+
+      function closeMobileNav() {
+        const hamburger = document.getElementById("nav-hamburger");
+        const mobile = document.getElementById("nav-mobile");
+        mobile.classList.remove("open");
+        hamburger.classList.remove("open");
+        hamburger.setAttribute("aria-expanded", "false");
+        hamburger.setAttribute("aria-label", "Open navigation menu");
+      }
+
+      document
+        .getElementById("nav-hamburger")
+        .addEventListener("click", toggleMobileNav);
 
       // Keyboard navigation for accordion
       list.addEventListener("keydown", (e) => {
@@ -1972,21 +1923,45 @@
         }
       });
 
-      // Scroll animations — only when motion is acceptable
+      // Scroll animations — only when motion is OK
       if (
         window.matchMedia("(prefers-reduced-motion: no-preference)").matches
       ) {
-        const observer = new IntersectionObserver(
+        // Section entrance
+        const sectionObserver = new IntersectionObserver(
           (entries) => {
             entries.forEach((e) => {
-              if (e.isIntersecting) e.target.classList.add("visible");
+              if (e.isIntersecting) {
+                e.target.classList.add("visible");
+                sectionObserver.unobserve(e.target);
+              }
             });
           },
-          { threshold: 0.1, rootMargin: "0px 0px -50px 0px" },
+          { threshold: 0.05, rootMargin: "0px 0px -40px 0px" },
         );
         document
           .querySelectorAll(".section-anim")
-          .forEach((el) => observer.observe(el));
+          .forEach((el) => sectionObserver.observe(el));
+
+        // Staggered agent rows — trigger when the agents-list container enters view
+        const agentListEl = document.getElementById("agents-list");
+        if (agentListEl) {
+          const rowObserver = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((e) => {
+                if (e.isIntersecting) {
+                  const rows = agentListEl.querySelectorAll(".agent-row");
+                  rows.forEach((row, i) => {
+                    setTimeout(() => row.classList.add("visible"), i * 40);
+                  });
+                  rowObserver.unobserve(e.target);
+                }
+              });
+            },
+            { threshold: 0.05, rootMargin: "0px 0px -20px 0px" },
+          );
+          rowObserver.observe(agentListEl);
+        }
       }
     </script>
   </body>

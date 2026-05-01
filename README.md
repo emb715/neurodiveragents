@@ -94,7 +94,9 @@ Use ndv-honest to tell me what's wrong with this plan
 
 ## 🧩 Cognitive Modules (Skills)
 
-The agent cognitive styles are also packaged as **loadable skills** — composable fragments you can inject into any workflow you already own.
+> Same engine, different vehicle. An agent uses its cognitive style for everything it does. A module injects that style into one phase of a larger workflow.
+
+The agent cognitive styles are also packaged as **loadable skills** — composable fragments you can inject into any workflow you already own. Not agents — no routing, no handoffs, no domain constraints. Just a cognitive orientation applied to one step.
 
 A planning step that loads `ndv-structural` approaches codebase investigation differently from one running with default model behavior. A review step that loads `ndv-total-perception` registers everything before sorting — nothing filtered during the read. Same workflow, different cognitive orientation, measurably different output.
 
@@ -113,7 +115,21 @@ Then add one line to any skill step:
 Load the `ndv-skeptical` skill and the `ndv-bounded` skill. Apply both throughout this step.
 ```
 
-**12 modules:** `ndv-skeptical`, `ndv-structural`, `ndv-precise`, `ndv-total-perception`, `ndv-adversarial`, `ndv-vigilant`, `ndv-efficient`, `ndv-direct`, `ndv-contextual`, `ndv-bounded`, `ndv-incremental`, `ndv-temporal`
+**Agent-derived (9)** — extracted from an NDV agent's cognitive core:  
+`ndv-skeptical` · `ndv-structural` · `ndv-precise` · `ndv-total-perception` · `ndv-direct` · `ndv-adversarial` · `ndv-vigilant` · `ndv-efficient` · `ndv-contextual`
+
+**Emergent (4)** — patterns no single agent owns but every workflow needs:  
+`ndv-bounded` · `ndv-incremental` · `ndv-parallel-safe` · `ndv-temporal`
+
+Modules compose. Keep it to 2–3 per phase — more dilutes the signal.
+
+| Phase | Recommended |
+|-------|-------------|
+| Plan / Design | `ndv-structural` + `ndv-bounded` |
+| Implement | `ndv-precise` + `ndv-incremental` + `ndv-efficient` |
+| Review / Audit | `ndv-total-perception` + `ndv-adversarial` |
+| Present / Handoff | `ndv-contextual` + `ndv-direct` |
+| Security-sensitive | + `ndv-vigilant` (any phase touching auth/input) |
 
 → **[Full guide: docs/ndv-skills.md](docs/ndv-skills.md)** — catalog, composition patterns, sub-agent injection, lifecycle.
 

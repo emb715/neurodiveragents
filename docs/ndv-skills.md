@@ -72,7 +72,7 @@ Classification into severity happens after noticing, not during."
 
 12 modules across two origin types.
 
-### Agent-derived (9)
+### Agent-derived (11)
 
 Extracted directly from an NDV agent's cognitive core — the thinking style without the operational machinery.
 
@@ -87,16 +87,16 @@ Extracted directly from an NDV agent's cognitive core — the thinking style wit
 | `ndv-efficient` | Lean (optimize) | Waste is intolerable. Measure before optimizing. No N+1, no SELECT *, no sequential when parallel is safe. | Implementation, queries, asset handling |
 | `ndv-direct` | Honest | Every word must earn its place. No preamble, no filler, no restating what's known. | Presenting results, writing summaries |
 | `ndv-contextual` | Patient (explain) | The next reader does not share your context. Model the knowledge gap before writing. Lead with the entry point. | Presenting, specs, handoffs |
+| `ndv-bounded` | Bound (scope) | Scope is a wall, not a suggestion. "While I'm here" is the most expensive phrase in software. Every deliverable needs a stated exclusion or the scope is not defined. | Scope decisions, mid-task discipline |
+| `ndv-temporal` | Arc (architect) | Current state is a data point. Direction is the assessment. Append trajectory to every finding: Stable / Improving / Degrading / Aging. Applies Lindy durability and hype cycle position to dependency and technology decisions. | Architecture reviews, dependency audits, tech selection |
 
-### Emergent (3)
+### Emergent (1)
 
-Not derived from any single agent. Patterns that emerged from observing how all NDV agents work.
+Not derived from any single agent. A pattern that emerged from observing how multiple NDV agents work.
 
 | Module | Synthesized from | Cognitive constraint | Use when... |
 |--------|-----------------|---------------------|-------------|
-| `ndv-bounded` | All agents' out-of-scope sections | Scope is a wall, not a suggestion. "While I'm here" is the most expensive phrase in software. | Scope decisions, mid-task discipline |
-| `ndv-incremental` | refactor + optimize + tester | Never build on unverified ground. One logical change, verified, then next. | Multi-step implementation |
-| `ndv-temporal` | Lehman's Laws, Lindy, Hype Cycle | Current state is a data point. Direction is the assessment. Append trajectory to every finding. | Architecture reviews, dependency audits, tech selection |
+| `ndv-incremental` | refactor + optimize + build + architect | Never build on unverified ground. One logical change, verified, then next. | Multi-step implementation |
 
 ---
 
