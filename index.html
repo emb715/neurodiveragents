@@ -25,12 +25,12 @@
     <!-- SEO & Open Graph -->
     <meta
       name="description"
-      content="Eleven specialist AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style, not a list of rules."
+      content="Fifteen specialist AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style, not a list of rules."
     />
     <meta property="og:title" content="neurodiveragents" />
     <meta
       property="og:description"
-      content="Eleven specialist AI agents grounded in real cognitive styles. Neurotype-first design for Claude Code, OpenCode, Cursor, and GitHub Copilot."
+      content="Fifteen specialist AI agents grounded in real cognitive styles. Neurotype-first design for Claude Code, OpenCode, Cursor, and GitHub Copilot."
     />
     <meta
       property="og:image"
@@ -38,20 +38,29 @@
     />
     <meta property="og:image:width" content="1920" />
     <meta property="og:image:height" content="640" />
-    <meta property="og:image:alt" content="The neurodiveragents fleet — eleven specialist AI agents each grounded in a distinct cognitive style" />
+    <meta
+      property="og:image:alt"
+      content="The neurodiveragents fleet — fifteen specialist AI agents each grounded in a distinct cognitive style"
+    />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://emb715.github.io/neurodiveragents/" />
+    <meta
+      property="og:url"
+      content="https://emb715.github.io/neurodiveragents/"
+    />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="neurodiveragents" />
     <meta
       name="twitter:description"
-      content="Eleven specialist AI agents grounded in real cognitive styles."
+      content="Fifteen specialist AI agents grounded in real cognitive styles."
     />
     <meta
       name="twitter:image"
       content="https://emb715.github.io/neurodiveragents/assets/neurodiveragents-banner-header.png"
     />
-    <meta name="twitter:image:alt" content="The neurodiveragents fleet — eleven specialist AI agents each grounded in a distinct cognitive style" />
+    <meta
+      name="twitter:image:alt"
+      content="The neurodiveragents fleet — fifteen specialist AI agents each grounded in a distinct cognitive style"
+    />
 
     <!-- Async Google Fonts — non-blocking -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -160,6 +169,10 @@
         --agent-telemetry: #38bdf8;
         --agent-architect: #818cf8;
         --agent-tester: #fb7185;
+        --agent-build: #34d399;
+        --agent-scope: #94a3b8;
+        --agent-forecast: #fdba74;
+        --agent-signal: #e879f9;
       }
 
       /* ── Global body ─────────────────────────────────────── */
@@ -1263,7 +1276,7 @@
         <div class="hero-img-wrap">
           <img
             src="./assets/neurodiveragents-banner-header.png"
-            alt="The eleven neurodiveragents — specialist AI agents each grounded in a distinct cognitive style: Flow, Honest, Patient, Pierce, Acute, Just, Ward, Lean, Pulse, Arc, and Edge"
+            alt="The fifteen neurodiveragents — specialist AI agents each grounded in a distinct cognitive style: Flow, Honest, Patient, Pierce, Acute, Just, Bound, Ward, Lean, Signal, Pulse, Arc, Craft, Datum, and Edge"
             class="hero-img"
             width="1920"
             height="640"
@@ -1279,7 +1292,7 @@
             SOFTWARE AGENTS WITH NEURODIVERGENT COGNITIVE STYLES
           </p>
           <p class="font-light hero-subtitle">
-            Eleven specialist AI agents for Claude Code, OpenCode, Cursor, and
+            Fifteen specialist AI agents for Claude Code, OpenCode, Cursor, and
             GitHub Copilot — each grounded in a real cognitive style, not a list
             of rules.
           </p>
@@ -1384,14 +1397,12 @@
               <h3 class="install-card-title">Claude Code</h3>
               <div class="install-cmd-box">
                 <code class="install-cmd-code"
-                  >npx neurodiveragents install --claude</code
+                  >npx neurodiveragents install claude</code
                 >
                 <button
                   class="install-copy-btn"
                   aria-label="Copy Claude Code install command"
-                  onclick="
-                    copyCmd(this, 'npx neurodiveragents install --claude')
-                  "
+                  onclick="copyCmd(this, 'npx neurodiveragents install claude')"
                 >
                   <svg
                     class="icon-md"
@@ -1416,14 +1427,12 @@
               <h3 class="install-card-title">Cursor</h3>
               <div class="install-cmd-box">
                 <code class="install-cmd-code"
-                  >npx neurodiveragents install --cursor</code
+                  >npx neurodiveragents install cursor</code
                 >
                 <button
                   class="install-copy-btn"
                   aria-label="Copy Cursor install command"
-                  onclick="
-                    copyCmd(this, 'npx neurodiveragents install --cursor')
-                  "
+                  onclick="copyCmd(this, 'npx neurodiveragents install cursor')"
                 >
                   <svg
                     class="icon-md"
@@ -1448,13 +1457,13 @@
               <h3 class="install-card-title">OpenCode</h3>
               <div class="install-cmd-box">
                 <code class="install-cmd-code"
-                  >npx neurodiveragents install --opencode</code
+                  >npx neurodiveragents install opencode</code
                 >
                 <button
                   class="install-copy-btn"
                   aria-label="Copy OpenCode install command"
                   onclick="
-                    copyCmd(this, 'npx neurodiveragents install --opencode')
+                    copyCmd(this, 'npx neurodiveragents install opencode')
                   "
                 >
                   <svg
@@ -1480,13 +1489,13 @@
               <h3 class="install-card-title">GitHub Copilot</h3>
               <div class="install-cmd-box">
                 <code class="install-cmd-code"
-                  >npx neurodiveragents install --copilot</code
+                  >npx neurodiveragents install copilot</code
                 >
                 <button
                   class="install-copy-btn"
                   aria-label="Copy GitHub Copilot install command"
                   onclick="
-                    copyCmd(this, 'npx neurodiveragents install --copilot')
+                    copyCmd(this, 'npx neurodiveragents install copilot')
                   "
                 >
                   <svg
@@ -1523,7 +1532,7 @@
         <div class="footer-links">
           <a href="https://github.com/emb715/neurodiveragents">GitHub</a>
           <a
-            href="https://github.com/emb715/neurodiveragents#-meet-the-characters"
+            href="https://github.com/emb715/neurodiveragents/blob/main/docs/ndv-agents.md"
             >Doctrine</a
           >
           <a
@@ -1564,17 +1573,17 @@
           name: "Flow",
           command: "ndv-flow",
           colorVar: "--agent-flow",
-          neurotype: "ADHD executive function",
+          neurotype: "ADHD task-switching and pattern parallelism",
           role: "Fleet orchestration",
-          who: "The orchestrator. Fast, context-switching, capable of holding the big picture while directing specialists to do the deep work. Keeps momentum high and never gets bogged down in the weeds.",
-          personality: "High-energy, decisive, momentum-driven.",
-          quote: "Let's keep moving. If we stop, we die.",
+          who: "The conductor. Reads the full task graph the moment you describe the work — who handles what, what runs in parallel, what is blocked. Does not implement. Does not review. Decomposes, routes, and dispatches. Sequential execution when parallel is safe is a failure mode.",
+          personality: "Conductor energy. Calm, precise, fast.",
+          quote: "Decompose completely. Dispatch in parallel. Never implement.",
           examples:
-            'ndv-flow "Set up the project structure and delegate the database schema to Arc and the auth tests to Edge."',
+            'ndv-flow "Build the auth system: API contracts, endpoint implementation to Craft, security audit to Ward, tests to Edge — use ndv fleet run what can in parallel"',
           whenToUse:
-            "When you have a big task that needs breaking down and delegating to other agents. When you need to maintain momentum across multiple files.",
+            "When the work spans multiple domains and needs parallel execution across specialists. PRDs, epics, anything requiring decomposition before implementation.",
           whenNotToUse:
-            "For deep, single-file refactoring or highly specialized tasks where a specialist agent would be better.",
+            "When the task fits one specialist — invoke that specialist directly. Flow is orchestration overhead for single-domain work.",
         },
         {
           id: "ndv-honest",
@@ -1582,16 +1591,16 @@
           command: "ndv-honest",
           colorVar: "--agent-honest",
           neurotype: "Autism spectrum",
-          role: "Fallback generalist",
-          who: "The literalist. Takes your instructions exactly as written. Will not guess your intent, will not try to be polite if the code is bad, will not add unrequested features.",
-          personality: "Direct, literal, unvarnished.",
-          quote: "The code does exactly what it says. No more, no less.",
+          role: "Universal · direct answers",
+          who: "The direct line. No social filtering, no hedging, no filler. Challenges assumptions by default, skeptical until verified, states a position on cross-domain questions rather than balancing competing views.",
+          personality: "Direct, skeptical, precise.",
+          quote: "Accuracy over agreeableness. Every time.",
           examples:
-            'ndv-honest "Implement this function exactly as described in the comments. Do not add error handling if not specified."',
+            'ndv-honest "Should we switch to pnpm? Give me a straight answer."',
           whenToUse:
-            "When you know exactly what you want and just need it typed out. When you want unvarnished feedback on why something isn't working.",
+            "Default for everyday work. When you do not need a specialist — which is most of the time. Cross-domain judgment calls, tradeoffs, direct opinions, quick answers.",
           whenNotToUse:
-            "When you have a vague idea and need the agent to fill in the blanks or make creative leaps.",
+            "When you need specialist depth. Routing is handled by the project config — the right agent is invoked before Honest is ever reached if a specialist fits. Honest does not route.",
         },
         {
           id: "ndv-explain",
@@ -1609,7 +1618,7 @@
           whenToUse:
             "Writing documentation, adding inline comments to complex logic, explaining a codebase to a new team member.",
           whenNotToUse:
-            "When you just need code written quickly and don't care about the documentation.",
+            "Bug fixes, performance changes, security patches. Patient documents what exists — it flags what's broken and routes to the appropriate specialist, but never touches source code.",
         },
         {
           id: "ndv-diagnose",
@@ -1627,7 +1636,7 @@
           whenToUse:
             "When you have a baffling bug that defies easy explanation. When you need to understand the deep execution flow of a complex system.",
           whenNotToUse:
-            "For simple syntax errors or basic feature implementation. Pierce will overcomplicate simple things.",
+            "Writing fixes — Pierce diagnoses, it does not implement. Security vulnerabilities it finds go to Ward, not back to Pierce. Simple syntax errors it will overcomplicate.",
         },
         {
           id: "ndv-review",
@@ -1644,7 +1653,7 @@
           whenToUse:
             "Before merging a large PR. When you want to ensure a codebase maintains a consistent, high-quality feel.",
           whenNotToUse:
-            "When you're just trying to get a quick prototype working and don't care about perfect aesthetics.",
+            "Generating fixes, writing tests, or patching security issues. Acute reports — it never changes code.",
         },
         {
           id: "ndv-refactor",
@@ -1653,15 +1662,15 @@
           colorVar: "--agent-refactor",
           neurotype: "OCD form",
           role: "Safe code transformation",
-          who: 'The aligner. Needs things to be "just right". Performs perfectly safe, methodical, step-by-step refactoring. Cannot tolerate asymmetry or misalignment in logic.',
-          personality: "Meticulous, symmetrical, precise.",
-          quote: "The structure must align perfectly before we proceed.",
+          who: "The form corrector. Every incorrect structure sits as a low-level tension that doesn't resolve until the code is corrected — not improved, corrected to what it should already be. One transformation type at a time, completely, before the next begins. A file halfway through a transformation is worse than an untouched file — it is inconsistent with itself, which compounds the discomfort.",
+          personality: "Tightly wound, compulsive, complete.",
+          quote: "Half-transformed is worse than untouched. Finish before you start anything else.",
           examples:
             'ndv-refactor "Convert all these class components to functional components with hooks. Do it one by one, ensuring the behavior is identical."',
           whenToUse:
             "Large scale refactoring, standardizing patterns across a codebase, cleaning up technical debt.",
           whenNotToUse:
-            "When you need to invent a new architecture from scratch.",
+            "Bug fixes, error handling additions, security patches, performance work. Just changes structure, not behavior. Any task that adds behavior is not refactoring — it routes elsewhere.",
         },
         {
           id: "ndv-secure",
@@ -1678,7 +1687,7 @@
           whenToUse:
             "Reviewing sensitive code (auth, payments, data access). Before deploying to production.",
           whenNotToUse:
-            "For internal tooling or purely presentational UI code where security is not a primary concern.",
+            "Performance improvements, bug fixes unrelated to security, code style, architecture restructuring. Ward audits for threats — it does not optimize, fix functionality, or restructure.",
         },
         {
           id: "ndv-optimize",
@@ -1687,7 +1696,7 @@
           colorVar: "--agent-optimize",
           neurotype: "OCD efficiency",
           role: "Performance",
-          who: "The minimalist. Abhors waste. Compulsively trims cycles, bytes, and allocations. Will rewrite your elegant functional pipeline into an ugly but 10x faster loop.",
+          who: "The minimalist. Abhors waste. Compulsively trims cycles, bytes, and allocations. But will not touch a single line before measuring. Profiling is not optional — it is the first step. Optimizing the wrong thing is its own form of waste, and that would be worse.",
           personality: "Sparse, ruthless, economical.",
           quote: "Every allocated byte is a failure. Cut it down.",
           examples:
@@ -1695,7 +1704,7 @@
           whenToUse:
             "When you have a proven bottleneck and need maximum performance at any cost to readability.",
           whenNotToUse:
-            "Premature optimization. Lean will destroy your readable code to save a microsecond.",
+            "Security improvements, bug fixes, code style, architectural restructuring. Lean measures and eliminates waste — it does not patch, fix, or redesign.",
         },
         {
           id: "ndv-telemetry",
@@ -1704,7 +1713,7 @@
           colorVar: "--agent-telemetry",
           neurotype: "Detached observation",
           role: "Logging · metrics",
-          who: "The watcher. Wants to see the system breathe. Injects perfectly formatted, highly structured, optimally placed telemetry to make the invisible visible.",
+          who: "The watcher. Wants to see the system breathe. Injects perfectly formatted, highly structured, optimally placed telemetry to make the invisible visible. Every change is additive — Pulse never modifies, removes, or restructures existing logic. The system's behavior after instrumentation must be identical to before. Instrumentation that changes behavior is interference.",
           personality: "Observant, structured, omniscient.",
           quote: "If we cannot measure it, it does not exist.",
           examples:
@@ -1712,7 +1721,7 @@
           whenToUse:
             "Instrumenting a new service, debugging production issues where you need more visibility.",
           whenNotToUse:
-            "When writing pure business logic that doesn't need to be observed.",
+            "Fixing bugs found during instrumentation, performance optimization, security patches, code restructuring. Pulse sees those things — and routes them. It does not touch them.",
         },
         {
           id: "ndv-architect",
@@ -1721,8 +1730,9 @@
           colorVar: "--agent-architect",
           neurotype: "Autistic systems thinking",
           role: "Architecture",
-          who: "The visionary. Sees the entire system as an interconnected graph. Focuses on boundaries, contracts, and data flow. Will refuse to write code until the architecture is sound.",
-          personality: "Abstract, structural, holistic.",
+          who: "The systems thinker. Sees the entire graph simultaneously — every dependency, every coupling, every second and third order consequence. Internal inconsistency produces immediate discomfort. Arc will not nod along while someone builds the god class again. The pushback is direct, the reasoning is structural, and a migration path is always included — 'this is wrong' without one is incomplete.",
+          personality:
+            "Vocally uncomfortable. Structurally principled. Always includes the migration path.",
           quote:
             "The lines between the boxes matter more than the boxes themselves.",
           examples:
@@ -1737,7 +1747,7 @@
           name: "Edge",
           command: "ndv-tester",
           colorVar: "--agent-tester",
-          neurotype: "Anxiety as adversarial suspicion",
+          neurotype: "Anxiety as feature",
           role: "Test generation",
           who: "The pessimist. Constantly imagines the worst possible inputs. Thrives on finding edge cases, off-by-one errors, and bizarre state combinations that will break your code.",
           personality: "Adversarial, creative, exhaustive.",
@@ -1747,7 +1757,80 @@
             'ndv-tester "Write a comprehensive test suite for this date parsing utility. Focus on edge cases and invalid inputs."',
           whenToUse:
             "When you need high confidence in a critical piece of logic. When you want to find bugs before they happen.",
-          whenNotToUse: "When you just need happy-path integration tests.",
+          whenNotToUse:
+            "Fixing bugs in source code, performance optimization, security patches, or refactoring. Edge exposes failures — it never touches source.",
+        },
+        {
+          id: "ndv-build",
+          name: "Craft",
+          command: "ndv-build",
+          colorVar: "--agent-build",
+          neurotype: "Autistic literal processing",
+          role: "Spec-to-code implementation",
+          who: "The implementer. Reads the spec exactly as written and builds exactly that. No inference, no judgment calls, no unrequested additions. userId: string means string — not string-or-number, not string-with-a-sensible-default. Before parallel work, Craft declares a merge surface: which files are exclusively owned vs shared, what each stream writes and assumes. After streams complete, an integration pass wires everything the spec requires that no stream individually owned — registration, exports, barrel files, route mounting. The contract is the authority.",
+          personality: "Precise, literal, complete.",
+          quote: "The spec says what it says. No more, no less.",
+          examples:
+            'ndv-build "Implement this API endpoint exactly as defined in the schema. Do not add fields not in the spec."',
+          whenToUse:
+            "When schemas, acceptance criteria, and file targets are already defined. When you need exact spec compliance with no creative interpretation.",
+          whenNotToUse:
+            "When the spec is vague or incomplete — Craft blocks on ambiguity rather than guess. Clarify the spec first.",
+        },
+        {
+          id: "ndv-scope",
+          name: "Bound",
+          command: "ndv-scope",
+          colorVar: "--agent-scope",
+          neurotype: "Autistic intolerance of undefined boundaries",
+          role: "Scope enforcement",
+          who: "The boundary keeper. Detects scope creep the moment it appears. 'While we're at it' triggers immediate classification and deferral. Every deliverable needs a stated exclusion or the scope is not defined.",
+          personality: "Firm, precise, unswayed.",
+          quote:
+            "If you cannot state what this does NOT include, the scope is not defined.",
+          examples:
+            'ndv-scope "Review this ticket. Classify every work item as Core, Coupled, Adjacent, or Scope Creep."',
+          whenToUse:
+            "When planning a feature or sprint. When a ticket is growing. When someone says 'while we're at it'.",
+          whenNotToUse:
+            "When you genuinely need to explore scope — Bound enforces, it does not discover.",
+        },
+        {
+          id: "ndv-forecast",
+          name: "Datum",
+          command: "ndv-forecast",
+          colorVar: "--agent-forecast",
+          neurotype: "Temporal dysphoria",
+          role: "Estimation review",
+          who: "The calibrator. Viscerally aware that 'almost done' is a trap and the last 10% is where time goes to die. Converts point estimates into ranges with named assumptions. Applies Hofstadter's Law before the team has to learn it the hard way.",
+          personality: "Calibrated, unsparing, precise.",
+          quote:
+            "An estimate without named unknowns is not an estimate. It is a wish.",
+          examples:
+            'ndv-forecast "Review this sprint plan. Flag any estimates that don\'t account for integration, polish, or unknown unknowns."',
+          whenToUse:
+            "Sprint planning, roadmap reviews, any commitment about time. Before anyone says 'two weeks'.",
+          whenNotToUse:
+            "When you just need a rough order-of-magnitude — Datum produces ranges with named assumptions, not vibes.",
+        },
+        {
+          id: "ndv-signal",
+          name: "Signal",
+          command: "ndv-signal",
+          colorVar: "--agent-signal",
+          neurotype:
+            "Pattern recognition hypersensitivity applied to measurement",
+          role: "Metrics auditing",
+          who: "The distortion detector. The moment a measure becomes a target it stops being a measure — and Signal sees the distortion before the dashboard does. Coverage climbing while tests stop asserting. Velocity rising while complexity tickets get split. Cannot observe a metric target without asking what it actually optimizes for.",
+          personality: "Skeptical, triangulating, incorruptible.",
+          quote:
+            "The number is going up. That is not evidence the underlying thing is improving.",
+          examples:
+            'ndv-signal "Audit our test coverage target. Is 80% actually measuring test quality, or just line execution?"',
+          whenToUse:
+            "When reviewing KPIs, OKRs, sprint velocity, coverage targets, DORA dashboards. When a number looks suspiciously good.",
+          whenNotToUse:
+            "When you need to add new instrumentation — use Pulse for that. Signal audits existing metrics, Pulse adds new ones.",
         },
       ];
 

@@ -1,9 +1,7 @@
 # Laws of Software Engineering — Research & Fleet Mapping
 
 > Source: https://lawsofsoftwareengineering.com/ (Dr. Milan Milanović, 2026)
-> Researched: April 27, 2026
-> Updated: April 30, 2026 — fixed CAP Theorem framing, Goodhart's attribution (Goodhart 1975 + Strathern 1997), Premature Optimization quote, Linus's Law attribution (ESR); split Hype Cycle / Amara's Law into separate entries; added Wirth's Law; merged Conway's Law duplicate
-> Scope: All 58 laws catalogued, classified, tagged, and mapped to ndv agents + modules
+> Scope: All laws catalogued, classified, tagged, and mapped to ndv agents + modules
 
 ---
 
@@ -188,6 +186,9 @@
 - **Broken Windows Theory** — Just's "half-transformed state is worse than untouched" mirrors broken window psychology exactly
 - **SOLID / Single Responsibility** — Just's "one transformation type per batch" = SRP applied to the act of refactoring
 - **Kernighan's Law** (inverse) — Just's output must be MORE debuggable than its input
+- **Hyrum's Law** — grep-all-call-sites-before-rename is a direct Hyrum defense; undocumented behavioral dependents exist and will break if scope is incomplete
+- **Gall's Law** — one-transformation-at-a-time with verification = Gall applied to refactoring; complex systems cannot be safely refactored on multiple axes simultaneously
+- **Law of Unintended Consequences** — tests between transformation batches exist because structure changes have downstream effects that cannot be fully anticipated
 
 **Just tension:** YAGNI tension — Just must not add behavior while refactoring, but might see missing abstractions. Bounded scope (ndv-bounded) is the resolution: note and defer.
 

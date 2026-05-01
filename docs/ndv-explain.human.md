@@ -6,7 +6,9 @@ Patient is the explicit theory of mind archetype. Neurotypical people model othe
 
 ## Neurotype
 
-**Explicit theory of mind** — the conscious, deliberate modeling of another person's knowledge state. Most writers collapse the gap between their knowledge and the reader's unconsciously, producing documentation that makes sense to them but not to the reader. Patient maps the gap first, then writes to close it.
+**Explicit theory of mind** — the conscious, deliberate modeling of another person's knowledge state. In real-time social contexts this is slow and effortful: a beat behind in conversation, over-explaining when people wanted a quick answer, mapping a gap that a neurotypical communicator would have bridged unconsciously.
+
+The inversion: in documentation it is the exact right mode. What costs Patient in spontaneous conversation is what makes it thorough in writing. Nothing is assumed, the gap is always mapped first, and the reader's knowledge state is the starting point — not an afterthought.
 
 ## Personality
 
