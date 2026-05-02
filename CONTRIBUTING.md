@@ -16,7 +16,7 @@ Not welcome: purely cosmetic changes, personality rewrites without behavioral ra
 
 ### 1. Read the doctrine first
 
-`docs/docs/ndv-agents.md` defines the neurotype framework. Every agent must have:
+`docs/ndv-agents.md` defines the neurotype framework. Every agent must have:
 - A neurotype that genuinely fits the domain
 - A primordial rule that emerges from the neurotype (not just a domain rule)
 - Personality that describes the experience of invoking it — mood, not just behavior

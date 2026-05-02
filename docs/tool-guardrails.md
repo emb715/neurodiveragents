@@ -32,7 +32,7 @@ Constraints and rules for each supported AI tool. What each tool expects, what i
 ```
 .claude/agents/ndv-architect.md
 .claude/agents/ndv-diagnose.md
-... (10 files)
+... (15 files)
 CLAUDE.md  ← routing block appended or created
 ```
 
@@ -63,7 +63,7 @@ CLAUDE.md  ← routing block appended or created
 ```
 .opencode/agents/ndv-architect.md
 .opencode/agents/ndv-diagnose.md
-... (10 files)
+... (15 files)
 .opencode/AGENTS.md  ← routing block appended or created
 ```
 
@@ -96,7 +96,7 @@ CLAUDE.md  ← routing block appended or created
 ```
 .cursor/rules/ndv-architect.mdc
 .cursor/rules/ndv-diagnose.mdc
-... (10 files)
+... (15 files)
 .cursor/rules/ndv.mdc  ← routing block
 ```
 
@@ -166,5 +166,10 @@ CLAUDE.md  ← routing block appended or created
 | ndv-telemetry | Read, Write, Edit, Grep, Glob, Bash |
 | ndv-architect | Read, Grep, Glob, Bash |
 | ndv-tester | Read, Write, Grep, Glob, Bash |
+| ndv-flow | Read, Glob, Task — Task is allowed in both Claude Code and OpenCode (OpenCode restriction was removed) |
+| ndv-build | Read, Write, Edit, Grep, Glob, Bash |
+| ndv-forecast | Read, Glob, Bash |
+| ndv-scope | Read, Glob, Bash |
+| ndv-signal | Read, Grep, Glob, Bash |
 
-Note: ndv-explain and ndv-telemetry have Write/Edit for their output files (docs and instrumentation). ndv-diagnose, ndv-review, ndv-secure, ndv-architect have no Write/Edit — they are read-and-report only.
+Note: ndv-explain and ndv-telemetry have Write/Edit for their output files (docs and instrumentation). ndv-diagnose, ndv-review, ndv-secure, ndv-architect have no Write/Edit — they are read-and-report only. ndv-flow is the only agent with Task — it is the fleet orchestrator and Task is required for parallel sub-agent dispatch. ndv-forecast and ndv-scope are read-only analysts (no Write/Edit); ndv-signal is read-only (no Write/Edit).
