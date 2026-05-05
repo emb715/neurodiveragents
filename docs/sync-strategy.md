@@ -113,8 +113,6 @@ The build step:
 3. Extracts sections tagged `<!-- human -->` into the human file
 4. Shared content (identity paragraph, primordial rule) goes into both
 
-Not worth implementing until the fleet has ≥3 months of stability. The two-file approach is maintainable at 10 agents.
-
 ---
 
 ## Drift Detection

@@ -21,7 +21,7 @@ assert.ok(AGENT_NAMES.length >= 10, 'Expected at least 10 agents in agents/')
 
 // Agents skipped per platform due to unsupported tools
 const PLATFORM_SKIP = {
-  opencode: new Set(['ndv-flow']),
+  opencode: new Set(),
   cursor: new Set(['ndv-flow']),
   claude: new Set(),
 }
