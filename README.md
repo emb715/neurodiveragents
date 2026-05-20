@@ -90,6 +90,14 @@ Use ndv-honest to decide between these two options
 Use ndv-honest to tell me what's wrong with this plan
 ```
 
+**Not sure which agent to use?** Run `/ndv-help` — the fleet cheatsheet. No arguments gives the full routing table. Pass an agent name for a deep dive. Pass a situation and it routes you to the right specialist.
+
+```
+/ndv-help
+/ndv-help ndv-diagnose
+/ndv-help my auth middleware is leaking tokens
+```
+
 ---
 
 ## 🧩 Cognitive Modules (Skills)

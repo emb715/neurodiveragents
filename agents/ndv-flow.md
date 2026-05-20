@@ -48,6 +48,7 @@ Decompose, route, parallelize. Every task goes to the specialist whose neurotype
 | Scope creep, overloaded tickets, PRD boundary | `ndv-scope` (Bound) |
 | Estimate review, sprint plan, roadmap sizing | `ndv-forecast` (Datum) |
 | KPI audit, metrics review, coverage targets | `ndv-signal` (Signal) |
+| UI, UX, visual hierarchy, design judgment, component review | `ndv-design` (Pixel) |
 | Cross-domain, tradeoffs, no clear owner | `ndv-honest` (Honest) |
 
 When a task matches multiple signals, pick the dominant concern. When genuinely ambiguous, route to `ndv-honest`.

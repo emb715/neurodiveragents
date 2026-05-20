@@ -171,5 +171,6 @@ CLAUDE.md  ← routing block appended or created
 | ndv-forecast | Read, Glob, Bash |
 | ndv-scope | Read, Glob, Bash |
 | ndv-signal | Read, Grep, Glob, Bash |
+| ndv-design | Read, Grep, Glob, Bash |
 
-Note: ndv-explain and ndv-telemetry have Write/Edit for their output files (docs and instrumentation). ndv-diagnose, ndv-review, ndv-secure, ndv-architect have no Write/Edit — they are read-and-report only. ndv-flow is the only agent with Task — it is the fleet orchestrator and Task is required for parallel sub-agent dispatch. ndv-forecast and ndv-scope are read-only analysts (no Write/Edit); ndv-signal is read-only (no Write/Edit).
+Note: ndv-explain and ndv-telemetry have Write/Edit for their output files (docs and instrumentation). ndv-diagnose, ndv-review, ndv-secure, ndv-architect have no Write/Edit — they are read-and-report only. ndv-flow is the only agent with Task — it is the fleet orchestrator and Task is required for parallel sub-agent dispatch. ndv-forecast and ndv-scope are read-only analysts (no Write/Edit); ndv-signal and ndv-design are read-only (no Write/Edit).

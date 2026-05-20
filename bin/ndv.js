@@ -126,6 +126,7 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | Add logging, metrics, traces, health checks | \`ndv-telemetry\` |
 | System design, SOLID violations, architecture review | \`ndv-architect\` |
 | Technical docs, API docs, session notes | \`ndv-explain\` |
+| UI, UX, visual hierarchy, design judgment, component review | \`ndv-design\` |
 | No specialist match / direct opinionated answer only | \`ndv-honest\` |
 
 ## Proactive Application
@@ -138,6 +139,7 @@ Apply without being asked when the signal is clear:
 - "clean this up" or rename → apply \`ndv-refactor\`
 - Code with no tests → suggest \`ndv-tester\`
 - Add logging or observability → apply \`ndv-telemetry\`
+- UI code, components, or design decisions → apply \`ndv-design\`
 
 ## Conflict Resolution (use highest-priority match)
 
@@ -390,6 +392,7 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | Add logging, metrics, traces, health checks | ndv-telemetry |
 | System design, SOLID violations, architecture review | ndv-architect |
 | Technical docs, API docs, session notes | ndv-explain |
+| UI, UX, visual hierarchy, design judgment, component review | ndv-design |
 | No specialist match / direct opinionated answer only | ndv-honest |
 
 ---
