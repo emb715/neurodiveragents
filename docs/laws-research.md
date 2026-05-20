@@ -484,3 +484,24 @@ Lehman's Laws → Lindy Effect → Amara's Law → Gartner Hype Cycle → Techni
 Zawinski's → YAGNI → Parkinson's → Hofstadter's → Ninety-Ninety Rule → Brooks's Law
 > Define the boundary. Build only what's needed. Time will expand to fill the space. It will still take longer. The last 10% is 90% of the work. Adding people makes it worse.
 > **Fleet implication:** Bound (ndv-scope) + Datum (ndv-forecast) now form a pre-implementation gate. Bound defines what ships. Datum prices what Bound defined. Neither existed before — the fleet had no upstream guardrails before code was written.
+
+---
+
+### ndv-design (Pixel) — *Involuntary cross-activation: code read as visual output*
+
+**New in the fleet.** Pixel embodies design laws grounded in human perception, cognition, and interaction — distinct from software engineering's DRY/SOLID/KISS design principles. These are about how humans see, process, and act on interfaces:
+
+- **Von Restorff Effect** — Distinct items command attention; Pixel flags buried CTAs and homogeneous lists
+- **Hick's Law** — Decision time scales with choices; Pixel flags overloaded menus and multi-step confirmations
+- **Fitts's Law** — Time to target scales with distance/size; Pixel flags tiny click targets and orphaned actions
+- **Jakob's Law** — Users expect familiar patterns; Pixel flags custom controls that break platform conventions
+- **Miller's Law** — Working memory holds ~7±2 chunks; Pixel flags information-dense screens
+- **Law of Proximity** — Related elements must be spatially grouped; Pixel flags scattered form fields
+- **Tesler's Law** (shared with Arc) — Complexity is conserved; Pixel asks "who absorbs it — the system or the user?"
+- **Doherty Threshold** — <400ms feels immediate; Pixel flags laggy feedback loops and missing loading states
+- **Aesthetic-Usability Effect** — Perceived usability rises with visual polish; Pixel ensures this doesn't mask functional problems
+- **Parkinson's Law of Triviality** (shared with Datum) — Visual bikeshedding displaces structural decisions; Pixel's severity classification prevents this
+
+All 26 design laws are catalogued in `docs/design-laws-research.md` with full source attribution and fleet mapping.
+
+**Cross-reference:** `docs/design-laws-research.md` — design-specific laws (Perception, Cognition, Composition, Interaction, Decision clusters). This file covers software engineering laws only; the design catalogue is a complementary body of knowledge.

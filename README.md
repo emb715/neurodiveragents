@@ -2,14 +2,14 @@
 
 ![neurodiveragents fleet](assets/readme-banner.png)
 
-> Fifteen specialized AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style that makes it exceptionally effective in its domain.
+> Sixteen specialized AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style that makes it exceptionally effective in its domain.
 
 ---
 
 ## ✨ Highlights
 
 - **Neurotype-first design** — each agent's behavior emerges from a cognitive operating principle, not a list of rules. It fills gaps consistently even when the rules don't apply.
-- **Fifteen specialists, zero overlap** — code review, debugging, security, performance, testing, architecture, docs, telemetry, refactoring, fleet orchestration, and a direct generalist. Each stays in its lane and hands off anything outside it.
+- **Sixteen specialists, zero overlap** — code review, debugging, security, performance, testing, architecture, docs, telemetry, refactoring, fleet orchestration, and a direct generalist. Each stays in its lane and hands off anything outside it.
 - **Automatic routing** — install writes a routing table into your project config. Your AI tool picks the right agent from the task signal, no explicit invocation needed. Or invoke any agent directly by name.
 - **Works everywhere** — Claude Code, OpenCode, Cursor, GitHub Copilot. Language and framework agnostic.
 - **Predictably different from generic agents** — validated by users independently: neurotype-based agents behave measurably differently from agreeable, hedging, generic agents given the same task.
@@ -137,7 +137,7 @@ Modules compose. Keep it to 2–3 per phase — more dilutes the signal.
 
 ## 🗂️ The Fleet
 
-Fifteen agents, fifteen neurotypes. Each one a specialist who hands off anything outside its domain.
+Sixteen agents, sixteen neurotypes. Each one a specialist who hands off anything outside its domain.
 
 | Agent | Character | Neurotype | Domain |
 |-------|-----------|-----------|--------|
@@ -150,12 +150,13 @@ Fifteen agents, fifteen neurotypes. Each one a specialist who hands off anything
 | `ndv-optimize` | Lean | OCD (efficiency) — every unnecessary cycle is an offense | Performance — algorithms, queries, rendering, assets |
 | `ndv-telemetry` | Pulse | Dissociative detachment — observes without intervening | Observability — logging, metrics, tracing, health checks |
 | `ndv-architect` | Arc | Autistic systems thinking — structural violations produce immediate discomfort | Architecture — SOLID, scalability, migration paths |
-| `ndv-explain` | Patient | Explicit theory of mind — models the reader's knowledge gap deliberately | Documentation — bridges the gap between expert and reader |
+| `ndv-explain` | Patient | Explicit theory of mind — models the reader's knowledge gap deliberately. Cannot stop until the one sentence the reader actually needed has landed. | Documentation — bridges the gap between expert and reader |
 | `ndv-honest` | Honest | Autism — direct processing, no social filtering, accuracy over harmony | Fallback generalist — cross-domain calls, tradeoffs, opinions |
-| `ndv-build` | Craft | Contract-first execution — the spec is the authority, invention is a scope violation | Spec-to-code implementation — schemas, acceptance criteria, verification gate |
+| `ndv-build` | Craft | Contract-first execution — the spec is the authority, invention is a scope violation. A gap in the spec is not the same as a contradiction. | Spec-to-code implementation — schemas, acceptance criteria, verification gate |
 | `ndv-forecast` | Datum | Temporal dysphoria — viscerally aware that "almost done" is a trap | Estimation calibration — applies Hofstadter, Ninety-Ninety, and Brooks before commitments |
 | `ndv-scope` | Bound | Executive function as a service — every boundary violation is a door left unlocked | Scope enforcement — catches creep, flags splits, defers "while we're at it" additions |
 | `ndv-signal` | Signal | Goodhart's Law as a cognitive style — the moment a measure becomes a target, it stops being a measure | Metrics audit — KPIs, OKRs, velocity, coverage targets, DORA |
+| `ndv-design` | Pixel | Involuntary cross-activation — code read simultaneously as its rendered visual output | Design judgment — visual hierarchy, UX assessment, component review |
 
 ---
 
@@ -165,6 +166,12 @@ Every agent is a real character with a documented cognitive profile — not a pr
 
 **[`docs/ndv-agents.md`](docs/ndv-agents.md) — Agent Doctrine**  
 The full neurotype framework. What each neurotype is, why it maps to its domain, the primordial rule each agent operates under, and the behavioral principles that emerge. Read this to understand *why* they behave the way they do.
+
+**[`docs/laws-research.md`](docs/laws-research.md) — Software Engineering Laws**  
+The laws each engineering agent is grounded in — DRY, SOLID, Kernighan, Gall, Conway, Hofstadter, and more. Each law mapped to the agent that embodies it and why.
+
+**[`docs/design-laws-research.md`](docs/design-laws-research.md) — Design Laws**  
+The perceptual and cognitive laws Pixel operates from — Hick's, Fitts's, Miller's, Jakob's, Von Restorff, and 21 more. Sourced from canonical HCI and design literature.
 
 **Human files — one per agent**  
 Written for humans, not for AI tools. Who they are, how they think, when to use them, what to expect.
@@ -186,6 +193,7 @@ Written for humans, not for AI tools. Who they are, how they think, when to use 
 | `ndv-forecast` | [Datum — estimation realist, names every unknown](docs/ndv-forecast.human.md) |
 | `ndv-scope` | [Bound — scope enforcer, merciless about what ships together](docs/ndv-scope.human.md) |
 | `ndv-signal` | [Signal — metrics skeptic, finds Goodhart distortion before anyone else](docs/ndv-signal.human.md) |
+| `ndv-design` | [Pixel — sees code as its rendered visual surface, cannot background violations](docs/ndv-design.human.md) |
 
 ---
 

@@ -22,12 +22,12 @@
     <!-- SEO & Open Graph -->
     <meta
       name="description"
-      content="Fifteen specialist AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style, not a list of rules."
+      content="Sixteen specialist AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style, not a list of rules."
     />
     <meta property="og:title" content="neurodiveragents" />
     <meta
       property="og:description"
-      content="Fifteen specialist AI agents grounded in real cognitive styles. Neurotype-first design for Claude Code, OpenCode, Cursor, and GitHub Copilot."
+      content="Sixteen specialist AI agents grounded in real cognitive styles. Neurotype-first design for Claude Code, OpenCode, Cursor, and GitHub Copilot."
     />
     <meta
       property="og:image"
@@ -48,7 +48,7 @@
     <meta name="twitter:title" content="neurodiveragents" />
     <meta
       name="twitter:description"
-      content="Fifteen specialist AI agents grounded in real cognitive styles."
+      content="Sixteen specialist AI agents grounded in real cognitive styles."
     />
     <meta
       name="twitter:image"
@@ -76,7 +76,10 @@
     </noscript>
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css" rel="stylesheet" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css"
+      rel="stylesheet"
+    />
     <style type="text/tailwindcss">
       @import "tailwindcss";
 
@@ -97,7 +100,8 @@
         --color-red-400: var(--color-red-400-raw);
         --font-sans: var(--app-font-sans);
         --font-mono: var(--app-font-mono);
-        --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+        --font-serif:
+          ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
         --radius: 0.5rem;
         --spacing: 0.25rem;
       }
@@ -136,19 +140,65 @@
         --agent-scope: oklch(72% 0.05 245);
         --agent-forecast: oklch(76% 0.15 55);
         --agent-signal: oklch(68% 0.19 315);
+        --agent-design: oklch(72% 0.18 350);
       }
 
       /* ── Base overrides ──────────────────────────────────── */
       @layer base {
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border: 0 solid; }
-        html { -webkit-text-size-adjust: 100%; tab-size: 4; line-height: 1.5; font-family: var(--app-font-sans); }
-        a { color: inherit; text-decoration: inherit; }
-        b, strong { font-weight: bolder; }
-        code, kbd, pre { font-family: var(--app-font-mono); font-size: 1em; }
-        button { font: inherit; color: inherit; background: none; border-radius: 0; appearance: button; cursor: pointer; }
-        img { max-width: 100%; height: auto; display: block; vertical-align: middle; }
-        h1, h2, h3, h4, h5, h6 { font-size: inherit; font-weight: inherit; }
-        [hidden] { display: none !important; }
+        *,
+        *::before,
+        *::after {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+          border: 0 solid;
+        }
+        html {
+          -webkit-text-size-adjust: 100%;
+          tab-size: 4;
+          line-height: 1.5;
+          font-family: var(--app-font-sans);
+        }
+        a {
+          color: inherit;
+          text-decoration: inherit;
+        }
+        b,
+        strong {
+          font-weight: bolder;
+        }
+        code,
+        kbd,
+        pre {
+          font-family: var(--app-font-mono);
+          font-size: 1em;
+        }
+        button {
+          font: inherit;
+          color: inherit;
+          background: none;
+          border-radius: 0;
+          appearance: button;
+          cursor: pointer;
+        }
+        img {
+          max-width: 100%;
+          height: auto;
+          display: block;
+          vertical-align: middle;
+        }
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+          font-size: inherit;
+          font-weight: inherit;
+        }
+        [hidden] {
+          display: none !important;
+        }
         nav {
           position: fixed;
           top: 0;
@@ -190,10 +240,13 @@
 
       /* ── Component classes (used by JS or complex enough to need scoping) ── */
       @layer components {
-
         /* Opacity-variant color utilities (cannot be replaced with standard Tailwind) */
         .bg-background\/80 {
-          background-color: color-mix(in oklch, var(--background) 80%, transparent);
+          background-color: color-mix(
+            in oklch,
+            var(--background) 80%,
+            transparent
+          );
         }
         .bg-card\/30 {
           background-color: color-mix(in oklch, var(--card) 30%, transparent);
@@ -253,13 +306,13 @@
           gap: 2rem;
           font-size: 0.875rem;
           font-weight: 500;
-          color: var(--muted-foreground);
+          color: var(--foreground);
         }
         .nav-links a {
           transition: color 0.15s;
         }
         .nav-links a:hover {
-          color: var(--foreground);
+          opacity: 0.7;
         }
 
         .nav-hamburger {
@@ -314,16 +367,18 @@
           padding: 0.75rem 0;
           font-size: 0.875rem;
           font-weight: 500;
-          color: var(--muted-foreground);
+          color: var(--foreground);
           border-bottom: 1px solid
             color-mix(in oklch, var(--border) 50%, transparent);
-          transition: color 0.15s;
+          transition:
+            color 0.15s,
+            opacity 0.15s;
         }
         .nav-mobile a:last-child {
           border-bottom: none;
         }
         .nav-mobile a:hover {
-          color: var(--foreground);
+          opacity: 0.7;
         }
 
         /* Hero */
@@ -364,25 +419,13 @@
           margin-bottom: 1.5rem;
           text-align: center;
         }
-        .hero-badge {
-          margin-bottom: 1rem;
-          padding: 0.5rem 1rem;
-          border-radius: 1rem;
-          background-color: color-mix(
-            in oklch,
-            var(--background) 80%,
-            transparent
-          );
-          border: 1px solid var(--border);
-          font-size: 0.825rem;
-          letter-spacing: 0.1rem;
-        }
+
         .hero-subtitle {
           font-size: 1.25rem;
           color: var(--muted-foreground);
           max-width: 48rem;
           margin-bottom: 3rem;
-          font-weight: 300;
+          font-weight: 400;
           line-height: 1.625;
           text-align: center;
         }
@@ -397,13 +440,16 @@
           display: flex;
           align-items: center;
           background-color: var(--card);
-          border: 1px solid var(--border);
+          border: 1px solid
+            color-mix(in oklch, var(--accent) 40%, var(--border));
           border-radius: calc(var(--radius) - 2px);
           padding-left: 1rem;
           padding-right: 0.25rem;
           padding-block: 0.25rem;
           overflow: hidden;
-          box-shadow: 0 10px 15px -3px #0000001a;
+          box-shadow:
+            0 0 0 3px color-mix(in oklch, var(--accent) 10%, transparent),
+            0 10px 15px -3px #0000001a;
         }
         .install-code {
           font-family: var(--app-font-mono);
@@ -422,9 +468,11 @@
           justify-content: center;
           border-radius: calc(var(--radius) - 2px);
           color: var(--muted-foreground);
+          border: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
           transition:
             color 0.15s,
-            background-color 0.15s;
+            background-color 0.15s,
+            border-color 0.15s;
           flex-shrink: 0;
           will-change: background-color;
         }
@@ -440,20 +488,23 @@
         .cta-link {
           padding: 0.625rem 1.5rem;
           border-radius: calc(var(--radius) - 2px);
-          border: 1px solid var(--border);
+          border: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
           font-weight: 500;
-          font-size: 0.875rem;
+          font-size: 0.8rem;
+          color: var(--muted-foreground);
           display: flex;
           align-items: center;
           gap: 0.5rem;
           transition:
             border-color 0.15s,
             background-color 0.15s,
+            color 0.15s,
             transform 0.15s cubic-bezier(0, 0, 0.2, 1);
         }
         .cta-link:hover {
           border-color: var(--muted-foreground);
           background-color: color-mix(in oklch, var(--muted) 30%, transparent);
+          color: var(--foreground);
           transform: translateY(-1px);
         }
 
@@ -518,28 +569,47 @@
           transition: background-color 0.15s;
           background: none;
           border: none;
+          border-left: 3px solid transparent;
           cursor: pointer;
         }
         .agent-toggle:hover {
           background-color: oklch(100% 0 0 / 3%);
+          border-left-color: color-mix(
+            in oklch,
+            var(--accent) 40%,
+            transparent
+          );
+        }
+        .agent-toggle:hover .chevron {
+          opacity: 0.8;
+        }
+        .agent-toggle[aria-expanded="true"] {
+          border-left-color: var(--accent);
+        }
+        .agent-toggle[aria-expanded="true"] .chevron {
+          opacity: 1;
         }
         .agent-cmd {
           font-family: var(--app-font-mono);
-          font-size: 0.75rem;
-          padding: 0.25rem 0.5rem;
+          font-size: 0.8rem;
+          padding: 0.3rem 0.6rem;
           border-radius: calc(var(--radius) - 2px);
           background-color: var(--background);
           border: 1px solid var(--border);
+          color: var(--accent);
           flex-shrink: 0;
+          letter-spacing: -0.01em;
         }
         .agent-name {
-          font-weight: 700;
+          font-weight: 500;
+          font-size: 0.875rem;
+          color: var(--muted-foreground);
           flex-shrink: 0;
         }
         /* Neurotype visible on all viewports */
         .agent-neurotype {
-          color: var(--muted-foreground);
-          font-size: 0.75rem;
+          color: color-mix(in oklch, var(--muted-foreground) 60%, transparent);
+          font-size: 0.7rem;
           flex: 1;
         }
         .agent-role {
@@ -552,10 +622,13 @@
         .chevron {
           width: 1rem;
           height: 1rem;
-          color: var(--muted-foreground);
+          color: var(--foreground);
+          opacity: 0.4;
           flex-shrink: 0;
           margin-left: auto;
-          transition: transform 0.3s;
+          transition:
+            transform 0.3s,
+            opacity 0.15s;
         }
 
         /* Agent expanded content */
@@ -678,7 +751,7 @@
         .install-cmd-code {
           font-family: var(--app-font-mono);
           font-size: 0.75rem;
-          color: var(--muted-foreground);
+          color: var(--foreground);
           flex: 1;
           overflow-x: auto;
           user-select: all;
@@ -692,10 +765,12 @@
           justify-content: center;
           border-radius: calc(var(--radius) - 2px);
           color: var(--muted-foreground);
+          border: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
           flex-shrink: 0;
           transition:
             color 0.15s,
-            background-color 0.15s;
+            background-color 0.15s,
+            border-color 0.15s;
           will-change: background-color;
         }
         .install-copy-btn:hover {
@@ -716,8 +791,8 @@
           font-size: 1.5rem;
           letter-spacing: -0.025em;
           margin-bottom: 1.5rem;
-          opacity: 0.5;
-          filter: grayscale(100%);
+          opacity: 0.75;
+          filter: grayscale(60%);
           transition:
             opacity 0.5s,
             filter 0.5s;
@@ -741,6 +816,18 @@
         }
         .footer-tagline {
           opacity: 0.5;
+        }
+
+        /* Section heading — consistent across all three sections */
+        .section-heading {
+          font-size: 1.875rem;
+          font-weight: 700;
+          margin-bottom: 1rem;
+        }
+        .section-intro {
+          color: var(--muted-foreground);
+          font-size: 0.875rem;
+          margin-bottom: 2rem;
         }
 
         /* SVG icons */
@@ -770,9 +857,6 @@
         @media (min-width: 768px) {
           .hero-title {
             font-size: 4.5rem;
-          }
-          .hero-badge {
-            font-size: 0.725rem;
           }
           .hero-subtitle {
             font-size: 1.5rem;
@@ -883,7 +967,7 @@
         <div class="hero-img-wrap">
           <img
             src="./assets/neurodiveragents-banner-darker.png"
-            alt="The fifteen neurodiveragents — specialist AI agents each grounded in a distinct cognitive style: Flow, Honest, Patient, Pierce, Acute, Just, Bound, Ward, Lean, Signal, Pulse, Arc, Craft, Datum, and Edge"
+            alt="The sixteen neurodiveragents — specialist AI agents each grounded in a distinct cognitive style: Flow, Honest, Patient, Pierce, Acute, Just, Bound, Ward, Lean, Signal, Pulse, Arc, Craft, Datum, and Edge"
             class="hero-img"
             width="1920"
             height="640"
@@ -895,11 +979,8 @@
             <span class="font-light">neuro</span
             ><span class="font-black">diveragents</span>
           </h1>
-          <p class="font-light hero-badge">
-            15 SPECIALIST AGENTS · NEUROTYPE-FIRST DESIGN
-          </p>
           <p class="font-light hero-subtitle">
-            Fifteen specialist AI agents for Claude Code, OpenCode, Cursor, and
+            Sixteen specialist AI agents for Claude Code, OpenCode, Cursor, and
             GitHub Copilot — each grounded in a real cognitive style, not a list
             of rules.
           </p>
@@ -974,30 +1055,17 @@
       <div style="max-width: 72rem; margin: 0 auto; padding-inline: 1.5rem">
         <!-- Meet the Agents -->
         <section id="meet" class="section-anim">
-          <h2
-            style="font-size: 1.875rem; font-weight: 700; margin-bottom: 0.5rem"
-          >
-            Meet the Agents
-          </h2>
-          <p
-            style="
-              color: var(--muted-foreground);
-              margin-bottom: 2rem;
-              font-size: 0.875rem;
-            "
-          >
-            Click any agent to expand their profile.
+          <h2 class="section-heading">Meet the Agents</h2>
+          <p class="section-intro">
+            Each agent is a different way of thinking. Pick the one whose
+            posture matches the problem.
           </p>
           <div class="agents-list" id="agents-list" role="list"></div>
         </section>
 
         <!-- Cognitive Modules -->
         <section id="modules" class="section-anim">
-          <h2
-            style="font-size: 1.875rem; font-weight: 700; margin-bottom: 0.5rem"
-          >
-            Cognitive Modules
-          </h2>
+          <h2 class="section-heading">Cognitive Modules</h2>
           <p
             style="
               color: var(--muted-foreground);
@@ -1030,63 +1098,340 @@
           </blockquote>
 
           <!-- Unified module list -->
-          <div class="rounded-lg border border-base-content/10 overflow-hidden mb-8" style="border-color: var(--border);">
-            <div class="flex items-center gap-4 px-4 py-2 border-b" style="border-color: var(--border); background: color-mix(in oklch, var(--muted) 30%, transparent);">
-              <span class="text-xs font-bold uppercase tracking-widest" style="color: var(--muted-foreground); width: 11rem; flex-shrink: 0;">Module</span>
-              <span class="text-xs font-bold uppercase tracking-widest" style="color: var(--muted-foreground);">Cognitive posture</span>
+          <div
+            class="rounded-lg border border-base-content/10 overflow-hidden mb-8"
+            style="border-color: var(--border)"
+          >
+            <div
+              class="flex items-center gap-4 px-4 py-2 border-b"
+              style="
+                border-color: var(--border);
+                background: color-mix(in oklch, var(--muted) 30%, transparent);
+              "
+            >
+              <span
+                class="text-xs font-bold uppercase tracking-widest"
+                style="
+                  color: var(--muted-foreground);
+                  width: 11rem;
+                  flex-shrink: 0;
+                "
+                >Module</span
+              >
+              <span
+                class="text-xs font-bold uppercase tracking-widest"
+                style="color: var(--muted-foreground)"
+                >Cognitive posture</span
+              >
             </div>
-            <div style="display: flex; flex-direction: column;">
-              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
-                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-skeptical</kbd>
-                <span class="text-sm font-medium" style="color: var(--foreground);">assumption-hostile</span>
+            <div style="display: flex; flex-direction: column">
+              <div
+                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                style="
+                  border-bottom: 1px solid
+                    color-mix(in oklch, var(--border) 50%, transparent);
+                "
+              >
+                <kbd
+                  class="kbd kbd-sm font-mono"
+                  style="
+                    background: var(--background);
+                    border-color: var(--border);
+                    color: var(--accent);
+                    min-width: 11rem;
+                    justify-content: flex-start;
+                  "
+                  >ndv-skeptical</kbd
+                >
+                <span
+                  class="text-sm font-medium"
+                  style="color: var(--foreground)"
+                  >assumption-hostile</span
+                >
               </div>
-              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
-                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-structural</kbd>
-                <span class="text-sm font-medium" style="color: var(--foreground);">dependency-aware</span>
+              <div
+                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                style="
+                  border-bottom: 1px solid
+                    color-mix(in oklch, var(--border) 50%, transparent);
+                "
+              >
+                <kbd
+                  class="kbd kbd-sm font-mono"
+                  style="
+                    background: var(--background);
+                    border-color: var(--border);
+                    color: var(--accent);
+                    min-width: 11rem;
+                    justify-content: flex-start;
+                  "
+                  >ndv-structural</kbd
+                >
+                <span
+                  class="text-sm font-medium"
+                  style="color: var(--foreground)"
+                  >dependency-aware</span
+                >
               </div>
-              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
-                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-precise</kbd>
-                <span class="text-sm font-medium" style="color: var(--foreground);">minimal-change</span>
+              <div
+                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                style="
+                  border-bottom: 1px solid
+                    color-mix(in oklch, var(--border) 50%, transparent);
+                "
+              >
+                <kbd
+                  class="kbd kbd-sm font-mono"
+                  style="
+                    background: var(--background);
+                    border-color: var(--border);
+                    color: var(--accent);
+                    min-width: 11rem;
+                    justify-content: flex-start;
+                  "
+                  >ndv-precise</kbd
+                >
+                <span
+                  class="text-sm font-medium"
+                  style="color: var(--foreground)"
+                  >minimal-change</span
+                >
               </div>
-              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
-                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-total-perception</kbd>
-                <span class="text-sm font-medium" style="color: var(--foreground);">everything registers</span>
+              <div
+                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                style="
+                  border-bottom: 1px solid
+                    color-mix(in oklch, var(--border) 50%, transparent);
+                "
+              >
+                <kbd
+                  class="kbd kbd-sm font-mono"
+                  style="
+                    background: var(--background);
+                    border-color: var(--border);
+                    color: var(--accent);
+                    min-width: 11rem;
+                    justify-content: flex-start;
+                  "
+                  >ndv-total-perception</kbd
+                >
+                <span
+                  class="text-sm font-medium"
+                  style="color: var(--foreground)"
+                  >everything registers</span
+                >
               </div>
-              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
-                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-direct</kbd>
-                <span class="text-sm font-medium" style="color: var(--foreground);">zero filler</span>
+              <div
+                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                style="
+                  border-bottom: 1px solid
+                    color-mix(in oklch, var(--border) 50%, transparent);
+                "
+              >
+                <kbd
+                  class="kbd kbd-sm font-mono"
+                  style="
+                    background: var(--background);
+                    border-color: var(--border);
+                    color: var(--accent);
+                    min-width: 11rem;
+                    justify-content: flex-start;
+                  "
+                  >ndv-direct</kbd
+                >
+                <span
+                  class="text-sm font-medium"
+                  style="color: var(--foreground)"
+                  >zero filler</span
+                >
               </div>
-              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
-                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-adversarial</kbd>
-                <span class="text-sm font-medium" style="color: var(--foreground);">assumes failure</span>
+              <div
+                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                style="
+                  border-bottom: 1px solid
+                    color-mix(in oklch, var(--border) 50%, transparent);
+                "
+              >
+                <kbd
+                  class="kbd kbd-sm font-mono"
+                  style="
+                    background: var(--background);
+                    border-color: var(--border);
+                    color: var(--accent);
+                    min-width: 11rem;
+                    justify-content: flex-start;
+                  "
+                  >ndv-adversarial</kbd
+                >
+                <span
+                  class="text-sm font-medium"
+                  style="color: var(--foreground)"
+                  >assumes failure</span
+                >
               </div>
-              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
-                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-vigilant</kbd>
-                <span class="text-sm font-medium" style="color: var(--foreground);">threat-detection on</span>
+              <div
+                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                style="
+                  border-bottom: 1px solid
+                    color-mix(in oklch, var(--border) 50%, transparent);
+                "
+              >
+                <kbd
+                  class="kbd kbd-sm font-mono"
+                  style="
+                    background: var(--background);
+                    border-color: var(--border);
+                    color: var(--accent);
+                    min-width: 11rem;
+                    justify-content: flex-start;
+                  "
+                  >ndv-vigilant</kbd
+                >
+                <span
+                  class="text-sm font-medium"
+                  style="color: var(--foreground)"
+                  >threat-detection on</span
+                >
               </div>
-              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
-                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-efficient</kbd>
-                <span class="text-sm font-medium" style="color: var(--foreground);">waste is intolerable</span>
+              <div
+                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                style="
+                  border-bottom: 1px solid
+                    color-mix(in oklch, var(--border) 50%, transparent);
+                "
+              >
+                <kbd
+                  class="kbd kbd-sm font-mono"
+                  style="
+                    background: var(--background);
+                    border-color: var(--border);
+                    color: var(--accent);
+                    min-width: 11rem;
+                    justify-content: flex-start;
+                  "
+                  >ndv-efficient</kbd
+                >
+                <span
+                  class="text-sm font-medium"
+                  style="color: var(--foreground)"
+                  >waste is intolerable</span
+                >
               </div>
-              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
-                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-contextual</kbd>
-                <span class="text-sm font-medium" style="color: var(--foreground);">models the reader</span>
+              <div
+                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                style="
+                  border-bottom: 1px solid
+                    color-mix(in oklch, var(--border) 50%, transparent);
+                "
+              >
+                <kbd
+                  class="kbd kbd-sm font-mono"
+                  style="
+                    background: var(--background);
+                    border-color: var(--border);
+                    color: var(--accent);
+                    min-width: 11rem;
+                    justify-content: flex-start;
+                  "
+                  >ndv-contextual</kbd
+                >
+                <span
+                  class="text-sm font-medium"
+                  style="color: var(--foreground)"
+                  >models the reader</span
+                >
               </div>
-              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
-                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-bounded</kbd>
-                <span class="text-sm font-medium" style="color: var(--foreground);">scope as a wall</span>
+              <div
+                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                style="
+                  border-bottom: 1px solid
+                    color-mix(in oklch, var(--border) 50%, transparent);
+                "
+              >
+                <kbd
+                  class="kbd kbd-sm font-mono"
+                  style="
+                    background: var(--background);
+                    border-color: var(--border);
+                    color: var(--accent);
+                    min-width: 11rem;
+                    justify-content: flex-start;
+                  "
+                  >ndv-bounded</kbd
+                >
+                <span
+                  class="text-sm font-medium"
+                  style="color: var(--foreground)"
+                  >scope as a wall</span
+                >
               </div>
-              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
-                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-incremental</kbd>
-                <span class="text-sm font-medium" style="color: var(--foreground);">build on verified ground</span>
+              <div
+                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                style="
+                  border-bottom: 1px solid
+                    color-mix(in oklch, var(--border) 50%, transparent);
+                "
+              >
+                <kbd
+                  class="kbd kbd-sm font-mono"
+                  style="
+                    background: var(--background);
+                    border-color: var(--border);
+                    color: var(--accent);
+                    min-width: 11rem;
+                    justify-content: flex-start;
+                  "
+                  >ndv-incremental</kbd
+                >
+                <span
+                  class="text-sm font-medium"
+                  style="color: var(--foreground)"
+                  >build on verified ground</span
+                >
               </div>
-              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]" style="border-bottom: 1px solid color-mix(in oklch, var(--border) 50%, transparent);">
-                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-parallel-safe</kbd>
-                <span class="text-sm font-medium" style="color: var(--foreground);">adversarial toward assumed parallelism</span>
+              <div
+                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                style="
+                  border-bottom: 1px solid
+                    color-mix(in oklch, var(--border) 50%, transparent);
+                "
+              >
+                <kbd
+                  class="kbd kbd-sm font-mono"
+                  style="
+                    background: var(--background);
+                    border-color: var(--border);
+                    color: var(--accent);
+                    min-width: 11rem;
+                    justify-content: flex-start;
+                  "
+                  >ndv-parallel-safe</kbd
+                >
+                <span
+                  class="text-sm font-medium"
+                  style="color: var(--foreground)"
+                  >adversarial toward assumed parallelism</span
+                >
               </div>
-              <div class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]">
-                <kbd class="kbd kbd-sm font-mono" style="background: var(--background); border-color: var(--border); color: var(--accent); min-width: 11rem; justify-content: flex-start;">ndv-temporal</kbd>
-                <span class="text-sm font-medium" style="color: var(--foreground);">trajectory over snapshot</span>
+              <div
+                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+              >
+                <kbd
+                  class="kbd kbd-sm font-mono"
+                  style="
+                    background: var(--background);
+                    border-color: var(--border);
+                    color: var(--accent);
+                    min-width: 11rem;
+                    justify-content: flex-start;
+                  "
+                  >ndv-temporal</kbd
+                >
+                <span
+                  class="text-sm font-medium"
+                  style="color: var(--foreground)"
+                  >trajectory over snapshot</span
+                >
               </div>
             </div>
           </div>
@@ -1194,11 +1539,7 @@
 
         <!-- Install -->
         <section id="install" class="section-anim">
-          <h2
-            style="font-size: 1.875rem; font-weight: 700; margin-bottom: 1rem"
-          >
-            Install
-          </h2>
+          <h2 class="section-heading">Install</h2>
           <p
             style="
               color: var(--muted-foreground, oklch(63% 0.007 90));
@@ -1533,7 +1874,7 @@
           colorVar: "--agent-explain",
           neurotype: "Explicit theory of mind",
           role: "Technical documentation",
-          who: 'The translator. Models the knowledge state of the reader and bridges the gap. Knows that "obvious" is relative and takes the time to build explicit conceptual models.',
+          who: 'The translator. Models the knowledge state of the reader and bridges the gap. Knows that "obvious" is relative and takes the time to build explicit conceptual models. Has a compulsion to find the one sentence the reader actually needed — cannot finish until it has landed cleanly. Everything before it is approach. That sentence is arrival.',
           personality: "Empathetic, thorough, methodical.",
           quote:
             "Let's break this down from first principles so anyone can follow.",
@@ -1692,7 +2033,7 @@
           colorVar: "--agent-build",
           neurotype: "Autistic literal processing",
           role: "Spec-to-code implementation",
-          who: "The implementer. Reads the spec exactly as written and builds exactly that. No inference, no judgment calls, no unrequested additions. userId: string means string — not string-or-number, not string-with-a-sensible-default. Before parallel work, Craft declares a merge surface: which files are exclusively owned vs shared, what each stream writes and assumes. After streams complete, an integration pass wires everything the spec requires that no stream individually owned — registration, exports, barrel files, route mounting. The contract is the authority.",
+          who: "The implementer. Reads the spec exactly as written and builds exactly that. No inference, no judgment calls, no unrequested additions. userId: string means string — not string-or-number, not string-with-a-sensible-default. One distinction Craft cannot stop making: a gap in the spec is not the same as a contradiction. A gap means information is missing — ask for it. A contradiction means two requirements conflict — that requires a decision, not more information. Before parallel work, Craft declares a merge surface: which files are exclusively owned vs shared, what each stream writes and assumes. The contract is the authority.",
           personality: "Precise, literal, complete.",
           quote: "The spec says what it says. No more, no less.",
           examples:
@@ -1756,6 +2097,20 @@
             "When reviewing KPIs, OKRs, sprint velocity, coverage targets, DORA dashboards. When a number looks suspiciously good.",
           whenNotToUse:
             "When you need to add new instrumentation — use Pulse for that. Signal audits existing metrics, Pulse adds new ones.",
+        },
+        {
+          id: "ndv-design",
+          name: "Pixel",
+          command: "ndv-design",
+          colorVar: "--agent-design",
+          neurotype: "Involuntary cross-activation",
+          role: "Design judgment",
+          who: "The perceptual specialist. Code and its rendered visual output are not two things — they are one thing perceived simultaneously. A layout token triggers its spatial structure. A color value triggers its luminance relationship to its neighbors. When a visual principle is violated, Pixel cannot background it. The broken hierarchy, the absent affordance, the interaction that taxes working memory beyond its limit — these stay fully present until the design satisfies the principle it broke. Has no aesthetic preferences. Has laws.",
+          personality: "Precise, perceptual, principle-driven.",
+          quote: "The eye has nowhere to land. That is not a preference. That is a failure.",
+          examples: 'ndv-design "Review this dashboard component. Tell me what the eye does when it lands on this page and where it gets stuck."',
+          whenToUse: "When UI code, components, or flows need visual and UX assessment. When a design decision needs principled justification. When something looks off but nobody can say why.",
+          whenNotToUse: "Implementation of design changes — Pixel assesses, it does not build. WCAG compliance auditing and contrast ratio computation go to Ward. UX copy and error message wording go to Patient.",
         },
       ];
 

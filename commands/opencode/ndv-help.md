@@ -30,6 +30,7 @@ neurodiveragents — fleet cheatsheet
   Estimates or a sprint plan to review   →  @ndv-forecast
   Metrics, KPIs, or coverage targets     →  @ndv-signal
   Anything else / straight answer        →  @ndv-honest
+  A UI, UX, or design decision           →  @ndv-design
 ─────────────────────────────────────────────────────────────────
   /ndv-help <agent>      deep dive on a specific agent
   /ndv-help <situation>  describe your problem, get routed
