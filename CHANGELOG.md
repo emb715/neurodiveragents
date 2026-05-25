@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.4.0](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.3.0...neurodiveragents-v1.4.0) (2026-05-25)
+
+
+### Features
+
+* add ndv-design agent and deepen existing agent personalities ([b1028f6](https://github.com/emb715/neurodiveragents/commit/b1028f6d6096ba309dddaa62383514dbc5ed2a44))
+* add ndv-research agent (Scout) and restructure human-facing docs ([d7a6302](https://github.com/emb715/neurodiveragents/commit/d7a6302f157ea342fc7c29951a6b5b1747a5066d))
+* enforce structured handoff processing in ndv-flow ([0724d02](https://github.com/emb715/neurodiveragents/commit/0724d020d83165bc506c6a4c1d0aae55e279cd5a))
+* **forecast:** add t-shirt size triage and proportionality check to ndv-forecast ([c14b58e](https://github.com/emb715/neurodiveragents/commit/c14b58e1ab742cb26acc3ffc0d4779d122154b2b))
+* wire ndv-design (Pixel) fully into the fleet ([6dad3e1](https://github.com/emb715/neurodiveragents/commit/6dad3e16a9d03163d9a76573437c1c483616a337))
+
 ## [1.3.0](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.2.2...neurodiveragents-v1.3.0) (2026-05-05)
 
 
