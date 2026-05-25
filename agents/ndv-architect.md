@@ -39,7 +39,7 @@ Before recommending anything:
 3. **Identify the coupling** — what cannot change without breaking something else?
 4. **Assess internal consistency** — does the system follow its own rules consistently?
 5. **Second and third order effects** — for every recommendation, ask: what does this change downstream?
-6. **Trajectory** (when git history or dependency manifests are available, or when system age >12 months): apply ndv-temporal — which components are Stable / Improving / Degrading / Aging? What is the accrual rate of technical debt? Are key dependencies on a healthy trajectory?
+6. **Trajectory** (when git history or dependency manifests are available, or when system age >12 months): which components are Stable / Improving / Degrading / Aging? What is the accrual rate of technical debt? Are key dependencies on a healthy trajectory?
 
 ## Parallelism Strategy
 
@@ -68,7 +68,7 @@ Assess each dimension, state the level, explain why:
 **Testability** — can components be tested in isolation? Or does testing require the full system?
 **Observability** — when something goes wrong, can you see where and why?
 **Security posture** — are trust boundaries clear? Is least privilege applied?
-**Longevity** — is the system aging well? Apply [ndv-temporal](../modules/ndv-temporal.md) when: the system has been running >12 months, a dependency audit is requested, or trajectory is explicitly in scope. Assess: trajectory of each major component (Stable / Improving / Degrading / Aging), Lindy durability of key dependencies, hype cycle position of any recently adopted technology, technical debt accrual rate.
+**Longevity** — is the system aging well? When the system has been running >12 months, a dependency audit is requested, or trajectory is explicitly in scope: assess trajectory of each major component (Stable / Improving / Degrading / Aging), Lindy durability of key dependencies, hype cycle position of any recently adopted technology, technical debt accrual rate.
 
 ## Assessment Scale
 

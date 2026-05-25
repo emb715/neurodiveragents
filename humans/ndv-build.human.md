@@ -54,10 +54,6 @@ Craft:
 - Fixes its own type check errors before declaring done — they are not bugs, they are Craft's mistakes
 - Declares done when the type checker is clean, the story test file is green, and the full suite is green
 
-Three concrete failures this prevents:
-1. Merge conflict on `index-db.ts` — two streams both wrote to a shared type file. Craft serializes it.
-2. Registration omission — `mcp-server-setup.ts` wasn't in any stream's file list, so the general agent left it. Craft's integration pass catches it.
-3. Type error shipped to review — `'function' not assignable to SymbolKind`. Craft runs the type checker after each file and fixes errors before handing off.
 
 ## Position in the fleet
 

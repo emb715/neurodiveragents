@@ -9,13 +9,17 @@ Key decisions made during fleet design. Each entry: what was decided, why, what 
 **Date:** 2026-04  
 **Status:** Active
 
-**Decision:** Agent files exist in two forms — `agents/ndv-[x].md` (model-facing) and `docs/ndv-[x].human.md` (human-facing). They are maintained separately.
+**Decision:** Agent files exist in two forms — `agents/ndv-[x].md` (model-facing) and `humans/ndv-[x].human.md` (human-facing). They are maintained separately.
 
 **Why:** Model files and human files serve audiences with opposing needs. Models need dense, token-efficient behavioral rules. Humans need rationale, narrative, and context. Trying to serve both in one file produces a file that does neither well — too verbose for the model, too terse for the human.
 
 **Rejected:** Single source with tagged sections (`<!-- model -->` / `<!-- human -->`). Rejected because it requires a build step to be useful, and the fleet is not stable enough to justify build tooling yet. The two-file approach is maintainable at 10 agents without automation.
 
 **Rejected:** Human-readable model files. Rejected because human-readability in a system prompt is token waste. The model does not need narrative — it needs rules.
+
+**Constraints on model files (derived from this decision):**
+- No file references of any kind — no markdown links, no relative paths, no filenames. Model files are loaded as system prompts; the referenced paths do not exist in the model's context.
+- No skill references of any kind — agents do not consume skills. Skills are extracted from agent behavior; the relationship is strictly one-directional. An agent already embodies its cognitive style natively. If behavior is required, it is expressed directly in the model file, not delegated to a skill the user may not have installed.
 
 **Revisit when:** Fleet exceeds 15 agents, or manual sync errors become frequent, or a contributor joins who needs the build step to stay sane.
 
@@ -85,7 +89,7 @@ Key decisions made during fleet design. Each entry: what was decided, why, what 
 
 **Trigger to implement:** Fleet stable for ≥3 months with no agent renames or neurotype changes. Manual sync errors appearing in PRs. Team size > 1 contributor.
 
-**Planned design:** Single `agents/src/ndv-[x].src.md` with tagged sections → build generates `agents/ndv-[x].md` and `docs/ndv-[x].human.md`. See `sync-strategy.md` for full design.
+**Planned design:** Single `agents/src/ndv-[x].src.md` with tagged sections → build generates `agents/ndv-[x].md` and `humans/ndv-[x].human.md`. See `sync-strategy.md` for full design.
 
 ---
 

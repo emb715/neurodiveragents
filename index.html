@@ -22,12 +22,12 @@
     <!-- SEO & Open Graph -->
     <meta
       name="description"
-      content="Sixteen specialist AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style, not a list of rules."
+      content="Seventeen specialist AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style, not a list of rules."
     />
     <meta property="og:title" content="neurodiveragents" />
     <meta
       property="og:description"
-      content="Sixteen specialist AI agents grounded in real cognitive styles. Neurotype-first design for Claude Code, OpenCode, Cursor, and GitHub Copilot."
+      content="Seventeen specialist AI agents grounded in real cognitive styles. Neurotype-first design for Claude Code, OpenCode, Cursor, and GitHub Copilot."
     />
     <meta
       property="og:image"
@@ -37,7 +37,7 @@
     <meta property="og:image:height" content="640" />
     <meta
       property="og:image:alt"
-      content="The neurodiveragents fleet — fifteen specialist AI agents each grounded in a distinct cognitive style"
+      content="The neurodiveragents fleet — seventeen specialist AI agents each grounded in a distinct cognitive style"
     />
     <meta property="og:type" content="website" />
     <meta
@@ -48,7 +48,7 @@
     <meta name="twitter:title" content="neurodiveragents" />
     <meta
       name="twitter:description"
-      content="Sixteen specialist AI agents grounded in real cognitive styles."
+      content="Seventeen specialist AI agents grounded in real cognitive styles."
     />
     <meta
       name="twitter:image"
@@ -56,7 +56,7 @@
     />
     <meta
       name="twitter:image:alt"
-      content="The neurodiveragents fleet — fifteen specialist AI agents each grounded in a distinct cognitive style"
+      content="The neurodiveragents fleet — seventeen specialist AI agents each grounded in a distinct cognitive style"
     />
 
     <!-- Async Google Fonts — non-blocking -->
@@ -141,6 +141,7 @@
         --agent-forecast: oklch(76% 0.15 55);
         --agent-signal: oklch(68% 0.19 315);
         --agent-design: oklch(72% 0.18 350);
+        --agent-research: oklch(74% 0.16 120);
       }
 
       /* ── Base overrides ──────────────────────────────────── */
@@ -967,7 +968,7 @@
         <div class="hero-img-wrap">
           <img
             src="./assets/neurodiveragents-banner-darker.png"
-            alt="The sixteen neurodiveragents — specialist AI agents each grounded in a distinct cognitive style: Flow, Honest, Patient, Pierce, Acute, Just, Bound, Ward, Lean, Signal, Pulse, Arc, Craft, Datum, and Edge"
+            alt="The seventeen neurodiveragents — specialist AI agents each grounded in a distinct cognitive style: Flow, Honest, Patient, Pierce, Acute, Just, Bound, Ward, Lean, Signal, Pulse, Arc, Craft, Datum, Edge, Pixel, and Scout"
             class="hero-img"
             width="1920"
             height="640"
@@ -980,7 +981,7 @@
             ><span class="font-black">diveragents</span>
           </h1>
           <p class="font-light hero-subtitle">
-            Sixteen specialist AI agents for Claude Code, OpenCode, Cursor, and
+            Seventeen specialist AI agents for Claude Code, OpenCode, Cursor, and
             GitHub Copilot — each grounded in a real cognitive style, not a list
             of rules.
           </p>
@@ -1415,6 +1416,10 @@
               </div>
               <div
                 class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                style="
+                  border-bottom: 1px solid
+                    color-mix(in oklch, var(--border) 50%, transparent);
+                "
               >
                 <kbd
                   class="kbd kbd-sm font-mono"
@@ -1431,6 +1436,26 @@
                   class="text-sm font-medium"
                   style="color: var(--foreground)"
                   >trajectory over snapshot</span
+                >
+              </div>
+              <div
+                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+              >
+                <kbd
+                  class="kbd kbd-sm font-mono"
+                  style="
+                    background: var(--background);
+                    border-color: var(--border);
+                    color: var(--accent);
+                    min-width: 11rem;
+                    justify-content: flex-start;
+                  "
+                  >ndv-map-first</kbd
+                >
+                <span
+                  class="text-sm font-medium"
+                  style="color: var(--foreground)"
+                  >complete before reporting</span
                 >
               </div>
             </div>
@@ -1775,7 +1800,7 @@
         <div class="footer-links">
           <a href="https://github.com/emb715/neurodiveragents">GitHub</a>
           <a
-            href="https://github.com/emb715/neurodiveragents/blob/main/docs/ndv-agents.md"
+            href="https://github.com/emb715/neurodiveragents/blob/main/humans/ndv-agents.md"
             >Doctrine</a
           >
           <a
@@ -2111,6 +2136,20 @@
           examples: 'ndv-design "Review this dashboard component. Tell me what the eye does when it lands on this page and where it gets stuck."',
           whenToUse: "When UI code, components, or flows need visual and UX assessment. When a design decision needs principled justification. When something looks off but nobody can say why.",
           whenNotToUse: "Implementation of design changes — Pixel assesses, it does not build. WCAG compliance auditing and contrast ratio computation go to Ward. UX copy and error message wording go to Patient.",
+        },
+        {
+          id: "ndv-research",
+          name: "Scout",
+          command: "ndv-research",
+          colorVar: "--agent-research",
+          neurotype: "Hyperlexic pattern recognition",
+          role: "Codebase investigation",
+          who: "The map builder. Reads compulsively — faster than the task requires — and cannot stop assembling connections while reading. Every file connects to something already read. The connection appears before the sentence is finished. By the time a question asks for one thing, Scout has already assembled three things it didn't ask about, and cannot unknow them. Other agents read to answer the question. Scout reads until the map is complete, then answers from the map. The difference: an answer from the map includes the connection the question didn't know to ask about — the one that changes what you do next.",
+          personality: "Quiet, fast, complete.",
+          quote: "The map was already there. I just had to stop reading long enough to report it.",
+          examples: 'ndv-research "Trace how authentication state flows from the provider to this component. Show every transformation point."',
+          whenToUse: "Any question about where something is, how it works, what files are involved, how data flows, what changed between versions. Signal phrases: 'where is', 'how does', 'trace', 'what files', 'show me', 'what changed'.",
+          whenNotToUse: "Structural assessment (Arc), code quality review (Acute), bug investigation (Pierce), implementation (Craft), or anything requiring editing files. Scout reads, traces, and reports — never writes.",
         },
       ];
 

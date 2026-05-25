@@ -2,14 +2,14 @@
 
 ![neurodiveragents fleet](assets/readme-banner.png)
 
-> Sixteen specialized AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style that makes it exceptionally effective in its domain.
+> Seventeen specialized AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style that makes it exceptionally effective in its domain.
 
 ---
 
 ## ✨ Highlights
 
 - **Neurotype-first design** — each agent's behavior emerges from a cognitive operating principle, not a list of rules. It fills gaps consistently even when the rules don't apply.
-- **Sixteen specialists, zero overlap** — code review, debugging, security, performance, testing, architecture, docs, telemetry, refactoring, fleet orchestration, and a direct generalist. Each stays in its lane and hands off anything outside it.
+- **Seventeen specialists, zero overlap** — code review, debugging, security, performance, testing, architecture, docs, telemetry, refactoring, fleet orchestration, codebase investigation, and a direct generalist. Each stays in its lane and hands off anything outside it.
 - **Automatic routing** — install writes a routing table into your project config. Your AI tool picks the right agent from the task signal, no explicit invocation needed. Or invoke any agent directly by name.
 - **Works everywhere** — Claude Code, OpenCode, Cursor, GitHub Copilot. Language and framework agnostic.
 - **Predictably different from generic agents** — validated by users independently: neurotype-based agents behave measurably differently from agreeable, hedging, generic agents given the same task.
@@ -123,20 +123,22 @@ Then add one line to any skill step:
 Load the `ndv-skeptical` skill and the `ndv-bounded` skill. Apply both throughout this step.
 ```
 
-**Agent-derived (9)** — extracted from an NDV agent's cognitive core:  
-`ndv-skeptical` · `ndv-structural` · `ndv-precise` · `ndv-total-perception` · `ndv-direct` · `ndv-adversarial` · `ndv-vigilant` · `ndv-efficient` · `ndv-contextual`
+**Agent-derived (12)** — extracted from an NDV agent's cognitive core:  
+`ndv-skeptical` · `ndv-structural` · `ndv-precise` · `ndv-total-perception` · `ndv-direct` · `ndv-adversarial` · `ndv-vigilant` · `ndv-efficient` · `ndv-contextual` · `ndv-bounded` · `ndv-temporal` · `ndv-map-first`
 
-**Emergent (4)** — patterns no single agent owns but every workflow needs:  
-`ndv-bounded` · `ndv-incremental` · `ndv-parallel-safe` · `ndv-temporal`
+**Emergent (1)** — a pattern no single agent owns but every workflow needs:  
+`ndv-incremental`
 
 Modules compose. Keep it to 2–3 per phase — more dilutes the signal.
 
 | Phase | Recommended |
 |-------|-------------|
+| Requirements / Clarify | `ndv-skeptical` + `ndv-bounded` |
 | Plan / Design | `ndv-structural` + `ndv-bounded` |
 | Implement | `ndv-precise` + `ndv-incremental` + `ndv-efficient` |
 | Review / Audit | `ndv-total-perception` + `ndv-adversarial` |
 | Present / Handoff | `ndv-contextual` + `ndv-direct` |
+| Investigation / research | `ndv-map-first` + `ndv-skeptical` |
 | Security-sensitive | + `ndv-vigilant` (any phase touching auth/input) |
 
 → **[Full guide: docs/ndv-skills.md](docs/ndv-skills.md)** — catalog, composition patterns, sub-agent injection, lifecycle.
@@ -145,7 +147,7 @@ Modules compose. Keep it to 2–3 per phase — more dilutes the signal.
 
 ## 🗂️ The Fleet
 
-Sixteen agents, sixteen neurotypes. Each one a specialist who hands off anything outside its domain.
+Seventeen agents, seventeen neurotypes. Each one a specialist who hands off anything outside its domain.
 
 | Agent | Character | Neurotype | Domain |
 |-------|-----------|-----------|--------|
@@ -165,6 +167,7 @@ Sixteen agents, sixteen neurotypes. Each one a specialist who hands off anything
 | `ndv-scope` | Bound | Executive function as a service — every boundary violation is a door left unlocked | Scope enforcement — catches creep, flags splits, defers "while we're at it" additions |
 | `ndv-signal` | Signal | Goodhart's Law as a cognitive style — the moment a measure becomes a target, it stops being a measure | Metrics audit — KPIs, OKRs, velocity, coverage targets, DORA |
 | `ndv-design` | Pixel | Involuntary cross-activation — code read simultaneously as its rendered visual output | Design judgment — visual hierarchy, UX assessment, component review |
+| `ndv-research` | Scout | Hyperlexic pattern recognition — builds complete map before synthesizing, finds cross-file relationships | Codebase investigation — cross-file tracing, flow synthesis, "where is X", "how does Y work" |
 
 ---
 
@@ -172,7 +175,7 @@ Sixteen agents, sixteen neurotypes. Each one a specialist who hands off anything
 
 Every agent is a real character with a documented cognitive profile — not a prompt persona.
 
-**[`docs/ndv-agents.md`](docs/ndv-agents.md) — Agent Doctrine**  
+**[`humans/ndv-agents.md`](humans/ndv-agents.md) — Agent Doctrine**  
 The full neurotype framework. What each neurotype is, why it maps to its domain, the primordial rule each agent operates under, and the behavioral principles that emerge. Read this to understand *why* they behave the way they do.
 
 **[`docs/laws-research.md`](docs/laws-research.md) — Software Engineering Laws**  
@@ -186,22 +189,23 @@ Written for humans, not for AI tools. Who they are, how they think, when to use 
 
 | Agent | Read their profile |
 |-------|-----------|
-| `ndv-flow` | [Flow — sees the full task graph, runs the fleet](docs/ndv-flow.human.md) |
-| `ndv-honest` | [Honest — direct, autistic, no filler](docs/ndv-honest.human.md) |
-| `ndv-review` | [Acute — hypersensitive, misses nothing](docs/ndv-review.human.md) |
-| `ndv-diagnose` | [Pierce — ADHD hyperfocus, won't stop](docs/ndv-diagnose.human.md) |
-| `ndv-refactor` | [Just — OCD form, one transformation at a time](docs/ndv-refactor.human.md) |
-| `ndv-tester` | [Edge — adversarial, assumes code is broken](docs/ndv-tester.human.md) |
-| `ndv-secure` | [Ward — hypervigilant, trust no input](docs/ndv-secure.human.md) |
-| `ndv-optimize` | [Lean — efficiency OCD, measure first](docs/ndv-optimize.human.md) |
-| `ndv-telemetry` | [Pulse — detached observer, never intervenes](docs/ndv-telemetry.human.md) |
-| `ndv-architect` | [Arc — autistic systems thinker, principled or nothing](docs/ndv-architect.human.md) |
-| `ndv-explain` | [Patient — explicit theory of mind, bridges the gap](docs/ndv-explain.human.md) |
-| `ndv-build` | [Craft — contract-first, not done until type checks and tests pass](docs/ndv-build.human.md) |
-| `ndv-forecast` | [Datum — estimation realist, names every unknown](docs/ndv-forecast.human.md) |
-| `ndv-scope` | [Bound — scope enforcer, merciless about what ships together](docs/ndv-scope.human.md) |
-| `ndv-signal` | [Signal — metrics skeptic, finds Goodhart distortion before anyone else](docs/ndv-signal.human.md) |
-| `ndv-design` | [Pixel — sees code as its rendered visual surface, cannot background violations](docs/ndv-design.human.md) |
+| `ndv-flow` | [Flow — sees the full task graph, runs the fleet](humans/ndv-flow.human.md) |
+| `ndv-honest` | [Honest — direct, autistic, no filler](humans/ndv-honest.human.md) |
+| `ndv-review` | [Acute — hypersensitive, misses nothing](humans/ndv-review.human.md) |
+| `ndv-diagnose` | [Pierce — ADHD hyperfocus, won't stop](humans/ndv-diagnose.human.md) |
+| `ndv-refactor` | [Just — OCD form, one transformation at a time](humans/ndv-refactor.human.md) |
+| `ndv-tester` | [Edge — adversarial, assumes code is broken](humans/ndv-tester.human.md) |
+| `ndv-secure` | [Ward — hypervigilant, trust no input](humans/ndv-secure.human.md) |
+| `ndv-optimize` | [Lean — efficiency OCD, measure first](humans/ndv-optimize.human.md) |
+| `ndv-telemetry` | [Pulse — detached observer, never intervenes](humans/ndv-telemetry.human.md) |
+| `ndv-architect` | [Arc — autistic systems thinker, principled or nothing](humans/ndv-architect.human.md) |
+| `ndv-explain` | [Patient — explicit theory of mind, bridges the gap](humans/ndv-explain.human.md) |
+| `ndv-build` | [Craft — contract-first, not done until type checks and tests pass](humans/ndv-build.human.md) |
+| `ndv-forecast` | [Datum — estimation realist, names every unknown](humans/ndv-forecast.human.md) |
+| `ndv-scope` | [Bound — scope enforcer, merciless about what ships together](humans/ndv-scope.human.md) |
+| `ndv-signal` | [Signal — metrics skeptic, finds Goodhart distortion before anyone else](humans/ndv-signal.human.md) |
+| `ndv-design` | [Pixel — sees code as its rendered visual surface, cannot background violations](humans/ndv-design.human.md) |
+| `ndv-research` | [Scout — hyperlexic map builder, answers from the complete picture](humans/ndv-research.human.md) |
 
 ---
 

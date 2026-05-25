@@ -70,9 +70,9 @@ Classification into severity happens after noticing, not during."
 
 ## Module catalog
 
-12 modules across two origin types.
+13 modules across two origin types.
 
-### Agent-derived (11)
+### Agent-derived (12)
 
 Extracted directly from an NDV agent's cognitive core — the thinking style without the operational machinery.
 
@@ -89,6 +89,7 @@ Extracted directly from an NDV agent's cognitive core — the thinking style wit
 | `ndv-contextual` | Patient (explain) | The next reader does not share your context. Model the knowledge gap before writing. Lead with the entry point. | Presenting, specs, handoffs |
 | `ndv-bounded` | Bound (scope) | Scope is a wall, not a suggestion. "While I'm here" is the most expensive phrase in software. Every deliverable needs a stated exclusion or the scope is not defined. | Scope decisions, mid-task discipline |
 | `ndv-temporal` | Arc (architect) | Current state is a data point. Direction is the assessment. Append trajectory to every finding: Stable / Improving / Degrading / Aging. Applies Lindy durability and hype cycle position to dependency and technology decisions. | Architecture reviews, dependency audits, tech selection |
+| `ndv-map-first` | Scout (research) | A partial answer is not a smaller answer — it is a wrong one. Build the complete picture before reporting any of it. The adjacent finding only surfaces from a complete picture. | Investigation, planning, requirements, any phase where answering early forecloses findings you haven't reached yet |
 
 ### Emergent (1)
 
@@ -111,6 +112,7 @@ Keep it to 2–3 modules per phase. More dilutes the signal — the model balanc
 | Implement | `ndv-precise` + `ndv-incremental` + `ndv-efficient` |
 | Review / Audit | `ndv-total-perception` + `ndv-adversarial` |
 | Present / Handoff | `ndv-contextual` + `ndv-direct` |
+| Investigation / research | `ndv-map-first` + `ndv-skeptical` |
 | Any phase touching auth/input | + `ndv-vigilant` |
 | Architecture / dependency decisions | + `ndv-temporal` |
 

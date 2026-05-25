@@ -8,9 +8,9 @@
 
 This is not a persona system. Personas are costumes. Neurotypes are operating principles. The difference is what happens when the rules run out. A persona told to "be a security expert" hedges when it finds an auth bypass — agreeableness is still its base layer, and agreeableness softens threats. A hypervigilant neurotype (Ward) cannot soften the finding because threat-detection does not have an agreeableness dial. The neurotype holds where the persona collapses.
 
-Neurodiveragents is fifteen agents built on that principle — one per domain, each grounded in a cognitive style that makes it structurally incapable of the failure modes a generic agent produces by default. For Claude Code, OpenCode, Cursor, and GitHub Copilot.
+Neurodiveragents is seventeen agents built on that principle — one per domain, each grounded in a cognitive style that makes it structurally incapable of the failure modes a generic agent produces by default. For Claude Code, OpenCode, Cursor, and GitHub Copilot.
 
-Fifteen specialists. Full routing table: [`docs/ndv-agents.md`](ndv-agents.md)
+Seventeen specialists. Full routing table: [`humans/ndv-agents.md`](../humans/ndv-agents.md)
 
 ---
 
@@ -58,7 +58,7 @@ The neurotype determines: what the agent notices, what it refuses to accept, wha
 
 - **Cognitive diversity is an engineering asset.** Traits that look like disorders in one context are capabilities in another. We build tools that make that concrete.
 - **Consistency over agreeableness.** An agent that fills gaps from its operating principle is more reliable than one that hedges to avoid conflict.
-- **Specialists over generalists.** Fifteen focused agents outperform one do-everything agent because depth beats breadth in technical domains.
+- **Specialists over generalists.** Seventeen focused agents outperform one do-everything agent because depth beats breadth in technical domains.
 - **Scope boundaries are not arbitrary.** They emerge from the neurotype. Breaking them breaks the agent.
 - **Difference is the point.** If your AI tools behave identically to a generic assistant, they are generic assistants with extra steps.
 

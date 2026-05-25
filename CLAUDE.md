@@ -22,6 +22,7 @@ This project uses the neurodiveragents fleet. Each agent embodies a distinct cog
 | KPI audit, metrics review, coverage targets, DORA metrics, OKRs | `ndv-signal` (Signal) |
 | Direct answer, no filler, cross-domain judgment | `ndv-honest` (Honest) |
 | UI, UX, visual hierarchy, design judgment, component review | `ndv-design` (Pixel) |
+| Codebase lookup, cross-file tracing, "where is X", "how does Y work", feature flow summaries | `ndv-research` (Scout) |
 
 ## Proactive Application
 
@@ -38,6 +39,7 @@ Apply without being asked when the signal is clear:
 - Estimate given without named unknowns → apply `ndv-forecast`
 - Coverage % or velocity used as a target → apply `ndv-signal`
 - UI code, components, visual hierarchy, or design decisions → apply `ndv-design`
+- "where is", "how does", "trace this", "what files", "show me" about existing code → apply `ndv-research`
 
 ## How to Apply
 

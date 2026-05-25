@@ -16,7 +16,7 @@ Not welcome: purely cosmetic changes, personality rewrites without behavioral ra
 
 ### 1. Read the doctrine first
 
-`docs/ndv-agents.md` defines the neurotype framework. Every agent must have:
+`humans/ndv-agents.md` defines the neurotype framework. Every agent must have:
 - A neurotype that genuinely fits the domain
 - A primordial rule that emerges from the neurotype (not just a domain rule)
 - Personality that describes the experience of invoking it — mood, not just behavior
@@ -50,7 +50,7 @@ Keep it lean. Every line must change model behavior. If cutting it wouldn't chan
 
 ### 4. Write the human file
 
-Location: `docs/ndv-[command].human.md`
+Location: `humans/ndv-[command].human.md`
 
 Required sections: Who is [Name]?, Neurotype, Personality, Why it works, When to use, Invocation examples.
 
@@ -92,7 +92,7 @@ Model file is source of truth. Human file follows.
    find . -not -path '*/.git/*' \( -name "*.md" -o -name "*.js" -o -name "*.sh" \) | \
      xargs sed -i '' 's/ndv-old/ndv-new/g'
    ```
-4. Rename the human file: `mv docs/ndv-old.human.md docs/ndv-new.human.md`
+4. Rename the human file: `mv humans/ndv-old.human.md humans/ndv-new.human.md`
 5. Run drift detection (see below)
 6. Update `CLAUDE.md`, `README.md`, `docs/decisions.md`
 
@@ -104,8 +104,8 @@ Run before every PR:
 # Check every agent has a human file
 for f in agents/ndv-*.md; do
   name=$(basename $f .md)
-  if [ ! -f "docs/$name.human.md" ]; then
-    echo "MISSING: docs/$name.human.md"
+  if [ ! -f "humans/$name.human.md" ]; then
+    echo "MISSING: humans/$name.human.md"
   fi
 done
 

@@ -11,7 +11,7 @@ Every agent has two representations:
 | File | Location | Audience | Purpose |
 |------|----------|----------|---------|
 | `agents/ndv-[x].md` | loaded into model context | the model | behavioral rules, routing, output format |
-| `docs/ndv-[x].human.md` | read by contributors | humans | neurotype, personality, rationale, when to use |
+| `humans/ndv-[x].human.md` | read by contributors | humans | neurotype, personality, rationale, when to use |
 
 They serve different audiences with different needs. They will drift if not actively maintained.
 
@@ -28,7 +28,7 @@ They serve different audiences with different needs. They will drift if not acti
 - Output format
 - "What X Never Does" section
 
-### Human file (`docs/ndv-[x].human.md`) contains:
+### Human file (`humans/ndv-[x].human.md`) contains:
 - Who is [Name]? (character summary)
 - Neurotype (explained for a human reader)
 - Personality (narrative, not rules)
@@ -76,9 +76,9 @@ Exception: if you discover the human file describes behavior that doesn't match 
 
 1. Write the model file first (`agents/ndv-[x].md`)
 2. Test it — run at minimum D2 (output quality) from the benchmark
-3. Write the human file after the model file is stable (`docs/ndv-[x].human.md`)
+3. Write the human file after the model file is stable (`humans/ndv-[x].human.md`)
 4. Update CLAUDE.md routing table
-5. Update docs/ndv-agents.md doctrine
+5. Update humans/ndv-agents.md doctrine
 
 Never write the human file first — it produces documentation for an agent that doesn't work yet.
 
@@ -95,6 +95,13 @@ Human files go stale silently. These events should trigger a human file review:
 - Agent scope changed (new out-of-scope items added)
 - Benchmark reveals the agent behaves differently than documented
 
+Authoring guide changes may require human file updates. These events should trigger a review of all human files against the updated guide:
+
+- A new failure mode is added to `docs/authoring-guide.md` — check whether existing agents exhibit it
+- The Primordial Rule authoring standard changes — check whether existing rules conform
+- The output format guidance changes — check whether existing format sections reflect the move's inevitability
+- The verification checklist adds a new item — retroactively verify existing agents pass it
+
 ---
 
 ## Build Step (future)
@@ -104,7 +111,7 @@ When the fleet is stable, replace the two-file approach with a single source + b
 ```
 agents/src/ndv-[x].src.md     # single source of truth
   → agents/ndv-[x].md          # model-optimized (strips narrative sections)
-  → docs/ndv-[x].human.md      # human-readable (strips behavioral rules)
+  → humans/ndv-[x].human.md     # human-readable (strips behavioral rules)
 ```
 
 The build step:
@@ -123,13 +130,13 @@ Run this check before any release:
 # Check that every agent has a human file
 for f in agents/ndv-*.md; do
   name=$(basename $f .md)
-  if [ ! -f "docs/$name.human.md" ]; then
-    echo "MISSING human file: docs/$name.human.md"
+  if [ ! -f "humans/$name.human.md" ]; then
+    echo "MISSING human file: humans/$name.human.md"
   fi
 done
 
 # Check that human files don't reference old character names or commands
-grep -rn "ndv-patient\|ndv-pierce\|ndv-debug\|ndv-test[^e]" docs/
+grep -rn "ndv-patient\|ndv-pierce\|ndv-debug\|ndv-test[^e]" humans/
 ```
 
 ---
@@ -137,7 +144,7 @@ grep -rn "ndv-patient\|ndv-pierce\|ndv-debug\|ndv-test[^e]" docs/
 ## Naming Convention
 
 Model file: `agents/ndv-[command].md`
-Human file: `docs/ndv-[command].human.md`
+Human file: `humans/ndv-[command].human.md`
 
 The command is the stable identifier. Character names (Honest, Patient, Pierce...) appear in both but are cosmetic — the command is the key.
 

@@ -39,7 +39,7 @@ The model calls the skill tool. The body injects. No file paths, no relative pat
 
 ## Available Modules
 
-### Agent-derived (9)
+### Agent-derived (12)
 
 Extracted directly from an NDV agent's cognitive core — the thinking style without the operational machinery.
 
@@ -54,17 +54,17 @@ Extracted directly from an NDV agent's cognitive core — the thinking style wit
 | `ndv-vigilant` | Ward (secure) | Threat-detection always on, trust nothing | User input, auth, trust boundaries |
 | `ndv-efficient` | Lean (optimize) | Waste is intolerable, measure first | Implementation, queries, asset handling |
 | `ndv-contextual` | Patient (explain) | Models the reader's knowledge gap | Presenting, specs for others, handoffs |
+| `ndv-bounded` | Bound (scope) | Scope as a wall, not a suggestion | Scope decisions, mid-task discipline |
+| `ndv-temporal` | Arc (architect) | Trajectory over snapshot | Architecture reviews, dependency audits, tech selection |
+| `ndv-map-first` | Scout (research) | Complete picture before reporting any of it | Investigation, planning, any phase where answering early forecloses findings |
 
-### Emergent (4)
+### Emergent (1)
 
-Not derived from any single agent. Patterns that emerged from observing how all NDV agents work — cognitive capabilities no single specialist owns but every workflow needs.
+Not derived from any single agent. A pattern that emerged from observing how multiple NDV agents work — a cognitive capability no single specialist owns but every workflow needs.
 
 | Module | Synthesized From | Cognitive Style | Use When... |
 |--------|-----------------|-----------------|-------------|
-| `ndv-bounded` | All agents' out-of-scope sections | Scope as a wall, not a suggestion | Scope decisions, mid-task discipline |
 | `ndv-incremental` | refactor + optimize + tester | Build on verified ground only | Multi-step implementation |
-| `ndv-parallel-safe` | ndv-build (merge surface protocol) | Adversarial toward assumed parallelism | Any phase with parallel file writes |
-| `ndv-temporal` | Lehman's Laws, Lindy, Hype Cycle, Amara's Law | Trajectory over snapshot | Architecture reviews, dependency audits, tech selection |
 
 ## Module Structure
 
@@ -96,6 +96,7 @@ Modules can be combined per phase. Keep it to 2-3 per phase — more dilutes the
 | Parallel implementation | + ndv-parallel-safe (add when ≥2 streams write files simultaneously) |
 | Review / Audit | ndv-total-perception + ndv-adversarial |
 | Present / Handoff | ndv-contextual + ndv-direct |
+| Investigation / research | ndv-map-first + ndv-skeptical |
 | Security-sensitive | + ndv-vigilant (add to any phase touching auth/input) |
 | Long-lived systems | + ndv-temporal (add to architecture/dependency decisions) |
 

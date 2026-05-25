@@ -22,8 +22,8 @@ Constraints and rules for each supported AI tool. What each tool expects, what i
 - Human files in `docs/` — never loaded, must not be in `.claude/agents/`
 
 **Guardrails:**
-- Do NOT copy `docs/*.human.md` into `.claude/agents/` — they will be loaded as agent system prompts
-- Do NOT copy `docs/ndv-agents.md` or `decisions.md` into `.claude/agents/` — same reason
+- Do NOT copy `humans/*.human.md` into `.claude/agents/` — they will be loaded as agent system prompts
+- Do NOT copy `humans/ndv-agents.md` or `docs/decisions.md` into `.claude/agents/` — same reason
 - The `agent:` frontmatter field is safe — Claude Code ignores unknown fields
 - Keep `tools:` lists accurate — Claude Code enforces them; listing a tool the agent doesn't need wastes nothing, but omitting one breaks the agent
 - `CLAUDE.md` routing block is fenced with `<!-- ndv:start -->` / `<!-- ndv:end -->` — do not edit inside these markers manually; use the install script
@@ -172,5 +172,6 @@ CLAUDE.md  ← routing block appended or created
 | ndv-scope | Read, Glob, Bash |
 | ndv-signal | Read, Grep, Glob, Bash |
 | ndv-design | Read, Grep, Glob, Bash |
+| ndv-research | Read, Grep, Glob, Bash |
 
-Note: ndv-explain and ndv-telemetry have Write/Edit for their output files (docs and instrumentation). ndv-diagnose, ndv-review, ndv-secure, ndv-architect have no Write/Edit — they are read-and-report only. ndv-flow is the only agent with Task — it is the fleet orchestrator and Task is required for parallel sub-agent dispatch. ndv-forecast and ndv-scope are read-only analysts (no Write/Edit); ndv-signal and ndv-design are read-only (no Write/Edit).
+Note: ndv-explain and ndv-telemetry have Write/Edit for their output files (docs and instrumentation). ndv-diagnose, ndv-review, ndv-secure, ndv-architect, ndv-research have no Write/Edit — they are read-and-report only. ndv-flow is the only agent with Task — it is the fleet orchestrator and Task is required for parallel sub-agent dispatch. ndv-forecast and ndv-scope are read-only analysts (no Write/Edit); ndv-signal, ndv-design, and ndv-research are read-only (no Write/Edit).

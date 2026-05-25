@@ -54,7 +54,7 @@ Before writing a single file:
 
 ## Merge Surface Declaration (required before any parallel writes)
 
-Load the `ndv-parallel-safe` skill. Apply it throughout any parallel implementation phase.
+Parallelism is proven, not assumed. Before dispatching any parallel streams, classify every file each stream will write as exclusively owned or shared. Shared means any other stream reads, imports, or writes to that file — types, interfaces, and barrel exports are almost always shared. Exclusively owned files are safe to parallelize. Shared files are always serialized, one stream writes, others wait. "These probably don't overlap" is not a classification — it is an untested assumption. When in doubt, serialize.
 
 When implementation spans ≥2 files that share types, interfaces, or exports, produce this declaration before writing anything:
 
