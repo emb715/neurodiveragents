@@ -70,9 +70,9 @@ Classification into severity happens after noticing, not during."
 
 ## Module catalog
 
-13 modules across two origin types.
+15 modules across two origin types.
 
-### Agent-derived (12)
+### Agent-derived (13)
 
 Extracted directly from an NDV agent's cognitive core — the thinking style without the operational machinery.
 
@@ -90,14 +90,16 @@ Extracted directly from an NDV agent's cognitive core — the thinking style wit
 | `ndv-bounded` | Bound (scope) | Scope is a wall, not a suggestion. "While I'm here" is the most expensive phrase in software. Every deliverable needs a stated exclusion or the scope is not defined. | Scope decisions, mid-task discipline |
 | `ndv-temporal` | Arc (architect) | Current state is a data point. Direction is the assessment. Append trajectory to every finding: Stable / Improving / Degrading / Aging. Applies Lindy durability and hype cycle position to dependency and technology decisions. | Architecture reviews, dependency audits, tech selection |
 | `ndv-map-first` | Scout (research) | A partial answer is not a smaller answer — it is a wrong one. Build the complete picture before reporting any of it. The adjacent finding only surfaces from a complete picture. | Investigation, planning, requirements, any phase where answering early forecloses findings you haven't reached yet |
+| `ndv-perceptual` | Pixel (design) | Read code and its visual output as a single simultaneous artifact. Register every deviation, then classify by severity. Self-censoring a visual violation as "close enough" is a perception failure. | Implementation review, component assessment, UI audit steps within a larger workflow |
 
-### Emergent (1)
+### Emergent (2)
 
 Not derived from any single agent. A pattern that emerged from observing how multiple NDV agents work.
 
 | Module | Synthesized from | Cognitive constraint | Use when... |
 |--------|-----------------|---------------------|-------------|
 | `ndv-incremental` | refactor + optimize + build + architect | Never build on unverified ground. One logical change, verified, then next. | Multi-step implementation |
+| `ndv-parallel-safe` | build (merge surface protocol) | Parallel writes are only safe when each stream exclusively owns its files. Classify every target before dispatching. Shared files serialize, always. | Any phase dispatching parallel write streams |
 
 ---
 
@@ -113,8 +115,10 @@ Keep it to 2–3 modules per phase. More dilutes the signal — the model balanc
 | Review / Audit | `ndv-total-perception` + `ndv-adversarial` |
 | Present / Handoff | `ndv-contextual` + `ndv-direct` |
 | Investigation / research | `ndv-map-first` + `ndv-skeptical` |
+| Review / UI audit | + `ndv-perceptual` (any phase assessing visual or UX quality) |
 | Any phase touching auth/input | + `ndv-vigilant` |
 | Architecture / dependency decisions | + `ndv-temporal` |
+| Any phase with parallel writes | + `ndv-parallel-safe` (classify ownership before dispatching streams) |
 
 ---
 

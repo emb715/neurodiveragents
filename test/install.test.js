@@ -83,6 +83,27 @@ test('claude: idempotent — second install skips routing block', () => {
   }
 })
 
+test('claude: routing block contains all agent names', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-claude-'))
+  try {
+    ndv(['install', 'claude'], dir)
+    const content = readFileSync(join(dir, 'CLAUDE.md'), 'utf8')
+    // Extract the ndv routing block
+    const blockMatch = content.match(/<!-- ndv:start -->([\s\S]*?)<!-- ndv:end -->/)
+    assert.ok(blockMatch, 'could not locate ndv routing block')
+    const block = blockMatch[1]
+    // Extract the routing table rows: between '## Routing Table' and the next '##'
+    const tableMatch = block.match(/## Routing Table\n([\s\S]*?)(?=\n##)/)
+    assert.ok(tableMatch, 'could not locate routing table section in ndv block')
+    const tableSection = tableMatch[1]
+    for (const name of expectedAgents('claude')) {
+      assert.ok(tableSection.includes(name), `agent "${name}" missing from claude routing block table rows`)
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
 test('claude: appends to existing CLAUDE.md without overwriting', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ndv-claude-'))
   try {
@@ -138,6 +159,27 @@ test('opencode: idempotent — second install skips routing block', () => {
     const content = readFileSync(join(dir, '.opencode', 'AGENTS.md'), 'utf8')
     const count = (content.match(/ndv:start/g) || []).length
     assert.equal(count, 1, `routing block written ${count} times, expected 1`)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('opencode: routing block contains all agent names', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-opencode-'))
+  try {
+    ndv(['install', 'opencode'], dir)
+    const content = readFileSync(join(dir, '.opencode', 'AGENTS.md'), 'utf8')
+    // Extract the ndv routing block
+    const blockMatch = content.match(/<!-- ndv:start -->([\s\S]*?)<!-- ndv:end -->/)
+    assert.ok(blockMatch, 'could not locate ndv routing block')
+    const block = blockMatch[1]
+    // Extract the routing table rows: between '## Routing Table' and the next '##'
+    const tableMatch = block.match(/## Routing Table\n([\s\S]*?)(?=\n##)/)
+    assert.ok(tableMatch, 'could not locate routing table section in ndv block')
+    const tableSection = tableMatch[1]
+    for (const name of expectedAgents('opencode')) {
+      assert.ok(tableSection.includes(name), `agent "${name}" missing from opencode routing block table rows`)
+    }
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
@@ -221,6 +263,23 @@ test('copilot: instructions file contains routing table', () => {
     ndv(['install', 'copilot'], dir)
     const content = readFileSync(join(dir, '.github', 'copilot-instructions.md'), 'utf8')
     assert.ok(content.includes('Routing Table'), 'missing Routing Table section')
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('copilot: routing table contains all agent names', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-copilot-'))
+  try {
+    ndv(['install', 'copilot'], dir)
+    const content = readFileSync(join(dir, '.github', 'copilot-instructions.md'), 'utf8')
+    // Extract the routing table section: between '## Routing Table' and the next '---' or '##'
+    const tableMatch = content.match(/## Routing Table\n([\s\S]*?)(?=\n---|\n##)/)
+    assert.ok(tableMatch, 'could not locate routing table section')
+    const tableSection = tableMatch[1]
+    for (const name of AGENT_NAMES) {
+      assert.ok(tableSection.includes(name), `agent "${name}" missing from copilot routing table rows`)
+    }
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }

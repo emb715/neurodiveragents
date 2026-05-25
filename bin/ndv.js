@@ -117,6 +117,7 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 
 | When the task involves... | Use agent |
 |--------------------------|-----------|
+| PRD, epic, multi-task workload, fleet orchestration | \`ndv-flow\` |
 | Code review, PR, code smells, quality | \`ndv-review\` |
 | Bug, failing test, root cause, stack trace | \`ndv-diagnose\` |
 | Rename, extract, restructure, modernize syntax | \`ndv-refactor\` |
@@ -125,8 +126,13 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | Slow code, N+1 queries, bundle size, latency | \`ndv-optimize\` |
 | Add logging, metrics, traces, health checks | \`ndv-telemetry\` |
 | System design, SOLID violations, architecture review | \`ndv-architect\` |
+| Implement a spec with schemas, acceptance criteria, file targets, and architecture decided | \`ndv-build\` |
+| Scope creep, "while we're at it", PRD boundary review, overloaded tickets | \`ndv-scope\` |
+| Estimate review, sprint plan calibration, roadmap sanity check | \`ndv-forecast\` |
+| KPI audit, metrics review, coverage targets, DORA metrics, OKRs | \`ndv-signal\` |
 | Technical docs, API docs, session notes | \`ndv-explain\` |
 | UI, UX, visual hierarchy, design judgment, component review | \`ndv-design\` |
+| Codebase lookup, cross-file tracing, "where is X", "how does Y work", feature flow summaries | \`ndv-research\` |
 | No specialist match / direct opinionated answer only | \`ndv-honest\` |
 
 ## Proactive Application
@@ -138,8 +144,10 @@ Apply without being asked when the signal is clear:
 - "it's slow" or slow query → apply \`ndv-optimize\`
 - "clean this up" or rename → apply \`ndv-refactor\`
 - Code with no tests → suggest \`ndv-tester\`
+- Story has schemas + criteria + file targets + architecture settled → apply \`ndv-build\`
 - Add logging or observability → apply \`ndv-telemetry\`
 - UI code, components, or design decisions → apply \`ndv-design\`
+- "where is", "how does", "trace this", "what files", "show me" about existing code → apply \`ndv-research\`
 
 ## Conflict Resolution (use highest-priority match)
 
@@ -383,6 +391,7 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 
 | When the task involves... | Use agent |
 |--------------------------|-----------|
+| PRD, epic, multi-task workload, fleet orchestration | ndv-flow |
 | Code review, PR, code smells, quality | ndv-review |
 | Bug, failing test, root cause, stack trace | ndv-diagnose |
 | Rename, extract, restructure, modernize syntax | ndv-refactor |
@@ -391,8 +400,13 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | Slow code, N+1 queries, bundle size, latency | ndv-optimize |
 | Add logging, metrics, traces, health checks | ndv-telemetry |
 | System design, SOLID violations, architecture review | ndv-architect |
+| Implement a spec with schemas, acceptance criteria, file targets, and architecture decided | ndv-build |
+| Scope creep, "while we're at it", PRD boundary review, overloaded tickets | ndv-scope |
+| Estimate review, sprint plan calibration, roadmap sanity check | ndv-forecast |
+| KPI audit, metrics review, coverage targets, DORA metrics, OKRs | ndv-signal |
 | Technical docs, API docs, session notes | ndv-explain |
 | UI, UX, visual hierarchy, design judgment, component review | ndv-design |
+| Codebase lookup, cross-file tracing, "where is X", "how does Y work", feature flow summaries | ndv-research |
 | No specialist match / direct opinionated answer only | ndv-honest |
 
 ---

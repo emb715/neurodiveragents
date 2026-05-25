@@ -2,7 +2,7 @@
  * Agent file validation — structural contracts for LLM consumption.
  *
  * agents/<name>.md    — machine-consumed by Claude Code / OpenCode / Cursor
- * docs/<name>.human.md — human-readable character profiles
+ * humans/<name>.human.md — human-readable character profiles
  *
  * Both must satisfy their respective schemas for every agent in the fleet.
  */
@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
 const AGENTS_DIR = join(ROOT, 'agents')
-const DOCS_DIR = join(ROOT, 'docs')
+const HUMANS_DIR = join(ROOT, 'humans')
 
 // ─── constants ───────────────────────────────────────────────────────────────
 
@@ -68,13 +68,13 @@ function agentFiles() {
 }
 
 function humanFiles() {
-  return readdirSync(DOCS_DIR)
+  return readdirSync(HUMANS_DIR)
     .filter(f => f.endsWith('.human.md'))
     .map(f => ({
       file: f,
       name: f.replace('.human.md', ''),
-      path: join(DOCS_DIR, f),
-      content: readFileSync(join(DOCS_DIR, f), 'utf8'),
+      path: join(HUMANS_DIR, f),
+      content: readFileSync(join(HUMANS_DIR, f), 'utf8'),
     }))
 }
 
@@ -209,11 +209,11 @@ describe('agent files (agents/*.md)', () => {
 
 // ─── human file schema ───────────────────────────────────────────────────────
 
-describe('human files (docs/*.human.md)', () => {
+describe('human files (humans/*.human.md)', () => {
   const humans = humanFiles()
 
   test('at least one human file exists', () => {
-    assert.ok(humans.length >= 1, 'No human files found in docs/')
+    assert.ok(humans.length >= 1, 'No human files found in humans/')
   })
 
   for (const human of humans) {
@@ -316,7 +316,7 @@ describe('symmetry: every agent file must have a human file and vice versa', () 
     assert.deepEqual(
       missing,
       [],
-      `Agents missing a human file: ${missing.join(', ')}\nCreate docs/<name>.human.md for each.`
+      `Agents missing a human file: ${missing.join(', ')}\nCreate humans/<name>.human.md for each.`
     )
   })
 
@@ -331,7 +331,7 @@ describe('symmetry: every agent file must have a human file and vice versa', () 
 
   test('character name in human H1 matches bold name in agent body', () => {
     for (const agent of agentFiles()) {
-      const humanPath = join(DOCS_DIR, `${agent.name}.human.md`)
+      const humanPath = join(HUMANS_DIR, `${agent.name}.human.md`)
       try {
         const humanContent = readFileSync(humanPath, 'utf8')
         const h1 = humanContent.match(/^# (.+)/m)

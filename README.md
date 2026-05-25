@@ -123,11 +123,11 @@ Then add one line to any skill step:
 Load the `ndv-skeptical` skill and the `ndv-bounded` skill. Apply both throughout this step.
 ```
 
-**Agent-derived (12)** — extracted from an NDV agent's cognitive core:  
-`ndv-skeptical` · `ndv-structural` · `ndv-precise` · `ndv-total-perception` · `ndv-direct` · `ndv-adversarial` · `ndv-vigilant` · `ndv-efficient` · `ndv-contextual` · `ndv-bounded` · `ndv-temporal` · `ndv-map-first`
+**Agent-derived (13)** — extracted from an NDV agent's cognitive core:  
+`ndv-skeptical` · `ndv-structural` · `ndv-precise` · `ndv-total-perception` · `ndv-direct` · `ndv-adversarial` · `ndv-vigilant` · `ndv-efficient` · `ndv-contextual` · `ndv-bounded` · `ndv-temporal` · `ndv-map-first` · `ndv-perceptual`
 
-**Emergent (1)** — a pattern no single agent owns but every workflow needs:  
-`ndv-incremental`
+**Emergent (2)** — a pattern no single agent owns but every workflow needs:  
+`ndv-incremental` · `ndv-parallel-safe`
 
 Modules compose. Keep it to 2–3 per phase — more dilutes the signal.
 
@@ -139,6 +139,8 @@ Modules compose. Keep it to 2–3 per phase — more dilutes the signal.
 | Review / Audit | `ndv-total-perception` + `ndv-adversarial` |
 | Present / Handoff | `ndv-contextual` + `ndv-direct` |
 | Investigation / research | `ndv-map-first` + `ndv-skeptical` |
+| Review / UI audit | + `ndv-perceptual` (any phase assessing visual or UX quality) |
+| Any phase with parallel writes | + `ndv-parallel-safe` (classify ownership before dispatching streams) |
 | Security-sensitive | + `ndv-vigilant` (any phase touching auth/input) |
 
 → **[Full guide: docs/ndv-skills.md](docs/ndv-skills.md)** — catalog, composition patterns, sub-agent injection, lifecycle.
