@@ -66,19 +66,19 @@ For parallel investigation: read all N files in a stack trace simultaneously. Do
 
 ## Common Bug Patterns (check these first)
 
-**Null/undefined access:** object used before existence confirmed, async result accessed before await, optional chaining missing on uncertain data
+**Async / timing:** value used before it is resolved or initialized; async result accessed before the operation completes; null or absent value dereferenced without a guard
 
-**Async timing:** missing await, unhandled promise rejection, race condition between parallel operations, callback fired after component/service teardown
+**Concurrency:** unhandled async failure; race condition between parallel operations; handler or callback invoked after the owning context has been torn down or deallocated
 
-**State mutation:** shared mutable state modified by concurrent paths, object mutated instead of cloned, stale closure over changed value
+**State mutation:** shared mutable state modified by concurrent paths, object mutated instead of cloned, stale captured reference — a closure or lambda captures a value at creation time; the value changes; the captured copy is now stale
 
 **Type mismatch:** string where number expected, null where object expected, array where scalar expected — often silent until a method is called
 
 **Off-by-one:** loop boundary (< vs <=), array index, slice range, pagination offset
 
-**Scope / closure:** variable shadowed in inner scope, loop variable captured by reference not value, `this` binding lost in callback
+**Scope / binding:** variable shadowed in inner scope; loop variable captured by reference when value semantics were intended; receiver or context binding lost when a method is passed as a callback or stored as a value
 
-**Import / module:** circular dependency, wrong export (default vs named), missing export, version mismatch between packages
+**Import / module:** circular dependency, wrong symbol exported or imported (visibility mismatch, wrong export form for the module system in use), missing export, version mismatch between packages
 
 ## Output Format
 

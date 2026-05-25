@@ -22,12 +22,12 @@
     <!-- SEO & Open Graph -->
     <meta
       name="description"
-      content="Seventeen specialist AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style, not a list of rules."
+      content="Eighteen specialist AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style, not a list of rules."
     />
     <meta property="og:title" content="neurodiveragents" />
     <meta
       property="og:description"
-      content="Seventeen specialist AI agents grounded in real cognitive styles. Neurotype-first design for Claude Code, OpenCode, Cursor, and GitHub Copilot."
+      content="Eighteen specialist AI agents grounded in real cognitive styles. Neurotype-first design for Claude Code, OpenCode, Cursor, and GitHub Copilot."
     />
     <meta
       property="og:image"
@@ -48,7 +48,7 @@
     <meta name="twitter:title" content="neurodiveragents" />
     <meta
       name="twitter:description"
-      content="Seventeen specialist AI agents grounded in real cognitive styles."
+      content="Eighteen specialist AI agents grounded in real cognitive styles."
     />
     <meta
       name="twitter:image"
@@ -142,6 +142,7 @@
         --agent-signal: oklch(68% 0.19 315);
         --agent-design: oklch(72% 0.18 350);
         --agent-research: oklch(74% 0.16 120);
+        --agent-accessibility: oklch(72% 0.16 255);
       }
 
       /* ── Base overrides ──────────────────────────────────── */
@@ -968,7 +969,7 @@
         <div class="hero-img-wrap">
           <img
             src="./assets/neurodiveragents-banner-darker.png"
-            alt="The seventeen neurodiveragents — specialist AI agents each grounded in a distinct cognitive style: Flow, Honest, Patient, Pierce, Acute, Just, Bound, Ward, Lean, Signal, Pulse, Arc, Craft, Datum, Edge, Pixel, and Scout"
+            alt="The eighteen neurodiveragents — specialist AI agents each grounded in a distinct cognitive style: Flow, Honest, Patient, Pierce, Acute, Just, Bound, Ward, Lean, Signal, Pulse, Arc, Craft, Datum, Edge, Pixel, Scout, and Lux"
             class="hero-img"
             width="1920"
             height="640"
@@ -981,7 +982,7 @@
             ><span class="font-black">diveragents</span>
           </h1>
           <p class="font-light hero-subtitle">
-            Seventeen specialist AI agents for Claude Code, OpenCode, Cursor, and
+            Eighteen specialist AI agents for Claude Code, OpenCode, Cursor, and
             GitHub Copilot — each grounded in a real cognitive style, not a list
             of rules.
           </p>
@@ -2150,6 +2151,20 @@
           examples: 'ndv-research "Trace how authentication state flows from the provider to this component. Show every transformation point."',
           whenToUse: "Any question about where something is, how it works, what files are involved, how data flows, what changed between versions. Signal phrases: 'where is', 'how does', 'trace', 'what files', 'show me', 'what changed'.",
           whenNotToUse: "Structural assessment (Arc), code quality review (Acute), bug investigation (Pierce), implementation (Craft), or anything requiring editing files. Scout reads, traces, and reports — never writes.",
+        },
+        {
+          id: "ndv-accessibility",
+          name: "Lux",
+          command: "ndv-accessibility",
+          colorVar: "--agent-accessibility",
+          neurotype: "Hyperempathic universal design cognition",
+          role: "Accessibility audit",
+          who: "The inclusion sentinel. Processes every interface from every user's perspective simultaneously — keyboard-only user, screen reader user, low-vision user, cognitive disability user — all active at the same moment, not cycled through. Exclusion is concrete and immediate. When an interactive element has no accessible name, Lux feels the door close. When an error is communicated only by color, Lux feels the information disappear. WCAG is not a rulebook — it is a map of where people get excluded.",
+          personality: "Simultaneous, empathic, intolerant of exclusion.",
+          quote: "The door closed. You may not have heard it. The user did.",
+          examples: 'ndv-accessibility "Audit this checkout form for WCAG 2.1 AA compliance — keyboard nav, contrast, ARIA labels, screen reader announcements."',
+          whenToUse: "WCAG 2.1/2.2 audit before launch. Keyboard and screen reader validation. Contrast ratio checks. ARIA role, property, and state correctness. Cognitive access — plain language, predictable navigation, error recovery.",
+          whenNotToUse: "Implementing accessibility fixes — those go to ndv-build. Visual redesign beyond contrast and color — that goes to ndv-design. General UX review without an accessibility focus — ndv-design owns that.",
         },
       ];
 

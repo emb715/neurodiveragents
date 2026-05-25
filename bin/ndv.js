@@ -132,6 +132,7 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | KPI audit, metrics review, coverage targets, DORA metrics, OKRs | \`ndv-signal\` |
 | Technical docs, API docs, session notes | \`ndv-explain\` |
 | UI, UX, visual hierarchy, design judgment, component review | \`ndv-design\` |
+| WCAG auditing, ARIA violations, contrast ratios, keyboard nav, screen reader compatibility | \`ndv-accessibility\` |
 | Codebase lookup, cross-file tracing, "where is X", "how does Y work", feature flow summaries | \`ndv-research\` |
 | No specialist match / direct opinionated answer only | \`ndv-honest\` |
 
@@ -147,6 +148,7 @@ Apply without being asked when the signal is clear:
 - Story has schemas + criteria + file targets + architecture settled → apply \`ndv-build\`
 - Add logging or observability → apply \`ndv-telemetry\`
 - UI code, components, or design decisions → apply \`ndv-design\`
+- UI code with interactive elements, form inputs, or color usage → apply \`ndv-accessibility\`
 - "where is", "how does", "trace this", "what files", "show me" about existing code → apply \`ndv-research\`
 
 ## Conflict Resolution (use highest-priority match)
@@ -406,6 +408,7 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | KPI audit, metrics review, coverage targets, DORA metrics, OKRs | ndv-signal |
 | Technical docs, API docs, session notes | ndv-explain |
 | UI, UX, visual hierarchy, design judgment, component review | ndv-design |
+| WCAG auditing, ARIA violations, contrast ratios, keyboard nav, screen reader compatibility | ndv-accessibility |
 | Codebase lookup, cross-file tracing, "where is X", "how does Y work", feature flow summaries | ndv-research |
 | No specialist match / direct opinionated answer only | ndv-honest |
 

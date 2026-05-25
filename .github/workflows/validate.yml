@@ -20,6 +20,84 @@ jobs:
       - name: Validate agent files and human files
         run: node --test test/validate-agents.test.js
 
+  validate-new-agents:
+    name: Authoring-guide validation (changed agents only)
+    runs-on: ubuntu-latest
+    # Only meaningful on PRs — push to main skips (already vetted)
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Fetch base branch so git diff works
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Detect changed agent files
+        id: changed
+        run: |
+          BASE=${{ github.event.pull_request.base.sha }}
+          HEAD=${{ github.event.pull_request.head.sha }}
+
+          # Agent model files changed in this PR (strip path, strip .md)
+          AGENT_NAMES=$(git diff --name-only "$BASE" "$HEAD" \
+            | grep '^agents/ndv-.*\.md$' \
+            | sed 's|^agents/||; s|\.md$||' \
+            | paste -sd ',' -)
+
+          echo "agent_names=$AGENT_NAMES" >> "$GITHUB_OUTPUT"
+          echo "Changed agents: $AGENT_NAMES"
+
+      - name: Run authoring-guide checks on changed agents
+        if: steps.changed.outputs.agent_names != ''
+        env:
+          CHANGED_AGENTS: ${{ steps.changed.outputs.agent_names }}
+        run: node --test test/validate-agents.test.js
+
+      - name: No new agent files detected — skipping authoring checks
+        if: steps.changed.outputs.agent_names == ''
+        run: echo "No agents/ndv-*.md files changed in this PR. Authoring-guide checks skipped."
+
+  request-copilot-review:
+    name: Request Copilot authoring review
+    runs-on: ubuntu-latest
+    # Only on PRs that touch agent or human files — not on push to main
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for changed agent files
+        id: changed
+        run: |
+          BASE=${{ github.event.pull_request.base.sha }}
+          HEAD=${{ github.event.pull_request.head.sha }}
+
+          COUNT=$(git diff --name-only "$BASE" "$HEAD" \
+            | grep -E '^(agents/ndv-.*\.md|humans/ndv-.*\.human\.md)$' \
+            | wc -l | tr -d ' ')
+
+          echo "count=$COUNT" >> "$GITHUB_OUTPUT"
+          echo "Agent/human files changed: $COUNT"
+
+      - name: Request Copilot code review
+        if: steps.changed.outputs.count != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers \
+            -f "reviewers[]=copilot" \
+            || echo "Copilot review request failed — enable Copilot code review in repository settings."
+
   test-install:
     name: Install smoke tests
     runs-on: ubuntu-latest

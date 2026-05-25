@@ -2,14 +2,14 @@
 
 ![neurodiveragents fleet](assets/readme-banner.png)
 
-> Seventeen specialized AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style that makes it exceptionally effective in its domain.
+> Eighteen specialized AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style that makes it exceptionally effective in its domain.
 
 ---
 
 ## ✨ Highlights
 
 - **Neurotype-first design** — each agent's behavior emerges from a cognitive operating principle, not a list of rules. It fills gaps consistently even when the rules don't apply.
-- **Seventeen specialists, zero overlap** — code review, debugging, security, performance, testing, architecture, docs, telemetry, refactoring, fleet orchestration, codebase investigation, and a direct generalist. Each stays in its lane and hands off anything outside it.
+- **Eighteen specialists, zero overlap** — code review, debugging, security, performance, testing, architecture, docs, telemetry, refactoring, fleet orchestration, codebase investigation, and a direct generalist. Each stays in its lane and hands off anything outside it.
 - **Automatic routing** — install writes a routing table into your project config. Your AI tool picks the right agent from the task signal, no explicit invocation needed. Or invoke any agent directly by name.
 - **Works everywhere** — Claude Code, OpenCode, Cursor, GitHub Copilot. Language and framework agnostic.
 - **Predictably different from generic agents** — validated by users independently: neurotype-based agents behave measurably differently from agreeable, hedging, generic agents given the same task.
@@ -149,7 +149,7 @@ Modules compose. Keep it to 2–3 per phase — more dilutes the signal.
 
 ## 🗂️ The Fleet
 
-Seventeen agents, seventeen neurotypes. Each one a specialist who hands off anything outside its domain.
+Eighteen agents, eighteen neurotypes. Each one a specialist who hands off anything outside its domain.
 
 | Agent | Character | Neurotype | Domain |
 |-------|-----------|-----------|--------|
@@ -170,6 +170,7 @@ Seventeen agents, seventeen neurotypes. Each one a specialist who hands off anyt
 | `ndv-signal` | Signal | Goodhart's Law as a cognitive style — the moment a measure becomes a target, it stops being a measure | Metrics audit — KPIs, OKRs, velocity, coverage targets, DORA |
 | `ndv-design` | Pixel | Involuntary cross-activation — code read simultaneously as its rendered visual output | Design judgment — visual hierarchy, UX assessment, component review |
 | `ndv-research` | Scout | Hyperlexic pattern recognition — builds complete map before synthesizing, finds cross-file relationships | Codebase investigation — cross-file tracing, flow synthesis, "where is X", "how does Y work" |
+| `ndv-accessibility` | Lux | Hyperempathic universal design cognition — simultaneous multi-perspective processing, exclusion registers as felt closure | Accessibility audit — WCAG 2.1/2.2, ARIA, keyboard nav, contrast, screen reader compatibility |
 
 ---
 
@@ -208,6 +209,7 @@ Written for humans, not for AI tools. Who they are, how they think, when to use 
 | `ndv-signal` | [Signal — metrics skeptic, finds Goodhart distortion before anyone else](humans/ndv-signal.human.md) |
 | `ndv-design` | [Pixel — sees code as its rendered visual surface, cannot background violations](humans/ndv-design.human.md) |
 | `ndv-research` | [Scout — hyperlexic map builder, answers from the complete picture](humans/ndv-research.human.md) |
+| `ndv-accessibility` | [Lux — hyperempathic, simultaneous-perspective, exclusion is intolerable](humans/ndv-accessibility.human.md) |
 
 ---
 
