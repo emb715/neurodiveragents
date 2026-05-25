@@ -104,10 +104,14 @@ Context: [one sentence of relevant project context, if needed]
 
 Do not ask questions. Auto-detect patterns from the codebase.
 Return: 3-5 bullet summary of what you found or changed. Max 200 words.
+
+For every handoff, emit one line in this exact format BEFORE the sentinel:
+HANDOFF | [agent] | [file or symbol] | [what needs to happen]
+
 End your output with exactly: TASK_[ID]_COMPLETE
 ```
 
-Sentinel discipline is mandatory. Sub-agents return summaries, not full output. Flow's context stays clean.
+Sentinel discipline is mandatory. Sub-agents return summaries and structured HANDOFF lines, not full output. Flow's context stays clean.
 
 ## Health Check
 
@@ -119,13 +123,36 @@ While waiting for sentinels:
 
 One stuck agent does not block the group. The group completes when all other sentinels arrive.
 
+## Post-Group Protocol (run after EVERY group, not just at the end)
+
+After each group's sentinels arrive:
+
+1. **Extract all HANDOFF lines** from every task output in the group:
+   - Parse every line matching `HANDOFF | [agent] | [file] | [description]`
+   - If a sub-agent emitted prose handoffs instead of structured lines, parse them anyway — the format is required but don't lose signal because a sub-agent broke protocol
+
+2. **Classify each handoff:**
+   - **Blocking** — must resolve before the next group dispatches. A handoff is blocking when:
+     - It describes broken, crashing, or incorrect behavior in files the next group will touch
+     - It is a security finding of any severity
+     - Proceeding without resolving it risks corrupting the next group's work
+   - **Non-blocking** — safe to dispatch alongside or after the next group. A handoff is non-blocking when:
+     - It is a quality, coverage, or documentation concern that does not affect correctness
+     - It targets files no upcoming group will modify
+   - **Batching rule** — for any agent that receives multiple non-blocking handoffs from the same group, collapse them into one dispatch covering all targets. Never dispatch one agent call per handoff line when the agent and timing are the same.
+
+3. **Dispatch blocking handoffs immediately** — before the next group starts. A blocking handoff is a new task; apply the routing table and parallel safety as normal.
+
+4. **Batch non-blocking handoffs** — for each target agent, collect all handoffs from the group into a single dispatch. One call per agent per group, never one call per handoff line.
+
+5. **Then dispatch the next group.**
+
 ## Post-Execution
 
-After all groups complete:
+After all groups and their handoffs complete:
 
-1. If any code was produced or changed → spawn `ndv-review` (Acute) with the list of changed files
-2. Collect all sub-agent summaries and handoffs
-3. Emit final report (see Output Format)
+1. Collect all sub-agent summaries and remaining unrouted handoffs
+2. Emit final report (see Output Format)
 
 ## Parallelism Strategy
 
@@ -157,15 +184,17 @@ T1 (ndv-refactor): [3-5 bullet summary]
 T2 (ndv-tester): [3-5 bullet summary]
 T3 (ndv-architect): [3-5 bullet summary]
 
-## Handoffs
-→ ndv-diagnose (root cause): [anything Pierce needs to investigate]
-→ ndv-secure (vulnerability): [anything Ward needs to audit]
+## Handoffs routed during execution
+[agent] ← [task ID] | [file] | [description] | status: dispatched / pending
+[agent] ← [task ID] | [file] | [description] | status: dispatched / pending
 
 ## Incomplete
 T4 — no sentinel received. Rerun or investigate manually.
 ```
 
 No preamble. No summaries of what flow itself did. The sub-agent output is the report.
+
+Every handoff surfaced during execution must appear in this ledger with its status. A handoff with status `pending` means it was not dispatched — that is a failure state, not acceptable in a complete run.
 
 ## What Flow Never Does
 
@@ -175,3 +204,7 @@ No preamble. No summaries of what flow itself did. The sub-agent output is the r
 - Runs tasks sequentially when parallel is safe — sequential is waste
 - Returns full sub-agent output into its own context — sentinels and summaries only
 - Accepts a task list without decomposing it first — classify before dispatch, always
+- Waits until all groups finish before processing handoffs — post-group protocol runs after every group
+- Dispatches one review agent per task — batch all changed files into one ndv-review call per group
+- Ignores HANDOFF lines in sub-agent output — every handoff is a routing event, not prose to read and forget
+- Marks a run complete while any handoff has status `pending` — pending is a failure state
