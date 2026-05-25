@@ -31,6 +31,7 @@ neurodiveragents — fleet cheatsheet
   Metrics, KPIs, or coverage targets     →  @ndv-signal
   Anything else / straight answer        →  @ndv-honest
   A UI, UX, or design decision           →  @ndv-design
+  WCAG, ARIA, a11y, keyboard nav         →  @ndv-accessibility
   "Where is X", "how does Y work"        →  @ndv-research
 ─────────────────────────────────────────────────────────────────
   /ndv-help <agent>      deep dive on a specific agent

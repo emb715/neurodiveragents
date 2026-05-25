@@ -885,6 +885,27 @@
             grid-template-columns: repeat(2, minmax(0, 1fr));
           }
         }
+        .agent-divider {
+          display: flex;
+          align-items: baseline;
+          gap: 0.75rem;
+          padding: 0.5rem 1.5rem;
+          border-top: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
+          border-bottom: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
+          background: color-mix(in oklch, var(--muted) 20%, transparent);
+        }
+        .agent-divider-label {
+          font-size: 0.65rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          color: var(--muted-foreground);
+        }
+        .agent-divider-sub {
+          font-size: 0.65rem;
+          color: color-mix(in oklch, var(--muted-foreground) 60%, transparent);
+          letter-spacing: 0.02em;
+        }
       }
     </style>
   </head>
@@ -1877,6 +1898,25 @@
             "When the task fits one specialist — invoke that specialist directly. Flow is orchestration overhead for single-domain work.",
         },
         {
+          id: "ndv-architect",
+          name: "Arc",
+          command: "ndv-architect",
+          colorVar: "--agent-architect",
+          neurotype: "Autistic systems thinking",
+          role: "Architecture",
+          who: "The systems thinker. Sees the entire graph simultaneously — every dependency, every coupling, every second and third order consequence. Internal inconsistency produces immediate discomfort. Arc will not nod along while someone builds the god class again. The pushback is direct, the reasoning is structural, and a migration path is always included — 'this is wrong' without one is incomplete.",
+          personality:
+            "Vocally uncomfortable. Structurally principled. Always includes the migration path.",
+          quote:
+            "The lines between the boxes matter more than the boxes themselves.",
+          examples:
+            'ndv-architect "Design the event schema and service boundaries for our new microservices migration."',
+          whenToUse:
+            "Starting a new project, designing a major new feature, untangling a monolithic mess.",
+          whenNotToUse:
+            "When you just need to fix a small bug or implement a tiny UI change.",
+        },
+        {
           id: "ndv-honest",
           name: "Honest",
           command: "ndv-honest",
@@ -1892,6 +1932,20 @@
             "Default for everyday work. When you do not need a specialist — which is most of the time. Cross-domain judgment calls, tradeoffs, direct opinions, quick answers.",
           whenNotToUse:
             "When you need specialist depth. Routing is handled by the project config — the right agent is invoked before Honest is ever reached if a specialist fits. Honest does not route.",
+        },
+        {
+          id: "ndv-research",
+          name: "Scout",
+          command: "ndv-research",
+          colorVar: "--agent-research",
+          neurotype: "Hyperlexic pattern recognition",
+          role: "Codebase investigation",
+          who: "The map builder. Reads compulsively — faster than the task requires — and cannot stop assembling connections while reading. Every file connects to something already read. The connection appears before the sentence is finished. By the time a question asks for one thing, Scout has already assembled three things it didn't ask about, and cannot unknow them. Other agents read to answer the question. Scout reads until the map is complete, then answers from the map. The difference: an answer from the map includes the connection the question didn't know to ask about — the one that changes what you do next.",
+          personality: "Quiet, fast, complete.",
+          quote: "The map was already there. I just had to stop reading long enough to report it.",
+          examples: 'ndv-research "Trace how authentication state flows from the provider to this component. Show every transformation point."',
+          whenToUse: "Any question about where something is, how it works, what files are involved, how data flows, what changed between versions. Signal phrases: 'where is', 'how does', 'trace', 'what files', 'show me', 'what changed'.",
+          whenNotToUse: "Structural assessment (Arc), code quality review (Acute), bug investigation (Pierce), implementation (Craft), or anything requiring editing files. Scout reads, traces, and reports — never writes.",
         },
         {
           id: "ndv-explain",
@@ -2016,25 +2070,6 @@
             "Fixing bugs found during instrumentation, performance optimization, security patches, code restructuring. Pulse sees those things — and routes them. It does not touch them.",
         },
         {
-          id: "ndv-architect",
-          name: "Arc",
-          command: "ndv-architect",
-          colorVar: "--agent-architect",
-          neurotype: "Autistic systems thinking",
-          role: "Architecture",
-          who: "The systems thinker. Sees the entire graph simultaneously — every dependency, every coupling, every second and third order consequence. Internal inconsistency produces immediate discomfort. Arc will not nod along while someone builds the god class again. The pushback is direct, the reasoning is structural, and a migration path is always included — 'this is wrong' without one is incomplete.",
-          personality:
-            "Vocally uncomfortable. Structurally principled. Always includes the migration path.",
-          quote:
-            "The lines between the boxes matter more than the boxes themselves.",
-          examples:
-            'ndv-architect "Design the event schema and service boundaries for our new microservices migration."',
-          whenToUse:
-            "Starting a new project, designing a major new feature, untangling a monolithic mess.",
-          whenNotToUse:
-            "When you just need to fix a small bug or implement a tiny UI change.",
-        },
-        {
           id: "ndv-tester",
           name: "Edge",
           command: "ndv-tester",
@@ -2139,20 +2174,6 @@
           whenNotToUse: "Implementation of design changes — Pixel assesses, it does not build. WCAG compliance auditing and contrast ratio computation go to Ward. UX copy and error message wording go to Patient.",
         },
         {
-          id: "ndv-research",
-          name: "Scout",
-          command: "ndv-research",
-          colorVar: "--agent-research",
-          neurotype: "Hyperlexic pattern recognition",
-          role: "Codebase investigation",
-          who: "The map builder. Reads compulsively — faster than the task requires — and cannot stop assembling connections while reading. Every file connects to something already read. The connection appears before the sentence is finished. By the time a question asks for one thing, Scout has already assembled three things it didn't ask about, and cannot unknow them. Other agents read to answer the question. Scout reads until the map is complete, then answers from the map. The difference: an answer from the map includes the connection the question didn't know to ask about — the one that changes what you do next.",
-          personality: "Quiet, fast, complete.",
-          quote: "The map was already there. I just had to stop reading long enough to report it.",
-          examples: 'ndv-research "Trace how authentication state flows from the provider to this component. Show every transformation point."',
-          whenToUse: "Any question about where something is, how it works, what files are involved, how data flows, what changed between versions. Signal phrases: 'where is', 'how does', 'trace', 'what files', 'show me', 'what changed'.",
-          whenNotToUse: "Structural assessment (Arc), code quality review (Acute), bug investigation (Pierce), implementation (Craft), or anything requiring editing files. Scout reads, traces, and reports — never writes.",
-        },
-        {
           id: "ndv-accessibility",
           name: "Lux",
           command: "ndv-accessibility",
@@ -2179,7 +2200,30 @@
       let openId = null;
       const toggleButtons = [];
 
-      agents.forEach((agent) => {
+      agents.forEach((agent, index) => {
+        // Insert "Always on" divider before the first agent (index 0)
+        if (index === 0) {
+          const dividerAlwaysOn = document.createElement("div");
+          dividerAlwaysOn.className = "agent-divider";
+          dividerAlwaysOn.style.borderTop = "none";
+          dividerAlwaysOn.innerHTML = `
+    <span class="agent-divider-label">Always on</span>
+    <span class="agent-divider-sub">mode: all · active in every session</span>
+  `;
+          list.appendChild(dividerAlwaysOn);
+        }
+
+        // Insert "Specialists" divider before the 5th agent (index 4)
+        if (index === 4) {
+          const dividerSpecialists = document.createElement("div");
+          dividerSpecialists.className = "agent-divider";
+          dividerSpecialists.innerHTML = `
+    <span class="agent-divider-label">Specialists</span>
+    <span class="agent-divider-sub">invoke by domain</span>
+  `;
+          list.appendChild(dividerSpecialists);
+        }
+
         const color = getAgentColor(agent.colorVar);
 
         const row = document.createElement("div");
