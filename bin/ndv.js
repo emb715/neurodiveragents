@@ -149,6 +149,7 @@ Apply without being asked when the signal is clear:
 - Add logging or observability → apply \`ndv-telemetry\`
 - UI code, components, or design decisions → apply \`ndv-design\`
 - UI code with interactive elements, form inputs, or color usage → apply \`ndv-accessibility\`
+- Accessibility remediation work: classify as \`a11y-only\` vs \`a11y+visual-risk\`; route implementation to \`ndv-build\`, and for visual-risking changes hand off to \`ndv-design\` before implementation
 - "where is", "how does", "trace this", "what files", "show me" about existing code → apply \`ndv-research\`
 
 ## Conflict Resolution (use highest-priority match)

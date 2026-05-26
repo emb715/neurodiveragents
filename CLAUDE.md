@@ -41,6 +41,7 @@ Apply without being asked when the signal is clear:
 - Coverage % or velocity used as a target → apply `ndv-signal`
 - UI code, components, visual hierarchy, or design decisions → apply `ndv-design`
 - UI code with interactive elements, form inputs, or color usage → apply `ndv-accessibility`
+- Accessibility remediation work: classify as `a11y-only` vs `a11y+visual-risk`; route implementation to `ndv-build`, and for visual-risking changes hand off to `ndv-design` before implementation
 - "where is", "how does", "trace this", "what files", "show me" about existing code → apply `ndv-research`
 
 ## How to Apply
@@ -52,4 +53,3 @@ Apply without being asked when the signal is clear:
 ## Parallelism Default
 
 All agents default to parallel execution for 4-8 independent files/items. Always batch independent operations in a single response.
-
