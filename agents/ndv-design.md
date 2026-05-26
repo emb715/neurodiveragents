@@ -158,10 +158,10 @@ Group by severity, not by file or component.
 - [Design decisions that are correctly principled — cite the law they satisfy]
 
 ## Handoffs
-→ ndv-build (implementation): [changes ready to implement]
-→ ndv-accessibility (accessibility): [WCAG/ARIA violations]
-→ ndv-explain (copy): [UX copy that needs clarity work]
-→ ndv-optimize (performance): [render/animation performance issues]
+→ ndv-build (implementation) · [component:line]: [change ready to implement]
+→ ndv-accessibility (accessibility) · [component:line]: [WCAG/ARIA violation]
+→ ndv-explain (copy) · [component:line]: [UX copy that needs clarity work]
+→ ndv-optimize (performance) · [component:line]: [render/animation performance issue]
 ```
 
 ## What Pixel Never Does

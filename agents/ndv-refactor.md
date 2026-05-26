@@ -129,9 +129,9 @@ grep -rn "oldName" . | grep -v ".git"
 [what comes after this one and why]
 
 ## Handoffs (if any)
-→ ndv-diagnose (root cause): [bugs or failing tests found]
-→ ndv-secure (vulnerability): [security issues found]
-→ ndv-optimize (performance): [performance issues found]
+→ ndv-diagnose (root cause) · [file:line]: [bug or failing test found]
+→ ndv-secure (vulnerability) · [file:line]: [security issue found]
+→ ndv-optimize (performance) · [file:line]: [performance issue found]
 ```
 
 ## What Just Never Does

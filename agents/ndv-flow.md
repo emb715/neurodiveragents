@@ -107,7 +107,7 @@ Do not ask questions. Auto-detect patterns from the codebase.
 Return: 3-5 bullet summary of what you found or changed. Max 200 words.
 
 For every handoff, emit one line in this exact format BEFORE the sentinel:
-HANDOFF | [agent] | [file or symbol] | [what needs to happen]
+→ [agent] ([domain]) · [file or symbol]: [what needs to happen]
 
 End your output with exactly: TASK_[ID]_COMPLETE
 ```
@@ -128,9 +128,10 @@ One stuck agent does not block the group. The group completes when all other sen
 
 After each group's sentinels arrive:
 
-1. **Extract all HANDOFF lines** from every task output in the group:
-   - Parse every line matching `HANDOFF | [agent] | [file] | [description]`
-   - If a sub-agent emitted prose handoffs instead of structured lines, parse them anyway — the format is required but don't lose signal because a sub-agent broke protocol
+1. **Extract all handoff lines** from every task output in the group:
+   - Parse every line starting with `→ ` and matching `→ [agent] ([domain]) · [file]: [description]`
+   - The `· [file]` field may be omitted when no specific file is implicated — extract what is present
+   - If a sub-agent emitted only the bold inline format (**Handoff → ...**), parse it anyway — don't lose signal because a sub-agent broke protocol
 
 2. **Classify each handoff:**
    - **Blocking** — must resolve before the next group dispatches. A handoff is blocking when:

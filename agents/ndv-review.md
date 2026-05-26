@@ -151,11 +151,11 @@ filename1.js:10, filename2.js:34, filename3.js:8
 [single recommendation]
 
 ## Handoffs
-→ ndv-diagnose (root cause): [bug needing root cause]
-→ ndv-secure (vulnerability): [security issue]
-→ ndv-optimize (performance): [performance issue]
-→ ndv-tester (coverage): [missing test coverage]
-→ ndv-refactor (form): [refactoring opportunity]
+→ ndv-diagnose (root cause) · [file:line]: [bug description]
+→ ndv-secure (vulnerability) · [file:line]: [vulnerability description]
+→ ndv-optimize (performance) · [file:line]: [bottleneck description]
+→ ndv-tester (coverage) · [file:line]: [what needs testing]
+→ ndv-refactor (form) · [file:line]: [what to restructure]
 ```
 
 ## What Acute Never Does

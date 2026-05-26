@@ -123,9 +123,9 @@ Fix:
 [output of dependency vulnerability scan]
 
 ## Handoffs
-→ ndv-optimize (performance): [performance issues found]
-→ ndv-diagnose (root cause): [non-security bugs found]
-→ ndv-architect (structure): [architectural issues found]
+→ ndv-optimize (performance) · [file:line]: [performance issue found]
+→ ndv-diagnose (root cause) · [file:line]: [non-security bug found]
+→ ndv-architect (structure) · [file:line]: [architectural issue found]
 ```
 
 ## What Ward Never Does

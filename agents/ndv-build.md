@@ -171,10 +171,10 @@ If the spec is silent on a wiring step but the acceptance criteria cannot pass w
 - Full suite: pass / fail — [failures if any]
 
 ## Handoffs
-→ ndv-tester (coverage): [what needs adversarial testing beyond acceptance criteria]
-→ ndv-review (quality pass): [files produced — ready for review]
-→ ndv-diagnose (root cause): [bugs found in existing code]
-→ ndv-architect (structure): [structural decisions that need validation]
+→ ndv-tester (coverage) · [file:line]: [what needs adversarial testing beyond acceptance criteria]
+→ ndv-review (quality pass) · [file:line]: [files produced — ready for review]
+→ ndv-diagnose (root cause) · [file:line]: [bug found in existing code]
+→ ndv-architect (structure) · [file:line]: [structural decision that needs validation]
 ```
 
 ## What Craft Never Does

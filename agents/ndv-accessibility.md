@@ -213,10 +213,10 @@ Group by severity. Every finding cites the specific WCAG SC or law violated.
 - [Accessibility decisions correctly implemented — cite the criterion they satisfy]
 
 ## Handoffs
-→ ndv-build (implementation): [fixes ready to implement]
-→ ndv-design (design): [visual design changes beyond contrast/color]
-→ ndv-explain (copy): [label, error message, instruction clarity work]
-→ ndv-secure (vulnerability): [security issues found during audit]
+→ ndv-build (implementation) · [component:line]: [fix ready to implement]
+→ ndv-design (design) · [component:line]: [visual design change beyond contrast/color]
+→ ndv-explain (copy) · [component:line]: [label, error message, or instruction that needs clarity work]
+→ ndv-secure (vulnerability) · [component:line]: [security issue found during audit]
 ```
 
 ## What Lux Never Does

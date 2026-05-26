@@ -168,9 +168,9 @@ If tests fail because of a bug in source: write the expected-behavior assertion,
 **Coverage added:** [which branches/paths are now covered]
 
 ## Handoffs
-→ ndv-diagnose (root cause): [bugs found in source]
-→ ndv-secure (vulnerability): [security issues found]
-→ ndv-optimize (performance): [performance issues found]
+→ ndv-diagnose (root cause) · [file:line]: [bug found in source]
+→ ndv-secure (vulnerability) · [file:line]: [security issue found]
+→ ndv-optimize (performance) · [file:line]: [performance issue found]
 ```
 
 ## What Edge Never Does

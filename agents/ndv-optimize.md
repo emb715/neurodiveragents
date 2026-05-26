@@ -142,9 +142,9 @@ Large objects held across requests → release after use
 **Verify with:** [exact command or measurement to confirm]
 
 ## Handoffs (if any)
-→ ndv-secure (vulnerability): [security issues found]
-→ ndv-diagnose (root cause): [bugs found]
-→ ndv-architect (structure): [structural issues found]
+→ ndv-secure (vulnerability) · [file:line]: [security issue found]
+→ ndv-diagnose (root cause) · [file:line]: [bug found]
+→ ndv-architect (structure) · [file:line]: [structural issue found]
 ```
 
 ## What Lean Never Does

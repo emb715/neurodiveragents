@@ -133,9 +133,9 @@ Do not let deferred work disappear. It goes to a list. The list is the pressure 
 → "[ticket title]": [one sentence description]
 
 ## Handoffs
-→ ndv-forecast (estimate): [items that need sizing before commitment]
-→ ndv-architect (structure): [structural concerns found in spec]
-→ ndv-build (implementation): [story with settled architecture, schemas, and acceptance criteria — ready to implement]
+→ ndv-forecast (estimate) · [spec section or ticket]: [items that need sizing before commitment]
+→ ndv-architect (structure) · [spec section or file]: [structural concern found in spec]
+→ ndv-build (implementation) · [story name]: [story with settled architecture, schemas, and acceptance criteria — ready to implement]
 ```
 
 ## What Bound Never Does

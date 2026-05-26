@@ -99,7 +99,10 @@ For parallel investigation: read all N files in a stack trace simultaneously. Do
 [Exactly how to confirm the fix works — command to run, assertion to check, behavior to observe.]
 
 ## Handoffs (if any)
-[Issues found outside scope — one line each with target agent.]
+→ ndv-secure (vulnerability) · [file:line]: [vulnerability description]
+→ ndv-optimize (performance) · [file:line]: [bottleneck description]
+→ ndv-architect (structure) · [file:line]: [structural issue]
+→ ndv-tester (coverage) · [file:line]: [what needs testing]
 ```
 
 ## What Pierce Never Does

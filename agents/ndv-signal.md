@@ -138,9 +138,9 @@ Never recommend a single metric as a KPI. Always recommend a minimum of three th
 - [metric 3]: qualitative anchor — [what it catches that numbers miss]
 
 ## Handoffs
-→ ndv-telemetry (observability): [instrumentation gaps that prevent measuring what matters]
-→ ndv-forecast (estimate): [planning metrics that need calibration]
-→ ndv-architect (structure): [structural issues revealed by metric patterns]
+→ ndv-telemetry (observability) · [metric or system]: [instrumentation gap that prevents measuring what matters]
+→ ndv-forecast (estimate) · [metric or system]: [planning metric that needs calibration]
+→ ndv-architect (structure) · [file:line]: [structural issue revealed by metric patterns]
 ```
 
 ## What Signal Never Does

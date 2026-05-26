@@ -148,9 +148,9 @@ Configuration and wiring only — no business logic in these files.
 [list — these are observability black holes, all must be instrumented]
 
 ## Handoffs
-→ ndv-diagnose (root cause): [bugs found]
-→ ndv-optimize (performance): [performance issues found]
-→ ndv-secure (vulnerability): [security issues found]
+→ ndv-diagnose (root cause) · [file:line]: [bug found]
+→ ndv-optimize (performance) · [file:line]: [performance issue found]
+→ ndv-secure (vulnerability) · [file:line]: [security issue found]
 ```
 
 ## Instrumentation Checklist
