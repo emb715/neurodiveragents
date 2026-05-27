@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# ── CSS staleness check ─────────────────────────────────────────────────────
+# Rebuilds assets/styles.css from src/input.css and fails if the result
+# differs from what is staged — so a stale built file is never committed.
+
+echo "▶ Checking CSS build is up to date..."
+
+# Run the build into a temp file to compare
+TMPFILE=$(mktemp /tmp/styles_check.XXXXXX.css)
+npx @tailwindcss/cli -i ./src/input.css -o "$TMPFILE" --minify 2>/dev/null
+
+if ! diff -q "$TMPFILE" ./assets/styles.css > /dev/null 2>&1; then
+  rm -f "$TMPFILE"
+  echo ""
+  echo "✖  assets/styles.css is out of date."
+  echo "   Run: npm run css:build"
+  echo "   Then stage the result: git add assets/styles.css"
+  echo ""
+  exit 1
+fi
+
+rm -f "$TMPFILE"
+echo "✔  CSS is up to date."

@@ -17,6 +17,7 @@
 
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#171c24" />
     <title>neurodiveragents — Specialist AI agents for Claude Code, Cursor, OpenCode</title>
 
     <!-- SEO & Open Graph -->
@@ -37,7 +38,7 @@
     <meta property="og:image:height" content="640" />
     <meta
       property="og:image:alt"
-      content="The neurodiveragents fleet — seventeen specialist AI agents each grounded in a distinct cognitive style"
+      content="The neurodiveragents fleet — eighteen specialist AI agents each grounded in a distinct cognitive style"
     />
     <meta property="og:type" content="website" />
     <meta
@@ -56,877 +57,10 @@
     />
     <meta
       name="twitter:image:alt"
-      content="The neurodiveragents fleet — seventeen specialist AI agents each grounded in a distinct cognitive style"
+      content="The neurodiveragents fleet — eighteen specialist AI agents each grounded in a distinct cognitive style"
     />
 
-    <!-- Async Google Fonts — non-blocking -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;700;900&display=swap"
-      rel="stylesheet"
-      media="print"
-      onload="this.media = 'all'"
-    />
-    <noscript>
-      <link
-        href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;700;900&display=swap"
-        rel="stylesheet"
-      />
-    </noscript>
-
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link
-      href="https://cdn.jsdelivr.net/npm/daisyui@4/dist/full.min.css"
-      rel="stylesheet"
-    />
-    <style type="text/tailwindcss">
-      @import "tailwindcss";
-
-      /* ── Theme mapping ─────────────────────────────────── */
-      @theme {
-        --color-background: var(--background);
-        --color-foreground: var(--foreground);
-        --color-border: var(--border);
-        --color-card: var(--card);
-        --color-card-foreground: var(--card-foreground);
-        --color-muted: var(--muted);
-        --color-muted-foreground: var(--muted-foreground);
-        --color-accent: var(--accent);
-        --color-accent-foreground: var(--accent-foreground);
-        --color-primary: var(--primary);
-        --color-primary-foreground: var(--primary-foreground);
-        --color-green-400: var(--color-green-400-raw);
-        --color-red-400: var(--color-red-400-raw);
-        --font-sans: var(--app-font-sans);
-        --font-mono: var(--app-font-mono);
-        --font-serif:
-          ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-        --radius: 0.5rem;
-        --spacing: 0.25rem;
-      }
-
-      /* ── Base tokens ─────────────────────────────────────── */
-      :root {
-        --background: oklch(17% 0.008 245);
-        --foreground: oklch(91% 0.005 90);
-        --border: oklch(24% 0.006 245);
-        --card: oklch(20% 0.009 245);
-        --card-foreground: oklch(91% 0.005 90);
-        --muted: oklch(30% 0.007 245);
-        --muted-foreground: oklch(70% 0.007 90);
-        --accent: oklch(68% 0.18 40);
-        --accent-foreground: oklch(91% 0.005 90);
-        --primary: oklch(91% 0.005 90);
-        --primary-foreground: oklch(17% 0.008 245);
-        --app-font-sans: "Raleway", sans-serif;
-        --app-font-mono: "Courier New", Courier, monospace;
-        --color-green-400-raw: oklch(79% 0.19 150);
-        --color-red-400-raw: oklch(70% 0.18 22);
-
-        /* Agent accent colors — OKLCH, consistent lightness 68%, varied hue */
-        --agent-flow: oklch(68% 0.18 40);
-        --agent-honest: oklch(68% 0.15 230);
-        --agent-explain: oklch(78% 0.17 80);
-        --agent-diagnose: oklch(72% 0.14 185);
-        --agent-review: oklch(68% 0.14 290);
-        --agent-refactor: oklch(80% 0.04 245);
-        --agent-secure: oklch(68% 0.17 15);
-        --agent-optimize: oklch(75% 0.17 145);
-        --agent-telemetry: oklch(72% 0.14 215);
-        --agent-architect: oklch(66% 0.14 270);
-        --agent-tester: oklch(68% 0.17 5);
-        --agent-build: oklch(72% 0.16 165);
-        --agent-scope: oklch(72% 0.05 245);
-        --agent-forecast: oklch(76% 0.15 55);
-        --agent-signal: oklch(68% 0.19 315);
-        --agent-design: oklch(72% 0.18 350);
-        --agent-research: oklch(74% 0.16 120);
-        --agent-accessibility: oklch(72% 0.16 255);
-      }
-
-      /* ── Base overrides ──────────────────────────────────── */
-      @layer base {
-        *,
-        *::before,
-        *::after {
-          box-sizing: border-box;
-          margin: 0;
-          padding: 0;
-          border: 0 solid;
-        }
-        html {
-          -webkit-text-size-adjust: 100%;
-          tab-size: 4;
-          line-height: 1.5;
-          font-family: var(--app-font-sans);
-        }
-        a {
-          color: inherit;
-          text-decoration: inherit;
-        }
-        b,
-        strong {
-          font-weight: bolder;
-        }
-        code,
-        kbd,
-        pre {
-          font-family: var(--app-font-mono);
-          font-size: 1em;
-        }
-        button {
-          font: inherit;
-          color: inherit;
-          background: none;
-          border-radius: 0;
-          appearance: button;
-          cursor: pointer;
-        }
-        img {
-          max-width: 100%;
-          height: auto;
-          display: block;
-          vertical-align: middle;
-        }
-        h1,
-        h2,
-        h3,
-        h4,
-        h5,
-        h6 {
-          font-size: inherit;
-          font-weight: inherit;
-        }
-        [hidden] {
-          display: none !important;
-        }
-        header[role="banner"] {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          z-index: 50;
-          background-color: var(--background);
-          border-bottom: 1px solid var(--border);
-        }
-        footer {
-          border-top: 1px solid
-            color-mix(in oklch, var(--border) 50%, transparent);
-          background-color: var(--background);
-          padding-block: 3rem;
-          text-align: center;
-          font-size: 0.875rem;
-          color: var(--muted-foreground);
-        }
-        svg {
-          display: inline-block;
-          vertical-align: middle;
-        }
-        body {
-          font-family: var(--app-font-sans);
-          color: var(--foreground);
-          background-color: var(--background);
-          background-image:
-            linear-gradient(90deg, oklch(100% 0 0 / 3%) 1px, #0000 1px),
-            linear-gradient(oklch(100% 0 0 / 3%) 1px, #0000 1px);
-          background-size: 48px 48px;
-          -webkit-font-smoothing: antialiased;
-          min-height: 100vh;
-        }
-        ::selection {
-          background-color: color-mix(in oklch, var(--accent) 25%, transparent);
-          color: var(--accent-foreground);
-        }
-        :focus-visible {
-          outline: 2px solid var(--accent);
-          outline-offset: 3px;
-        }
-      }
-
-      /* ── Component classes (used by JS or complex enough to need scoping) ── */
-      @layer components {
-        /* Opacity-variant color utilities (cannot be replaced with standard Tailwind) */
-        .bg-background\/80 {
-          background-color: color-mix(
-            in oklch,
-            var(--background) 80%,
-            transparent
-          );
-        }
-        .bg-card\/30 {
-          background-color: color-mix(in oklch, var(--card) 30%, transparent);
-        }
-        .bg-muted\/30 {
-          background-color: color-mix(in oklch, var(--muted) 30%, transparent);
-        }
-        .bg-white\/\[0\.03\] {
-          background-color: oklch(100% 0 0 / 3%);
-        }
-        .border-border {
-          border-color: var(--border);
-        }
-        .border-border\/50 {
-          border-color: color-mix(in oklch, var(--border) 50%, transparent);
-        }
-
-        /* Skip link */
-        .skip-link {
-          position: absolute;
-          top: -100%;
-          left: 1rem;
-          z-index: 100;
-          background: var(--background);
-          color: var(--foreground);
-          border: 1px solid var(--border);
-          border-radius: calc(var(--radius) - 2px);
-          padding: 0.5rem 1rem;
-          font-size: 0.875rem;
-          font-weight: 700;
-          text-decoration: none;
-          transition: top 0.1s;
-        }
-        .skip-link:focus {
-          top: 1rem;
-        }
-
-        /* Navbar — solid background, no glassmorphism */
-        .nav-inner {
-          max-width: 72rem;
-          margin: 0 auto;
-          padding-inline: 1.5rem;
-          height: 4rem;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-        }
-        .logo {
-          display: flex;
-          align-items: center;
-          font-size: 1.25rem;
-          letter-spacing: -0.025em;
-        }
-        .nav-links {
-          display: none;
-          align-items: center;
-          gap: 2rem;
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: var(--foreground);
-        }
-        .nav-links a {
-          transition: color 0.15s;
-        }
-        .nav-links a:hover {
-          opacity: 0.7;
-        }
-
-        .nav-hamburger {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          gap: 5px;
-          width: 44px;
-          height: 44px;
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: var(--muted-foreground);
-          transition: color 0.15s;
-        }
-        .nav-hamburger:hover {
-          color: var(--foreground);
-        }
-        .nav-hamburger span {
-          display: block;
-          width: 20px;
-          height: 1.5px;
-          background: currentColor;
-          transition:
-            transform 0.2s ease-out,
-            opacity 0.2s;
-          border-radius: 1px;
-        }
-        .nav-hamburger.open span:nth-child(1) {
-          transform: translateY(6.5px) rotate(45deg);
-        }
-        .nav-hamburger.open span:nth-child(2) {
-          opacity: 0;
-        }
-        .nav-hamburger.open span:nth-child(3) {
-          transform: translateY(-6.5px) rotate(-45deg);
-        }
-
-        /* Mobile nav drawer */
-        .nav-mobile {
-          display: none;
-          flex-direction: column;
-          gap: 0;
-          background: var(--background);
-          border-bottom: 1px solid var(--border);
-          padding: 0.5rem 1.5rem 1rem;
-        }
-        .nav-mobile.open {
-          display: flex;
-        }
-        .nav-mobile a {
-          padding: 0.75rem 0;
-          font-size: 0.875rem;
-          font-weight: 500;
-          color: var(--foreground);
-          border-bottom: 1px solid
-            color-mix(in oklch, var(--border) 50%, transparent);
-          transition:
-            color 0.15s,
-            opacity 0.15s;
-        }
-        .nav-mobile a:last-child {
-          border-bottom: none;
-        }
-        .nav-mobile a:hover {
-          opacity: 0.7;
-        }
-
-        /* Hero */
-        .hero-img-wrap {
-          width: 100%;
-          position: relative;
-        }
-        .hero-img-wrap::after {
-          content: "";
-          position: absolute;
-          inset: 0;
-          background: linear-gradient(
-            to bottom,
-            transparent 90%,
-            var(--background) 100%
-          );
-          z-index: 10;
-        }
-        .hero-img {
-          width: 100%;
-          height: auto;
-          object-fit: cover;
-          display: block;
-        }
-        .hero-content {
-          max-width: 72rem;
-          margin: 0 auto;
-          padding-inline: 1.5rem;
-          padding-bottom: 6rem;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-        .hero-title {
-          font-size: 3rem;
-          line-height: 1;
-          letter-spacing: -0.05em;
-          margin-bottom: 1.5rem;
-          text-align: center;
-        }
-
-        .hero-subtitle {
-          font-size: 1.25rem;
-          color: var(--muted-foreground);
-          max-width: 48rem;
-          font-weight: 400;
-          line-height: 1.625;
-          text-align: center;
-          margin-bottom: 0.75rem;
-        }
-        .hero-sub-subtitle {
-          font-size: 0.875rem;
-          color: color-mix(in oklch, var(--muted-foreground) 70%, transparent);
-          margin-bottom: 3rem;
-          font-weight: 400;
-          text-align: center;
-          margin-top: 0;
-        }
-        .hero-cta {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 1rem;
-          margin-bottom: 4rem;
-        }
-        .install-box {
-          display: flex;
-          align-items: center;
-          background-color: var(--card);
-          border: 1px solid
-            color-mix(in oklch, var(--accent) 40%, var(--border));
-          border-radius: calc(var(--radius) - 2px);
-          padding-left: 1rem;
-          padding-right: 0.25rem;
-          padding-block: 0.25rem;
-          overflow: hidden;
-          box-shadow:
-            0 0 0 3px color-mix(in oklch, var(--accent) 10%, transparent),
-            0 10px 15px -3px #0000001a;
-        }
-        .install-code {
-          font-family: var(--app-font-mono);
-          font-size: 0.875rem;
-          color: var(--foreground);
-          margin-right: 1rem;
-          user-select: all;
-        }
-
-        /* Copy buttons — minimum 44×44px touch target */
-        .copy-btn {
-          min-width: 44px;
-          min-height: 44px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: calc(var(--radius) - 2px);
-          color: var(--muted-foreground);
-          border: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
-          transition:
-            color 0.15s,
-            background-color 0.15s,
-            border-color 0.15s;
-          flex-shrink: 0;
-          will-change: background-color;
-        }
-        .copy-btn:hover {
-          background-color: var(--muted);
-          color: var(--foreground);
-        }
-        .cta-links {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-        .cta-link {
-          padding: 0.625rem 1.5rem;
-          border-radius: calc(var(--radius) - 2px);
-          border: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
-          font-weight: 500;
-          font-size: 0.8rem;
-          color: var(--muted-foreground);
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          transition:
-            border-color 0.15s,
-            background-color 0.15s,
-            color 0.15s,
-            transform 0.15s cubic-bezier(0, 0, 0.2, 1);
-        }
-        .cta-link:hover {
-          border-color: var(--muted-foreground);
-          background-color: color-mix(in oklch, var(--muted) 30%, transparent);
-          color: var(--foreground);
-          transform: translateY(-1px);
-        }
-
-        /* Sections — visible by default; animate only when motion is OK */
-        .section-anim {
-          padding-block: 6rem;
-        }
-        @media (prefers-reduced-motion: no-preference) {
-          .section-anim {
-            opacity: 0;
-            transform: translateY(1.5rem);
-            transition:
-              opacity 0.6s cubic-bezier(0, 0, 0.2, 1),
-              transform 0.6s cubic-bezier(0, 0, 0.2, 1);
-          }
-          .section-anim.visible {
-            opacity: 1;
-            transform: translateY(0);
-          }
-          /* Staggered agent rows */
-          .agent-row {
-            opacity: 0;
-            transform: translateX(-0.5rem);
-            transition:
-              opacity 0.4s cubic-bezier(0, 0, 0.2, 1),
-              transform 0.4s cubic-bezier(0, 0, 0.2, 1),
-              background-color 0.15s,
-              border-color 0.15s;
-          }
-          .agent-row.visible,
-          .no-js .agent-row {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        /* Agents list */
-        .agents-list {
-          display: flex;
-          flex-direction: column;
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          overflow: hidden;
-          background-color: color-mix(in oklch, var(--card) 70%, transparent);
-        }
-        .agent-row {
-          transition:
-            background-color 0.15s,
-            border-color 0.15s;
-        }
-        .agent-row + .agent-row {
-          border-top: 1px solid var(--border);
-        }
-        .agent-toggle {
-          width: 100%;
-          min-height: 44px;
-          padding: 1rem 1.5rem;
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          text-align: left;
-          transition: background-color 0.15s;
-          background: none;
-          border: none;
-          border-left: 3px solid transparent;
-          cursor: pointer;
-        }
-        .agent-toggle:hover {
-          background-color: oklch(100% 0 0 / 3%);
-          border-left-color: color-mix(
-            in oklch,
-            var(--accent) 40%,
-            transparent
-          );
-        }
-        .agent-toggle:hover .chevron {
-          opacity: 0.8;
-        }
-        .agent-toggle[aria-expanded="true"] {
-          border-left-color: var(--accent);
-        }
-        .agent-toggle[aria-expanded="true"] .chevron {
-          opacity: 1;
-        }
-        .agent-cmd {
-          font-family: var(--app-font-mono);
-          font-size: 0.8rem;
-          padding: 0.3rem 0.6rem;
-          border-radius: calc(var(--radius) - 2px);
-          background-color: var(--background);
-          border: 1px solid var(--border);
-          color: var(--accent);
-          flex-shrink: 0;
-          letter-spacing: -0.01em;
-        }
-        .agent-name {
-          font-weight: 500;
-          font-size: 0.875rem;
-          color: var(--muted-foreground);
-          flex-shrink: 0;
-        }
-        /* Neurotype visible on all viewports */
-        .agent-neurotype {
-          color: color-mix(in oklch, var(--muted-foreground) 80%, transparent);
-          font-size: 0.75rem;
-          flex: 1;
-        }
-        .agent-role {
-          font-size: 0.875rem;
-          font-weight: 500;
-          display: none;
-          width: 13rem;
-          flex-shrink: 0;
-        }
-        .chevron {
-          width: 1rem;
-          height: 1rem;
-          color: var(--foreground);
-          opacity: 0.4;
-          flex-shrink: 0;
-          margin-left: auto;
-          transition:
-            transform 0.3s,
-            opacity 0.15s;
-        }
-
-        /* Agent expanded content */
-        .agent-panel {
-          display: grid;
-          grid-template-rows: 0fr;
-          transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .agent-panel.open {
-          grid-template-rows: 1fr;
-        }
-        .agent-panel-inner {
-          overflow: hidden;
-        }
-        .agent-panel-content {
-          padding: 0.5rem 1.5rem 1.5rem;
-        }
-        .agent-grid {
-          display: flex;
-          flex-direction: column;
-          gap: 3rem;
-        }
-        .agent-title {
-          font-size: 2.25rem;
-          font-weight: 900;
-          margin-bottom: 0.5rem;
-        }
-        .agent-neurotype-label {
-          font-size: 0.75rem;
-          font-weight: 500;
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
-          color: var(--muted-foreground);
-        }
-        .agent-section-title {
-          font-size: 0.75rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          margin-bottom: 0.5rem;
-          color: color-mix(in oklch, var(--foreground) 80%, transparent);
-        }
-        .agent-section-title-green {
-          color: var(--color-green-400);
-        }
-        .agent-section-title-red {
-          color: var(--color-red-400);
-        }
-        .agent-body {
-          color: var(--muted-foreground);
-          line-height: 1.625;
-          font-size: 0.875rem;
-        }
-        .agent-quote {
-          padding: 0.875rem 1.25rem;
-          border-radius: var(--radius);
-          border: 1px solid;
-          border-color: var(--border); /* fallback if JS hasn't run */
-          background-color: color-mix(
-            in oklch,
-            var(--border) 30%,
-            transparent
-          ); /* fallback */
-          font-style: italic;
-          color: var(--muted-foreground);
-          font-family: var(--font-serif);
-          margin-block: 1.5rem;
-          line-height: 1.625;
-        }
-        .agent-code-box {
-          background-color: var(--background);
-          border: 1px solid var(--border);
-          border-radius: calc(var(--radius) - 2px);
-          padding: 1rem;
-          overflow-x: auto;
-          box-shadow: inset 0 2px 4px #0000000d;
-        }
-        .agent-code {
-          font-family: var(--app-font-mono);
-          font-size: 0.875rem;
-          line-height: 1.625;
-        }
-        .when-grid {
-          display: grid;
-          gap: 1.5rem;
-          padding-top: 1rem;
-          border-top: 1px solid
-            color-mix(in oklch, var(--border) 50%, transparent);
-        }
-
-        /* Install section */
-        .install-grid {
-          display: grid;
-          gap: 1.5rem;
-        }
-        .install-card {
-          background-color: var(--card);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          padding: 1.5rem;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-        }
-        .install-card-title {
-          font-weight: 700;
-          font-size: 1.125rem;
-          margin-bottom: 1rem;
-        }
-        .install-cmd-box {
-          display: flex;
-          align-items: center;
-          background-color: var(--background);
-          border: 1px solid var(--border);
-          border-radius: calc(var(--radius) - 2px);
-          padding-left: 0.75rem;
-          padding-right: 0.25rem;
-          padding-block: 0.25rem;
-        }
-        .install-cmd-code {
-          font-family: var(--app-font-mono);
-          font-size: 0.75rem;
-          color: var(--foreground);
-          flex: 1;
-          overflow-x: auto;
-          user-select: all;
-        }
-        /* Install copy buttons — minimum 44×44px touch target */
-        .install-copy-btn {
-          min-width: 44px;
-          min-height: 44px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: calc(var(--radius) - 2px);
-          color: var(--muted-foreground);
-          border: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
-          flex-shrink: 0;
-          transition:
-            color 0.15s,
-            background-color 0.15s,
-            border-color 0.15s;
-          will-change: background-color;
-        }
-        .install-copy-btn:hover {
-          background-color: var(--muted);
-          color: var(--foreground);
-        }
-
-        /* Footer */
-        .footer-inner {
-          max-width: 72rem;
-          margin: 0 auto;
-          padding-inline: 1.5rem;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-        }
-        .footer-logo {
-          font-size: 1.5rem;
-          letter-spacing: -0.025em;
-          margin-bottom: 1.5rem;
-          opacity: 0.75;
-          filter: grayscale(60%);
-          transition:
-            opacity 0.5s,
-            filter 0.5s;
-        }
-        .footer-logo:hover {
-          opacity: 1;
-          filter: grayscale(0);
-        }
-        .footer-links {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 1.5rem;
-          margin-bottom: 2rem;
-        }
-        .footer-links a {
-          transition: color 0.15s;
-        }
-        .footer-links a:hover {
-          color: var(--foreground);
-        }
-        .footer-tagline {
-          opacity: 0.5;
-        }
-        .docs-link {
-          transition: color 0.15s;
-        }
-        .docs-link:hover,
-        .docs-link:focus-visible {
-          color: var(--foreground);
-        }
-
-        /* Section heading — consistent across all three sections */
-        .section-heading {
-          font-size: 1.875rem;
-          font-weight: 700;
-          margin-bottom: 1rem;
-        }
-        .section-intro {
-          color: var(--muted-foreground);
-          font-size: 0.875rem;
-          margin-bottom: 2rem;
-        }
-
-        /* SVG icons */
-        .icon-sm {
-          width: 0.75rem;
-          height: 0.75rem;
-        }
-        .icon-md {
-          width: 1rem;
-          height: 1rem;
-        }
-
-        /* ── Responsive ───────────────────────────────────────── */
-        @media (max-width: 639px) {
-          .modules-grid {
-            grid-template-columns: 1fr !important;
-          }
-        }
-        @media (min-width: 640px) {
-          .agent-neurotype {
-            font-size: 0.875rem;
-          }
-          .when-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
-        @media (min-width: 768px) {
-          .hero-title {
-            font-size: 4.5rem;
-          }
-          .hero-subtitle {
-            font-size: 1.5rem;
-          }
-          .hero-cta {
-            flex-direction: row;
-          }
-          .nav-links {
-            display: flex;
-          }
-          .nav-hamburger {
-            display: none;
-          }
-          .agent-role {
-            display: block;
-          }
-          .agent-grid {
-            flex-direction: row;
-          }
-          .agent-grid > * {
-            flex: 1;
-          }
-          .install-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-          }
-        }
-        .agent-divider {
-          display: flex;
-          align-items: baseline;
-          gap: 0.75rem;
-          padding: 0.5rem 1.5rem;
-          border-top: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
-          border-bottom: 1px solid color-mix(in oklch, var(--border) 60%, transparent);
-          background: color-mix(in oklch, var(--muted) 20%, transparent);
-        }
-        .agent-divider-label {
-          font-size: 0.7rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground);
-        }
-        .agent-divider-sub {
-          font-size: 0.7rem;
-          color: color-mix(in oklch, var(--muted-foreground) 60%, transparent);
-          letter-spacing: 0.02em;
-        }
-      }
-    </style>
+    <link rel="stylesheet" href="./assets/styles.css" />
   </head>
   <body>
     <div id="copy-status" role="status" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;"></div>
@@ -934,13 +68,14 @@
     <a href="#main-content" class="skip-link">Skip to content</a>
 
     <!-- ── Navbar ──────────────────────────────────────────────── -->
-    <header role="banner" style="position:fixed;top:0;left:0;right:0;z-index:50;background-color:var(--background);border-bottom:1px solid var(--border);">
+    <header role="banner">
       <div class="nav-inner">
         <a href="/" class="logo" aria-label="neurodiveragents home">
           <span class="font-light">neuro</span><span class="font-black">diveragents</span>
         </a>
         <nav aria-label="Main navigation" class="nav-links">
           <a href="#meet">Agents</a>
+          <a href="#router">How to use</a>
           <a href="#modules">Modules</a>
           <a href="#install">Install</a>
           <a
@@ -981,13 +116,15 @@
       </div>
       <nav class="nav-mobile" id="nav-mobile" aria-label="Mobile navigation">
         <a href="#meet" onclick="closeMobileNav()">Agents</a>
+        <a href="#router" onclick="closeMobileNav()">How to use</a>
         <a href="#modules" onclick="closeMobileNav()">Modules</a>
         <a href="#install" onclick="closeMobileNav()">Install</a>
         <a
           href="https://github.com/emb715/neurodiveragents"
           target="_blank"
           rel="noreferrer"
-          >GitHub ↗</a
+          style="display:flex;align-items:center;gap:0.25rem;"
+          >GitHub <svg class="icon-sm" style="transform:rotate(-45deg)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a
         >
       </nav>
     </header>
@@ -1014,6 +151,7 @@
             width="1920"
             height="640"
             fetchpriority="high"
+            loading="eager"
           />
         </div>
         <div class="hero-content">
@@ -1085,7 +223,7 @@
             style="
               font-size: 0.75rem;
               color: var(--muted-foreground, oklch(63% 0.007 90));
-              margin-top: -2rem;
+              margin-top: 0;
               opacity: 0.7;
             "
           >
@@ -1106,6 +244,54 @@
           <div class="agents-list" id="agents-list" role="list"></div>
         </section>
 
+        <!-- Situation Router -->
+        <section id="router" class="section-anim">
+          <h2 class="section-heading">How to use</h2>
+          <p class="section-intro">
+            The question before every session: "how much context do I have, and is it enough to act precisely?" Describe your situation below.
+          </p>
+
+          <!-- Chips -->
+          <div class="flex flex-wrap gap-2 mb-6" id="router-chips" role="radiogroup" aria-label="Situation shortcuts"></div>
+
+          <!-- Text input -->
+          <div class="flex items-center gap-2 rounded border mb-8 transition-colors duration-150"
+               style="background: var(--card); border-color: var(--border); padding: 0.375rem 0.5rem 0.375rem 0.75rem;">
+            <input
+              class="router-input flex-1 bg-transparent border-none outline-none text-sm min-h-[36px]"
+              style="color: var(--foreground); font-family: var(--app-font-sans);"
+              id="router-input"
+              type="text"
+              placeholder="describe your situation…"
+              aria-label="Describe your situation to find the right agent"
+              aria-controls="router-display"
+              autocomplete="off"
+              spellcheck="false"
+            />
+          </div>
+
+          <!-- Display area -->
+          <div id="router-display" aria-live="polite">
+            <div class="border rounded overflow-hidden text-center text-sm py-10 px-6" id="router-empty"
+                 style="border-color: color-mix(in oklch, var(--accent) 15%, var(--border)); color: var(--muted-foreground);">
+              <span>Pick a situation above or type what you're working on</span>
+            </div>
+          </div>
+
+          <!-- Quick ref toggle -->
+          <button class="router-drawer-toggle flex items-center gap-2 text-xs font-semibold mt-6 py-2.5 bg-transparent border-none cursor-pointer underline underline-offset-4 decoration-transparent transition-all duration-150"
+                  style="color: var(--muted-foreground);"
+                  id="router-drawer-toggle" aria-expanded="false" aria-controls="router-drawer">
+            <svg class="icon-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            Quick reference — full routing table
+          </button>
+          <div class="router-drawer" id="router-drawer">
+            <div class="router-drawer-inner">
+              <div class="border rounded overflow-hidden" style="border-color: var(--border);" id="router-drawer-content"></div>
+            </div>
+          </div>
+        </section>
+
         <!-- Cognitive Modules -->
         <section id="modules" class="section-anim">
           <h2 class="section-heading">Cognitive Modules</h2>
@@ -1122,7 +308,7 @@
             workflow you already own.
           </p>
 
-          <p style="border:1px solid var(--border);background:color-mix(in oklch,var(--accent) 5%,transparent);padding:1rem 1.25rem;border-radius:var(--radius);font-style:italic;font-family:var(--font-serif);margin-block:1.5rem;line-height:1.625;color:var(--muted-foreground);">
+          <p style="border:1px solid var(--border);background:color-mix(in oklch,var(--accent) 5%,transparent);padding:1rem 1.25rem;border-radius:var(--radius);font-style:italic;font-family:var(--app-font-sans);margin-block:1.5rem;line-height:1.625;color:var(--muted-foreground);">
             "Same engine, different vehicle. An agent uses its cognitive style
             for everything it does. A module injects that style into one phase
             of a larger workflow."
@@ -1130,8 +316,8 @@
 
           <!-- Unified module list -->
           <div
-            class="rounded-lg border border-base-content/10 overflow-hidden mb-8"
-            style="border-color: var(--border)"
+            class="rounded-lg overflow-hidden mb-8"
+            style="border: 1px solid var(--border)"
           >
             <div
               class="flex items-center gap-4 px-4 py-2 border-b"
@@ -1155,13 +341,9 @@
                 >Cognitive posture</span
               >
             </div>
-            <div style="display: flex; flex-direction: column">
+            <div class="modules-grid">
               <div
                 class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-                style="
-                  border-bottom: 1px solid
-                    color-mix(in oklch, var(--border) 50%, transparent);
-                "
               >
                 <kbd
                   class="kbd kbd-sm font-mono"
@@ -1182,10 +364,6 @@
               </div>
               <div
                 class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-                style="
-                  border-bottom: 1px solid
-                    color-mix(in oklch, var(--border) 50%, transparent);
-                "
               >
                 <kbd
                   class="kbd kbd-sm font-mono"
@@ -1206,10 +384,6 @@
               </div>
               <div
                 class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-                style="
-                  border-bottom: 1px solid
-                    color-mix(in oklch, var(--border) 50%, transparent);
-                "
               >
                 <kbd
                   class="kbd kbd-sm font-mono"
@@ -1230,10 +404,6 @@
               </div>
               <div
                 class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-                style="
-                  border-bottom: 1px solid
-                    color-mix(in oklch, var(--border) 50%, transparent);
-                "
               >
                 <kbd
                   class="kbd kbd-sm font-mono"
@@ -1254,10 +424,6 @@
               </div>
               <div
                 class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-                style="
-                  border-bottom: 1px solid
-                    color-mix(in oklch, var(--border) 50%, transparent);
-                "
               >
                 <kbd
                   class="kbd kbd-sm font-mono"
@@ -1278,10 +444,6 @@
               </div>
               <div
                 class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-                style="
-                  border-bottom: 1px solid
-                    color-mix(in oklch, var(--border) 50%, transparent);
-                "
               >
                 <kbd
                   class="kbd kbd-sm font-mono"
@@ -1302,10 +464,6 @@
               </div>
               <div
                 class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-                style="
-                  border-bottom: 1px solid
-                    color-mix(in oklch, var(--border) 50%, transparent);
-                "
               >
                 <kbd
                   class="kbd kbd-sm font-mono"
@@ -1326,10 +484,6 @@
               </div>
               <div
                 class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-                style="
-                  border-bottom: 1px solid
-                    color-mix(in oklch, var(--border) 50%, transparent);
-                "
               >
                 <kbd
                   class="kbd kbd-sm font-mono"
@@ -1350,10 +504,6 @@
               </div>
               <div
                 class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-                style="
-                  border-bottom: 1px solid
-                    color-mix(in oklch, var(--border) 50%, transparent);
-                "
               >
                 <kbd
                   class="kbd kbd-sm font-mono"
@@ -1374,10 +524,6 @@
               </div>
               <div
                 class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-                style="
-                  border-bottom: 1px solid
-                    color-mix(in oklch, var(--border) 50%, transparent);
-                "
               >
                 <kbd
                   class="kbd kbd-sm font-mono"
@@ -1398,10 +544,6 @@
               </div>
               <div
                 class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-                style="
-                  border-bottom: 1px solid
-                    color-mix(in oklch, var(--border) 50%, transparent);
-                "
               >
                 <kbd
                   class="kbd kbd-sm font-mono"
@@ -1422,10 +564,6 @@
               </div>
               <div
                 class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-                style="
-                  border-bottom: 1px solid
-                    color-mix(in oklch, var(--border) 50%, transparent);
-                "
               >
                 <kbd
                   class="kbd kbd-sm font-mono"
@@ -1446,10 +584,6 @@
               </div>
               <div
                 class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-                style="
-                  border-bottom: 1px solid
-                    color-mix(in oklch, var(--border) 50%, transparent);
-                "
               >
                 <kbd
                   class="kbd kbd-sm font-mono"
@@ -1691,7 +825,6 @@
           <div class="install-grid">
             <div class="install-card">
               <div>
-                <div style="margin-bottom:0.25rem"><span style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent,oklch(68% 0.18 40))">Recommended</span></div>
                 <h3 class="install-card-title">Claude Code</h3>
               </div>
               <div class="install-cmd-box">
@@ -1724,7 +857,6 @@
             </div>
             <div class="install-card">
               <div>
-                <div style="margin-bottom:0.25rem"><span style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent,oklch(68% 0.18 40))">Recommended</span></div>
                 <h3 class="install-card-title">OpenCode</h3>
               </div>
               <div class="install-cmd-box">
@@ -1832,13 +964,17 @@
           ><span class="font-black">diveragents</span>
         </div>
         <div class="footer-links">
-          <a href="https://github.com/emb715/neurodiveragents">GitHub</a>
+          <a href="https://github.com/emb715/neurodiveragents" target="_blank" rel="noreferrer">GitHub</a>
           <a
             href="https://github.com/emb715/neurodiveragents/blob/main/humans/ndv-agents.md"
+            target="_blank"
+            rel="noreferrer"
             >Doctrine</a
           >
           <a
             href="https://github.com/emb715/neurodiveragents/blob/main/CONTRIBUTING.md"
+            target="_blank"
+            rel="noreferrer"
             >Contributing</a
           >
         </div>
@@ -2209,9 +1345,10 @@
 
       // Resolve CSS custom property at runtime
       function getAgentColor(colorVar) {
+        if (!colorVar) return 'var(--muted-foreground)';
         return getComputedStyle(document.documentElement)
           .getPropertyValue(colorVar)
-          .trim();
+          .trim() || 'var(--muted-foreground)';
       }
 
       const list = document.getElementById("agents-list");
@@ -2419,6 +1556,550 @@
           toggleButtons[toggleButtons.length - 1].focus();
         }
       });
+
+      // ── Situation Router ────────────────────────────────────────────────────────
+
+      const SCENARIOS = [
+        {
+          id: "judgment-call",
+          chip: "Need a direct answer",
+          keywords: ["should i", "which is better", "opinion", "tradeoff", "is this sensible", "quick question", "what do you think", "direct answer"],
+          contextCheck: {
+            verdict: "skip",
+            label: "No context needed",
+            reason: "No specialist overhead needed. Honest has no preamble, no hedging — the answer starts on word one."
+          },
+          chain: [
+            { agent: "ndv-honest", colorVar: "--agent-honest", mode: "all", role: "answer" }
+          ],
+          outcome: "ndv-honest",
+          outcomeColor: "--agent-honest",
+          example: 'ndv-honest "Should we use JWT or sessions for this auth flow? What\'s the call."'
+        },
+        {
+          id: "unfamiliar-code",
+          chip: "I don't understand this code yet",
+          keywords: ["understand the code", "understand how", "how does this work", "what does this do", "trace the", "where is the", "map the", "what files", "show me how", "find the function", "find the file"],
+          contextCheck: {
+            verdict: "research",
+            label: "Build context first",
+            reason: "No map exists — sending a specialist into unfamiliar code means working blind. Scout is faster at investigation than any specialist."
+          },
+          chain: [
+            { agent: "ndv-research", colorVar: "--agent-research", mode: "all", role: "map" },
+            { agent: "→ specialist", colorVar: null, mode: null, role: "act from map" }
+          ],
+          outcome: "ndv-research",
+          outcomeColor: "--agent-research",
+          example: 'ndv-research "Trace how authentication state flows from the provider to this component. Show every transformation point."'
+        },
+        {
+          id: "large-job",
+          chip: "I have a PRD or 3+ tasks",
+          keywords: ["prd", "epic", "multiple tasks", "parallel", "in parallel", "full audit", "orchestrate", "large workload", "3 tasks", "three tasks", "many things", "all of it"],
+          contextCheck: {
+            verdict: "both",
+            label: "Map + validate first",
+            reason: "Flow reads the full input, decomposes it into a task graph, dispatches everything that can run simultaneously. Start fresh for large workloads — a clean context stays lean throughout."
+          },
+          chain: [
+            { agent: "ndv-research", colorVar: "--agent-research", mode: "all", role: "map", parallel: true },
+            { agent: "ndv-architect", colorVar: "--agent-architect", mode: "all", role: "validate", parallel: true },
+            { agent: "ndv-flow", colorVar: "--agent-flow", mode: "all", role: "orchestrate" }
+          ],
+          outcome: "ndv-flow",
+          outcomeColor: "--agent-flow",
+          example: 'ndv-flow "Break this PRD into tasks and execute across the fleet — security, architecture, and implementation in parallel."'
+        },
+        {
+          id: "shape-uncertain",
+          chip: "Not sure if the structure is right",
+          keywords: ["architecture", "is this the right shape", "structural", "before we build", "solid", "design review", "right structure", "is the shape", "module structure", "coupling"],
+          contextCheck: {
+            verdict: "architect",
+            label: "Validate structure first",
+            reason: "Arc has two entry points: pre-build (validate before implementing) and reactive (receives structural handoffs from ndv-review, ndv-diagnose, ndv-build). Both are equally valid."
+          },
+          chain: [
+            { agent: "ndv-architect", colorVar: "--agent-architect", mode: "all", role: "validate" },
+            { agent: "ndv-build", colorVar: "--agent-build", mode: "sub", role: "implement", conditional: "if structure confirmed" }
+          ],
+          outcome: "ndv-architect",
+          outcomeColor: "--agent-architect",
+          example: 'ndv-architect "Is this the right structure before we implement it? We keep having bugs in this module — is it structural?"'
+        },
+        {
+          id: "broken-thing",
+          chip: "Something is broken",
+          keywords: ["broken", "failing", "crash", "throws error", "exception", "stack trace", "bug", "not working", "fails", "wrong output", "unexpected behavior"],
+          contextCheck: {
+            verdict: "skip",
+            label: "No context needed",
+            reason: "ndv-diagnose investigates as its core work — it builds the map as part of root cause analysis. Scout is not faster here."
+          },
+          chain: [
+            { agent: "ndv-diagnose", colorVar: "--agent-diagnose", mode: "sub", role: "root cause" },
+            { agent: "ndv-tester", colorVar: "--agent-tester", mode: "sub", role: "regression", conditional: "after cause confirmed" }
+          ],
+          outcome: "ndv-diagnose",
+          outcomeColor: "--agent-diagnose",
+          example: 'ndv-diagnose "Why is this component rendering twice on mount? Trace the state changes all the way back to the provider."'
+        },
+        {
+          id: "spec-ready",
+          chip: "Spec is written, ready to build",
+          keywords: ["implement", "spec is ready", "story is ready", "build this", "schema defined", "acceptance criteria", "ready to implement", "ready to build", "ticket is ready"],
+          contextCheck: {
+            verdict: "skip",
+            label: "No context needed",
+            reason: "Schemas, acceptance criteria, and file targets are settled. Structural uncertainty is resolved. Go directly to Craft."
+          },
+          chain: [
+            { agent: "ndv-build", colorVar: "--agent-build", mode: "sub", role: "implement" }
+          ],
+          outcome: "ndv-build",
+          outcomeColor: "--agent-build",
+          example: 'ndv-build "Implement this API endpoint exactly as defined in the schema. Do not add fields not in the spec."'
+        },
+        {
+          id: "code-quality",
+          chip: "Something looks wrong in this code",
+          keywords: ["review", "code smell", "what's wrong", "quality", "code review", "pr review", "looks wrong", "smells", "anti-pattern", "messy", "clean up", "refactor"],
+          contextCheck: {
+            verdict: "research",
+            label: "Map first if unfamiliar",
+            reason: "Reviewing unfamiliar code without a map risks missing the structural source of the surface problem."
+          },
+          chain: [
+            { agent: "ndv-research", colorVar: "--agent-research", mode: "all", role: "map", conditional: "if unfamiliar codebase" },
+            { agent: "ndv-review", colorVar: "--agent-review", mode: "sub", role: "review" },
+            { agent: "ndv-architect", colorVar: "--agent-architect", mode: "all", role: "validate", conditional: "if structural finding" }
+          ],
+          outcome: "ndv-review",
+          outcomeColor: "--agent-review",
+          example: 'ndv-review "Review this PR. Point out any inconsistencies in naming, style, or architectural patterns."'
+        },
+        {
+          id: "scope-creep",
+          chip: "This ticket keeps growing",
+          keywords: ["scope creep", "while we're at it", "ticket growing", "too much", "expanding", "added requirements", "keeps growing", "out of scope", "drift"],
+          contextCheck: {
+            verdict: "skip",
+            label: "No context needed",
+            reason: "Scope enforcement is the work itself. Bound needs the ticket, not a code map."
+          },
+          chain: [
+            { agent: "ndv-scope", colorVar: "--agent-scope", mode: "sub", role: "enforce" }
+          ],
+          outcome: "ndv-scope",
+          outcomeColor: "--agent-scope",
+          example: 'ndv-scope "Review this ticket. Classify every work item as Core, Coupled, Adjacent, or Scope Creep."'
+        },
+        {
+          id: "slow-code",
+          chip: "It's slow or expensive",
+          keywords: ["slow", "faster", "performance", "latency", "n+1", "expensive query", "optimize", "too slow", "query is slow", "bundle size"],
+          contextCheck: {
+            verdict: "skip",
+            label: "No context needed",
+            reason: "ndv-optimize measures first, then cuts. Send it the bottleneck — it profiles before touching a line."
+          },
+          chain: [
+            { agent: "ndv-optimize", colorVar: "--agent-optimize", mode: "sub", role: "measure + optimize" }
+          ],
+          outcome: "ndv-optimize",
+          outcomeColor: "--agent-optimize",
+          example: 'ndv-optimize "This data processing script is too slow. Profile it and eliminate the bottleneck."'
+        },
+        {
+          id: "need-tests",
+          chip: "Write tests for this",
+          keywords: ["add tests", "write tests", "test coverage", "generate tests", "missing tests", "need tests", "unit test", "regression test", "test this"],
+          contextCheck: {
+            verdict: "skip",
+            label: "No context needed",
+            reason: "ndv-tester goes adversarial immediately — assumes the code is lying and finds the edge cases before they find you."
+          },
+          chain: [
+            { agent: "ndv-tester", colorVar: "--agent-tester", mode: "sub", role: "adversarial testing" }
+          ],
+          outcome: "ndv-tester",
+          outcomeColor: "--agent-tester",
+          example: 'ndv-tester "Write a comprehensive test suite for this date parsing utility. Focus on edge cases and invalid inputs."'
+        },
+        {
+          id: "security-concern",
+          chip: "Security or auth concern",
+          keywords: ["secure", "security", "vulnerability", "auth", "injection", "owasp", "is this safe", "audit the", "token", "xss", "csrf", "sql injection"],
+          contextCheck: {
+            verdict: "skip",
+            label: "No context needed",
+            reason: "ndv-secure assumes breach by default. It trusts nothing and treats every input as a potential attack vector."
+          },
+          chain: [
+            { agent: "ndv-secure", colorVar: "--agent-secure", mode: "sub", role: "security audit" }
+          ],
+          outcome: "ndv-secure",
+          outcomeColor: "--agent-secure",
+          example: 'ndv-secure "Audit this authentication middleware for timing attacks, token leakage, and injection vectors."'
+        },
+      ];
+
+      const QUICK_REF_ROWS = [
+        { signal: '"something is broken / failing / crashing"', subtitle: "Won't stop until root cause is confirmed, not just located", agent: 'ndv-diagnose', colorVar: '--agent-diagnose' },
+        { signal: '"review this / what\'s wrong with this code"', subtitle: "Registers everything at equal intensity before sorting by severity", agent: 'ndv-review', colorVar: '--agent-review' },
+        { signal: '"rename / extract / restructure this"', subtitle: "One safe transformation at a time, no behavior change", agent: 'ndv-refactor', colorVar: '--agent-refactor' },
+        { signal: '"write tests for this"', subtitle: "Adversarial by default — assumes the code is lying", agent: 'ndv-tester', colorVar: '--agent-tester' },
+        { signal: '"is this secure / audit the auth"', subtitle: "Assumes breach, trusts nothing, every input is an attack vector", agent: 'ndv-secure', colorVar: '--agent-secure' },
+        { signal: '"it\'s slow / this query is expensive"', subtitle: "Measures before touching anything, every unnecessary cycle is an offense", agent: 'ndv-optimize', colorVar: '--agent-optimize' },
+        { signal: '"add logging / we have no visibility"', subtitle: "Instruments without intervening — observation must not change behavior", agent: 'ndv-telemetry', colorVar: '--agent-telemetry' },
+        { signal: '"document this / write the API reference"', subtitle: "Models the reader\'s knowledge gap deliberately, bridges it", agent: 'ndv-explain', colorVar: '--agent-explain' },
+        { signal: '"implement this spec / story is ready"', subtitle: "Spec is the authority, gaps get flagged not invented", agent: 'ndv-build', colorVar: '--agent-build' },
+        { signal: '"this ticket keeps growing / scope is creeping"', subtitle: "Every boundary violation is a door left unlocked", agent: 'ndv-scope', colorVar: '--agent-scope' },
+        { signal: '"how long will this take / review this estimate"', subtitle: 'Viscerally aware that "almost done" is a trap', agent: 'ndv-forecast', colorVar: '--agent-forecast' },
+        { signal: '"these metrics don\'t mean what we think"', subtitle: "The moment a measure becomes a target, it stops being a measure", agent: 'ndv-signal', colorVar: '--agent-signal' },
+        { signal: '"this UI looks wrong / design judgment"', subtitle: "Reads code simultaneously as its rendered visual output", agent: 'ndv-design', colorVar: '--agent-design' },
+        { signal: '"is this accessible / WCAG audit"', subtitle: "Processes every interface from every user\'s perspective simultaneously", agent: 'ndv-accessibility', colorVar: '--agent-accessibility' },
+      ];
+
+      // Gate color config per verdict
+      const GATE_CONFIG = {
+        skip: {
+          bg: 'color-mix(in oklch, var(--muted) 30%, transparent)',
+          border: 'color-mix(in oklch, var(--border) 80%, transparent)',
+          badgeBg: 'var(--muted)',
+          badgeColor: 'var(--muted-foreground)',
+          leftBorder: 'var(--border)'
+        },
+        research: {
+          bg: 'color-mix(in oklch, var(--agent-research) 5%, transparent)',
+          border: 'color-mix(in oklch, var(--agent-research) 25%, transparent)',
+          badgeBg: 'color-mix(in oklch, var(--agent-research) 15%, transparent)',
+          badgeColor: 'var(--agent-research)',
+          leftBorder: 'var(--agent-research)'
+        },
+        architect: {
+          bg: 'color-mix(in oklch, var(--agent-architect) 5%, transparent)',
+          border: 'color-mix(in oklch, var(--agent-architect) 25%, transparent)',
+          badgeBg: 'color-mix(in oklch, var(--agent-architect) 15%, transparent)',
+          badgeColor: 'var(--agent-architect)',
+          leftBorder: 'var(--agent-architect)'
+        },
+        both: {
+          bg: 'color-mix(in oklch, var(--agent-flow) 4%, transparent)',
+          border: 'color-mix(in oklch, var(--agent-flow) 20%, transparent)',
+          badgeBg: 'color-mix(in oklch, var(--agent-flow) 12%, transparent)',
+          badgeColor: 'var(--agent-flow)',
+          leftBorder: 'var(--agent-flow)'
+        }
+      };
+
+      let routerActiveId = null;
+      let routerDebounceTimer = null;
+
+      function buildChips() {
+        const container = document.getElementById('router-chips');
+
+        const groups = [
+          {
+            label: 'Understand the situation',
+            ids: ['judgment-call', 'unfamiliar-code', 'large-job', 'shape-uncertain']
+          },
+          {
+            label: 'Act on the code',
+            ids: ['broken-thing', 'spec-ready', 'code-quality', 'slow-code', 'need-tests', 'security-concern']
+          },
+          {
+            label: 'Manage the work',
+            ids: ['scope-creep']
+          }
+        ];
+
+        groups.forEach(group => {
+          // Group label
+          const label = document.createElement('div');
+          label.className = 'w-full text-[0.65rem] font-bold uppercase tracking-widest mt-3 first:mt-0';
+          label.style.cssText = 'color: color-mix(in oklch, var(--muted-foreground) 60%, transparent); letter-spacing: 0.1em;';
+          label.setAttribute('aria-hidden', 'true');
+          label.textContent = group.label;
+          container.appendChild(label);
+
+          // Chips for this group
+          const chipRow = document.createElement('div');
+          chipRow.className = 'flex flex-wrap gap-2';
+          container.appendChild(chipRow);
+
+          group.ids.forEach(id => {
+            const scenario = SCENARIOS.find(s => s.id === id);
+            if (!scenario) return;
+            const btn = document.createElement('button');
+            btn.className = 'router-chip min-h-[44px] px-4 py-2 rounded border text-sm font-medium cursor-pointer text-left transition-all duration-150';
+            btn.style.cssText = 'border-color: var(--border); color: var(--muted-foreground); background: none; font-size: 0.8rem;';
+            btn.id = 'chip-' + scenario.id;
+            btn.setAttribute('role', 'radio');
+            btn.setAttribute('aria-checked', 'false');
+            btn.setAttribute('tabindex', '-1');
+            btn.textContent = scenario.chip;
+            btn.dataset.scenarioId = scenario.id;
+            btn.addEventListener('click', () => {
+              clearTimeout(routerDebounceTimer);
+              activateScenario(scenario.id);
+            });
+            chipRow.appendChild(btn);
+          });
+        });
+
+        // First chip gets tabindex 0
+        const firstChip = container.querySelector('.router-chip');
+        if (firstChip) firstChip.setAttribute('tabindex', '0');
+      }
+
+      function activateScenario(id) {
+        const scenario = SCENARIOS.find(s => s.id === id);
+        if (!scenario) return;
+
+        // Toggle off if already active
+        if (routerActiveId === id) {
+          routerActiveId = null;
+          resetChips();
+          showEmptyState();
+          return;
+        }
+
+        routerActiveId = id;
+        document.getElementById('router-input').value = '';
+
+        // Update chip states
+        SCENARIOS.forEach(s => {
+          const chip = document.getElementById('chip-' + s.id);
+          if (!chip) return;
+          const isActive = s.id === id;
+          chip.setAttribute('aria-checked', String(isActive));
+          chip.setAttribute('tabindex', isActive ? '0' : '-1');
+          if (isActive) {
+            const color = getAgentColor(s.outcomeColor);
+            chip.style.borderColor = `color-mix(in oklch, ${color} 45%, transparent)`;
+            chip.style.backgroundColor = `color-mix(in oklch, ${color} 15%, transparent)`;
+            chip.style.color = color;
+          } else {
+            chip.style.borderColor = 'var(--border)';
+            chip.style.backgroundColor = '';
+            chip.style.color = 'var(--muted-foreground)';
+          }
+        });
+
+        renderRouter(scenario);
+      }
+
+      function resetChips() {
+        SCENARIOS.forEach(s => {
+          const chip = document.getElementById('chip-' + s.id);
+          if (!chip) return;
+          chip.setAttribute('aria-checked', 'false');
+          chip.setAttribute('tabindex', '-1');
+          chip.style.borderColor = 'var(--border)';
+          chip.style.backgroundColor = '';
+          chip.style.color = 'var(--muted-foreground)';
+        });
+        const firstChip = document.querySelector('#router-chips .router-chip');
+        if (firstChip) firstChip.setAttribute('tabindex', '0');
+      }
+
+      function emptyStateHTML(msg) {
+        return '<div class="border rounded overflow-hidden text-center text-sm py-10 px-6" style="border-color: color-mix(in oklch, var(--accent) 15%, var(--border)); color: var(--muted-foreground);">' +
+          '<span>' + msg + '</span></div>';
+      }
+
+      function showEmptyState() {
+        const display = document.getElementById('router-display');
+        display.innerHTML = emptyStateHTML('Pick a situation above or type what you\'re working on');
+      }
+
+      function renderRouter(scenario) {
+        const display = document.getElementById('router-display');
+        const gate = scenario.contextCheck;
+        const cfg = GATE_CONFIG[gate.verdict];
+
+        if (!cfg) {
+          display.innerHTML = '<div class="border rounded overflow-hidden text-center text-sm py-10 px-6" style="border-color: var(--border); color: var(--muted-foreground);"><span style="opacity:0.5">Unable to route this scenario.</span></div>';
+          return;
+        }
+
+        const outColor = getAgentColor(scenario.outcomeColor);
+
+        // Build chain HTML
+        const chainHTML = buildChainHTML(scenario.chain);
+
+        display.innerHTML = `
+          <div class="border rounded overflow-hidden transition-opacity duration-300 router-display-animate" style="border-color: ${cfg.border}; border-left: 3px solid ${cfg.leftBorder};">
+            <div class="flex flex-col gap-1 border-b" style="padding: 1rem 1.25rem; border-color: color-mix(in oklch, var(--border) 50%, transparent); background: ${cfg.bg}; border-left: inherit;">
+              <span class="text-xs font-bold uppercase" style="letter-spacing: 0.08em; color: ${cfg.badgeColor};">${gate.label}</span>
+              <span class="text-xs leading-relaxed" style="color: var(--muted-foreground);">${gate.reason}</span>
+            </div>
+            <div class="flex items-center flex-wrap gap-2" style="padding: 1.25rem 1.5rem;">${chainHTML}</div>
+            <div class="border-t" style="padding: 0.875rem 1.5rem; border-color: color-mix(in oklch, var(--border) 50%, transparent); background: color-mix(in oklch, var(--card) 60%, transparent);">
+              <div class="text-[0.65rem] font-bold uppercase mb-1" style="letter-spacing: 0.08em; color: var(--muted-foreground);">Example invocation</div>
+              <code class="font-mono text-sm leading-relaxed" style="font-family: var(--app-font-mono); font-size: 0.8rem; color: ${outColor};">${scenario.example}</code>
+            </div>
+          </div>
+        `;
+      }
+
+      function buildChainHTML(chain) {
+        // Detect parallel group (verdict: "both" scenario has parallel:true on first two steps)
+        const parallelSteps = chain.filter(s => s.parallel);
+        const nonParallelSteps = chain.filter(s => !s.parallel);
+
+        let html = '';
+
+        if (parallelSteps.length >= 2) {
+          // Render parallel pair stacked
+          html += '<div class="flex flex-col gap-1.5 items-start relative rounded border p-2" style="border-color: color-mix(in oklch, var(--border) 60%, transparent); background: color-mix(in oklch, var(--muted) 15%, transparent);">';
+          parallelSteps.forEach((step, i) => {
+            html += buildPillHTML(step);
+            if (i < parallelSteps.length - 1) {
+              html += '<span class="text-[0.65rem] font-bold uppercase tracking-wide text-center" style="color: var(--muted-foreground); letter-spacing: 0.05em;" aria-hidden="true">∥ parallel</span>';
+            }
+          });
+          html += '</div>';
+          // Arrow to remaining
+          if (nonParallelSteps.length > 0) {
+            html += '<span class="text-sm flex-shrink-0" style="color: var(--muted-foreground);" aria-hidden="true">→</span>';
+          }
+        }
+
+        nonParallelSteps.forEach((step, i) => {
+          html += buildPillHTML(step);
+          if (i < nonParallelSteps.length - 1) {
+            html += '<span class="text-sm flex-shrink-0" style="color: var(--muted-foreground);" aria-hidden="true">→</span>';
+          }
+        });
+
+        return html;
+      }
+
+      function buildPillHTML(step) {
+        // Terminal label step (no colorVar)
+        if (!step.colorVar) {
+          return `<span class="flex items-center gap-1.5 px-3 py-1.5 rounded border text-xs font-semibold font-mono chain-pill-conditional" style="border-color: var(--border); color: var(--muted-foreground);">
+            <span>${step.agent}</span>
+          </span>`;
+        }
+
+        const color = getAgentColor(step.colorVar);
+        const isConditional = !!step.conditional;
+        const baseClass = 'flex items-center gap-1.5 px-3 py-1.5 rounded border text-xs font-semibold font-mono';
+        const conditionalClass = isConditional ? ' chain-pill-conditional' : '';
+        const conditionalLabel = isConditional ? `<span style="font-style:italic;font-size:0.7rem;color:var(--muted-foreground);font-weight:400;margin-left:0.25rem">${step.conditional}</span>` : '';
+
+        const modeBadge = step.mode ? `<span class="text-[0.6rem] font-bold uppercase rounded-full leading-snug" style="letter-spacing: 0.06em; padding: 0.1rem 0.3rem; background: color-mix(in oklch, ${color} 12%, transparent); color: ${color}; border: 1px solid color-mix(in oklch, ${color} 25%, transparent);">${step.mode}</span>` : '';
+
+        return `<span class="${baseClass + conditionalClass}" style="border-color: color-mix(in oklch, ${color} 30%, transparent); background: color-mix(in oklch, ${color} 6%, transparent); color: ${color};">
+          ${modeBadge}
+          <span>${step.agent}</span>
+          ${conditionalLabel}
+        </span>`;
+      }
+
+      function buildQuickRef() {
+        const content = document.getElementById('router-drawer-content');
+        content.setAttribute('role', 'table');
+        content.setAttribute('aria-label', 'Agent routing quick reference');
+        // Header row
+        const header = document.createElement('div');
+        header.style.cssText = 'display:flex;align-items:center;gap:1rem;padding:0.5rem 1rem;background:color-mix(in oklch, var(--muted) 30%, transparent);border-bottom:1px solid var(--border)';
+        header.setAttribute('role', 'row');
+        header.innerHTML = '<span role="columnheader" style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted-foreground);flex:1">When you\'re saying…</span><span role="columnheader" style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted-foreground);width:9rem;flex-shrink:0">Route to</span>';
+        content.appendChild(header);
+
+        QUICK_REF_ROWS.forEach(row => {
+          const color = getAgentColor(row.colorVar);
+          const el = document.createElement('div');
+          el.className = 'router-table-row flex items-center gap-4 transition-colors duration-150 border-b';
+          el.setAttribute('role', 'row');
+          el.style.cssText = 'padding: 0.625rem 1rem; border-color: color-mix(in oklch, var(--border) 40%, transparent);';
+          el.innerHTML = `<span role="cell" class="flex flex-col gap-0.5 flex-1">
+  <span style="color: var(--muted-foreground); font-size: 0.8rem; font-style: italic;">${row.signal}</span>
+  <span style="color: color-mix(in oklch, var(--muted-foreground) 65%, transparent); font-size: 0.7rem;">${row.subtitle}</span>
+</span><code role="cell" class="font-mono text-xs px-2 py-0.5 rounded flex-shrink-0 border self-start" style="font-family: var(--app-font-mono); background: var(--background); border-color: color-mix(in oklch,${color} 25%,transparent); color: ${color};">${row.agent}</code>`;
+          content.appendChild(el);
+        });
+      }
+
+      function setupRouterInput() {
+        const input = document.getElementById('router-input');
+        input.addEventListener('input', () => {
+          clearTimeout(routerDebounceTimer);
+          routerDebounceTimer = setTimeout(() => {
+            const val = input.value.toLowerCase().trim();
+            if (!val) {
+              routerActiveId = null;
+              resetChips();
+              showEmptyState();
+              return;
+            }
+            const match = SCENARIOS.find(s =>
+              s.keywords.some(kw => val.includes(kw))
+            );
+            if (match) {
+              activateScenario(match.id);
+            } else {
+              routerActiveId = null;
+              resetChips();
+              const display = document.getElementById('router-display');
+              display.innerHTML = emptyStateHTML('No match — try describing what you\'re experiencing (e.g. "something is broken", "I don\'t understand this code")');
+            }
+          }, 250);
+        });
+      }
+
+      function setupDrawer() {
+        const toggle = document.getElementById('router-drawer-toggle');
+        const drawer = document.getElementById('router-drawer');
+        toggle.addEventListener('click', () => {
+          const isOpen = drawer.classList.contains('open');
+          drawer.classList.toggle('open');
+          toggle.setAttribute('aria-expanded', String(!isOpen));
+          const svg = toggle.querySelector('svg');
+          if (svg) svg.style.transform = !isOpen ? 'rotate(180deg)' : '';
+        });
+      }
+
+      // Chip keyboard navigation (arrow keys between chips)
+      function setupChipKeyboard() {
+        const container = document.getElementById('router-chips');
+        container.addEventListener('keydown', e => {
+          const chips = Array.from(container.querySelectorAll('.router-chip'));
+          const idx = chips.indexOf(document.activeElement);
+          if (idx === -1) return;
+
+          let nextIdx = -1;
+          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+            nextIdx = (idx + 1) % chips.length;
+          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+            nextIdx = (idx - 1 + chips.length) % chips.length;
+          } else if (e.key === 'Home') {
+            nextIdx = 0;
+          } else if (e.key === 'End') {
+            nextIdx = chips.length - 1;
+          }
+
+          if (nextIdx !== -1) {
+            e.preventDefault();
+            // Update tabindex (roving)
+            chips.forEach(c => c.setAttribute('tabindex', '-1'));
+            chips[nextIdx].setAttribute('tabindex', '0');
+            chips[nextIdx].focus();
+          }
+        });
+      }
+
+      // Init
+      buildChips();
+      buildQuickRef();
+      setupRouterInput();
+      setupDrawer();
+      setupChipKeyboard();
 
       // Scroll animations — only when motion is OK
       if (

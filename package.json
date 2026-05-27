@@ -35,9 +35,14 @@
     "neurodivergent"
   ],
   "scripts": {
+    "prepare": "husky",
     "test": "node --test test/install.test.js test/validate-agents.test.js",
     "test:install": "node --test test/install.test.js",
-    "test:validate": "node --test test/validate-agents.test.js"
+    "test:validate": "node --test test/validate-agents.test.js",
+    "css:build": "npx @tailwindcss/cli -i ./src/input.css -o ./assets/styles.css --minify",
+    "css:watch": "npx @tailwindcss/cli -i ./src/input.css -o ./assets/styles.css --watch",
+    "build": "npm run css:build",
+    "pre-commit": "sh .husky/pre-commit"
   },
   "license": "MIT",
   "engines": {
@@ -46,5 +51,11 @@
   "dependencies": {
     "@clack/prompts": "^1.3.0",
     "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@fontsource/raleway": "^5.2.8",
+    "@tailwindcss/cli": "^4.3.0",
+    "husky": "^9.0.0",
+    "tailwindcss": "^4.3.0"
   }
 }
