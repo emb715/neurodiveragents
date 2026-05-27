@@ -1,5 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
 
 # ── CSS staleness check ─────────────────────────────────────────────────────
 # Rebuilds assets/styles.css from src/input.css and fails if the result
