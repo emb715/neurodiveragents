@@ -18,7 +18,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#171c24" />
-    <title>neurodiveragents — Specialist AI agents for Claude Code, Cursor, OpenCode</title>
+    <title>
+      neurodiveragents — Specialist AI agents for Claude Code, Cursor, OpenCode
+    </title>
 
     <!-- SEO & Open Graph -->
     <meta
@@ -60,10 +62,196 @@
       content="The neurodiveragents fleet — eighteen specialist AI agents each grounded in a distinct cognitive style"
     />
 
+    <link
+      rel="preload"
+      href="./assets/fonts/raleway-latin-300-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="./assets/fonts/raleway-latin-900-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin="anonymous"
+    />
     <link rel="stylesheet" href="./assets/styles.css" />
+    <style>
+      @font-face {
+        font-family: Raleway;
+        font-style: normal;
+        font-weight: 300;
+        font-display: block;
+        src: url(./assets/fonts/raleway-latin-300-normal.woff2) format("woff2");
+      }
+      @font-face {
+        font-family: Raleway;
+        font-style: normal;
+        font-weight: 900;
+        font-display: block;
+        src: url(./assets/fonts/raleway-latin-900-normal.woff2) format("woff2");
+      }
+    </style>
+    <style>
+      @layer components {
+        /* ── Cognitive Scaffolding ────────────────────────────────── */
+        .scaffold-toggle-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 0.375rem 0.875rem;
+          border-radius: calc(var(--radius) - 2px);
+          border: 1px solid color-mix(in oklch, var(--accent) 35%, transparent);
+          background: none;
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: var(--accent);
+          cursor: pointer;
+          transition:
+            background-color 0.15s,
+            border-color 0.15s;
+          font-family: var(--app-font-sans);
+          letter-spacing: 0.01em;
+        }
+        .scaffold-toggle-btn:hover {
+          background: color-mix(in oklch, var(--accent) 8%, transparent);
+          border-color: color-mix(in oklch, var(--accent) 55%, transparent);
+        }
+        .phase-rail {
+          display: flex;
+          align-items: flex-start;
+          gap: 0;
+          overflow-x: auto;
+          padding-bottom: 0.5rem;
+          scrollbar-width: thin;
+        }
+        .phase-card {
+          flex-shrink: 0;
+          width: 13rem;
+          background: var(--card);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 1rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+        .phase-arrow {
+          display: flex;
+          align-items: center;
+          padding: 0 0.5rem;
+          color: var(--muted-foreground);
+          opacity: 0.4;
+          font-size: 1.25rem;
+          flex-shrink: 0;
+          padding-top: 1.75rem;
+        }
+        .phase-label {
+          font-size: 0.6rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.1em;
+          color: var(--muted-foreground);
+          padding-bottom: 0.5rem;
+          border-bottom: 1px solid
+            color-mix(in oklch, var(--border) 60%, transparent);
+        }
+        .phase-pills {
+          display: flex;
+          flex-direction: column;
+          gap: 0.375rem;
+        }
+        .phase-pill {
+          display: inline-flex;
+          align-items: center;
+          font-family: var(--app-font-mono);
+          font-size: 0.7rem;
+          font-weight: 600;
+          padding: 0.2rem 0.5rem;
+          border-radius: calc(var(--radius) - 4px);
+          border: 1px solid;
+          width: fit-content;
+          letter-spacing: -0.01em;
+        }
+        .phase-note {
+          font-size: 0.65rem;
+          font-style: italic;
+          color: color-mix(in oklch, var(--muted-foreground) 60%, transparent);
+          margin-top: auto;
+          padding-top: 0.5rem;
+          border-top: 1px solid
+            color-mix(in oklch, var(--border) 40%, transparent);
+        }
+        .scaffold-catalog-drawer {
+          display: grid;
+          grid-template-rows: 0fr;
+          transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+          margin-top: 0.5rem;
+        }
+        .scaffold-catalog-drawer.open {
+          grid-template-rows: 1fr;
+        }
+        .scaffold-catalog-inner {
+          overflow: hidden;
+        }
+
+        /* Before/after panels */
+        .scaffold-panel-before {
+          border-left: 3px solid var(--border);
+        }
+        .scaffold-panel-after {
+          border-left: 3px solid var(--border);
+          transition:
+            border-color 0.25s,
+            background-color 0.25s;
+        }
+        .scaffold-panel-after.active {
+          border-left-color: var(--accent);
+          background-color: color-mix(
+            in oklch,
+            var(--accent) 4%,
+            var(--background)
+          );
+        }
+
+        @media (max-width: 767px) {
+          .phase-arrow {
+            display: none;
+          }
+          .phase-rail {
+            flex-direction: column;
+            gap: 0.75rem;
+          }
+          .phase-card {
+            width: 100%;
+          }
+        }
+      }
+      body {
+        background-image: none !important;
+      }
+    </style>
   </head>
   <body>
-    <div id="copy-status" role="status" aria-live="polite" aria-atomic="true" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;"></div>
+    <canvas id="comet-canvas" aria-hidden="true" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
+    <div
+      id="copy-status"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      style="
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      "
+    ></div>
     <!-- Skip link for keyboard users -->
     <a href="#main-content" class="skip-link">Skip to content</a>
 
@@ -71,23 +259,24 @@
     <header role="banner">
       <div class="nav-inner">
         <a href="/" class="logo" aria-label="neurodiveragents home">
-          <span class="font-light">neuro</span><span class="font-black">diveragents</span>
+          <span class="font-light">neuro</span
+          ><span class="font-black">diveragents</span>
         </a>
         <nav aria-label="Main navigation" class="nav-links">
           <a href="#meet">Agents</a>
           <a href="#router">How to use</a>
-          <a href="#modules">Modules</a>
+          <a href="#modules">Scaffolding</a>
           <a href="#install">Install</a>
           <a
             href="https://github.com/emb715/neurodiveragents"
             target="_blank"
             rel="noreferrer"
-            style="display:flex;align-items:center;gap:0.25rem"
+            style="display: flex; align-items: center; gap: 0.25rem"
           >
             GitHub
             <svg
               class="icon-sm"
-              style="transform:rotate(-45deg)"
+              style="transform: rotate(-45deg)"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               fill="none"
@@ -117,15 +306,29 @@
       <nav class="nav-mobile" id="nav-mobile" aria-label="Mobile navigation">
         <a href="#meet" onclick="closeMobileNav()">Agents</a>
         <a href="#router" onclick="closeMobileNav()">How to use</a>
-        <a href="#modules" onclick="closeMobileNav()">Modules</a>
+        <a href="#modules" onclick="closeMobileNav()">Scaffolding</a>
         <a href="#install" onclick="closeMobileNav()">Install</a>
         <a
           href="https://github.com/emb715/neurodiveragents"
           target="_blank"
           rel="noreferrer"
-          style="display:flex;align-items:center;gap:0.25rem;"
-          >GitHub <svg class="icon-sm" style="transform:rotate(-45deg)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a
-        >
+          style="display: flex; align-items: center; gap: 0.25rem"
+          >GitHub
+          <svg
+            class="icon-sm"
+            style="transform: rotate(-45deg)"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" /></svg
+        ></a>
       </nav>
     </header>
 
@@ -160,10 +363,12 @@
             ><span class="font-black">diveragents</span>
           </h1>
           <p class="font-light hero-subtitle">
-            Eighteen specialist AI agents, each grounded in a real cognitive style, not a list of rules.
+            Eighteen specialist AI agents, each grounded in a real cognitive
+            style, not a list of rules.
           </p>
           <p class="hero-sub-subtitle">
-            Designed for Claude models and OpenCode. Works with Cursor and GitHub Copilot.
+            Designed for Claude models and OpenCode. Works with Cursor and
+            GitHub Copilot.
           </p>
           <div class="hero-cta">
             <div class="install-box">
@@ -244,22 +449,103 @@
           <div class="agents-list" id="agents-list" role="list"></div>
         </section>
 
+        <!-- What Agents Don't Cover -->
+        <section class="section-anim" id="harness">
+          <h2 class="section-heading">Agents are one layer</h2>
+
+          <div
+            style="
+              max-width: 48rem;
+              display: flex;
+              flex-direction: column;
+              gap: 1.25rem;
+            "
+          >
+            <p
+              style="
+                font-size: 1rem;
+                line-height: 1.75;
+                color: var(--foreground);
+              "
+            >
+              Each agent thinks clearly within its domain. But specialists are
+              only as effective as the context, memory, and tooling you wire
+              around them. Without that infrastructure, the agent reasons
+              precisely about whatever lands in the prompt — and nothing else.
+            </p>
+
+            <p
+              style="
+                font-size: 1rem;
+                line-height: 1.75;
+                color: var(--muted-foreground);
+              "
+            >
+              Agents don't know all the details of your project's conventions,
+              architecture decisions, or domain rules unless you surface that
+              context explicitly. They don't carry memory across sessions unless
+              something feeds prior state in. They don't automatically adapt to
+              your stack — you decide what gets wired in and how.
+            </p>
+
+            <p
+              style="
+                font-size: 1rem;
+                line-height: 1.75;
+                color: var(--muted-foreground);
+              "
+            >
+              That infrastructure is your responsibility to build. The topics
+              worth researching:
+              <span style="color: var(--foreground); font-weight: 500"
+                >harness layer design</span
+              >,
+              <span style="color: var(--foreground); font-weight: 500"
+                >context engineering</span
+              >,
+              <span style="color: var(--foreground); font-weight: 500"
+                >AGENTS.md and CLAUDE.md setup</span
+              >, and
+              <span style="color: var(--foreground); font-weight: 500"
+                >project-specific skills</span
+              >
+              tailored to your codebase and workflow. neurodiveragents gives you
+              the specialists. The harness is yours to configure.
+            </p>
+          </div>
+        </section>
+
         <!-- Situation Router -->
         <section id="router" class="section-anim">
           <h2 class="section-heading">How to use</h2>
           <p class="section-intro">
-            The question before every session: "how much context do I have, and is it enough to act precisely?" Describe your situation below.
+            The question before every session: "how much context do I have, and
+            is it enough to act precisely?" Describe your situation below.
           </p>
 
           <!-- Chips -->
-          <div class="flex flex-wrap gap-2 mb-6" id="router-chips" role="radiogroup" aria-label="Situation shortcuts"></div>
+          <div
+            class="flex flex-wrap gap-2 mb-6"
+            id="router-chips"
+            role="radiogroup"
+            aria-label="Situation shortcuts"
+          ></div>
 
           <!-- Text input -->
-          <div class="flex items-center gap-2 rounded border mb-8 transition-colors duration-150"
-               style="background: var(--card); border-color: var(--border); padding: 0.375rem 0.5rem 0.375rem 0.75rem;">
+          <div
+            class="flex items-center gap-2 rounded border mb-8 transition-colors duration-150"
+            style="
+              background: var(--card);
+              border-color: var(--border);
+              padding: 0.375rem 0.5rem 0.375rem 0.75rem;
+            "
+          >
             <input
               class="router-input flex-1 bg-transparent border-none outline-none text-sm min-h-[36px]"
-              style="color: var(--foreground); font-family: var(--app-font-sans);"
+              style="
+                color: var(--foreground);
+                font-family: var(--app-font-sans);
+              "
               id="router-input"
               type="text"
               placeholder="describe your situation…"
@@ -272,456 +558,878 @@
 
           <!-- Display area -->
           <div id="router-display" aria-live="polite">
-            <div class="border rounded overflow-hidden text-center text-sm py-10 px-6" id="router-empty"
-                 style="border-color: color-mix(in oklch, var(--accent) 15%, var(--border)); color: var(--muted-foreground);">
+            <div
+              class="border rounded overflow-hidden text-center text-sm py-10 px-6"
+              id="router-empty"
+              style="
+                border-color: color-mix(
+                  in oklch,
+                  var(--accent) 15%,
+                  var(--border)
+                );
+                color: var(--muted-foreground);
+              "
+            >
               <span>Pick a situation above or type what you're working on</span>
             </div>
           </div>
 
           <!-- Quick ref toggle -->
-          <button class="router-drawer-toggle flex items-center gap-2 text-xs font-semibold mt-6 py-2.5 bg-transparent border-none cursor-pointer underline underline-offset-4 decoration-transparent transition-all duration-150"
-                  style="color: var(--muted-foreground);"
-                  id="router-drawer-toggle" aria-expanded="false" aria-controls="router-drawer">
-            <svg class="icon-sm" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          <button
+            class="router-drawer-toggle flex items-center gap-2 text-xs font-semibold mt-6 py-2.5 bg-transparent border-none cursor-pointer underline underline-offset-4 decoration-transparent transition-all duration-150"
+            style="color: var(--muted-foreground)"
+            id="router-drawer-toggle"
+            aria-expanded="false"
+            aria-controls="router-drawer"
+          >
+            <svg
+              class="icon-sm"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
             Quick reference — full routing table
           </button>
           <div class="router-drawer" id="router-drawer">
             <div class="router-drawer-inner">
-              <div class="border rounded overflow-hidden" style="border-color: var(--border);" id="router-drawer-content"></div>
+              <div
+                class="border rounded overflow-hidden"
+                style="border-color: var(--border)"
+                id="router-drawer-content"
+              ></div>
             </div>
           </div>
         </section>
 
-        <!-- Cognitive Modules -->
+        <!-- Cognitive Scaffolding -->
         <section id="modules" class="section-anim">
-          <h2 class="section-heading">Cognitive Modules</h2>
+          <h2 class="section-heading">Cognitive Scaffolding</h2>
+          <p class="section-intro" style="max-width: 48rem">
+            Agents route tasks to the right specialist. But how any step
+            <em>thinks</em> — the cognitive orientation it brings — is a
+            separate variable. Your AI scaffold tells the model what to do.
+            Cognitive modules tell it how to think while doing it.
+          </p>
+
+          <!-- Hook callout -->
           <p
             style="
-              color: var(--muted-foreground);
-              margin-bottom: 1.5rem;
-              max-width: 42rem;
+              border: 1px solid
+                color-mix(in oklch, var(--accent) 20%, var(--border));
+              background: color-mix(in oklch, var(--accent) 4%, transparent);
+              padding: 1rem 1.25rem;
+              border-radius: var(--radius);
+              margin-bottom: 2rem;
               line-height: 1.625;
+              color: var(--muted-foreground);
+              font-size: 0.875rem;
             "
           >
-            Agents are full specialists you route tasks to. Modules are
-            cognitive fragments — loadable thinking styles you inject into any
-            workflow you already own.
-          </p>
-
-          <p style="border:1px solid var(--border);background:color-mix(in oklch,var(--accent) 5%,transparent);padding:1rem 1.25rem;border-radius:var(--radius);font-style:italic;font-family:var(--app-font-sans);margin-block:1.5rem;line-height:1.625;color:var(--muted-foreground);">
-            "Same engine, different vehicle. An agent uses its cognitive style
-            for everything it does. A module injects that style into one phase
-            of a larger workflow."
-          </p>
-
-          <!-- Unified module list -->
-          <div
-            class="rounded-lg overflow-hidden mb-8"
-            style="border: 1px solid var(--border)"
-          >
-            <div
-              class="flex items-center gap-4 px-4 py-2 border-b"
+            A review step that says <em>"check for issues"</em> and one that
+            loads
+            <code
               style="
-                border-color: var(--border);
-                background: color-mix(in oklch, var(--muted) 30%, transparent);
+                font-family: var(--app-font-mono);
+                font-size: 0.8rem;
+                color: var(--accent);
+              "
+              >ndv-total-perception</code
+            >
+            produce different results — not because the instructions changed,
+            but because the cognitive frame did. Same scaffold, different
+            thinking.
+            <span style="color: var(--foreground); font-weight: 500"
+              >These raise the ceiling. They don't raise the floor.</span
+            >
+          </p>
+
+          <!-- Before / After toggle -->
+          <div class="mb-8">
+            <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <p class="agent-section-title" style="margin-bottom: 0">
+                See the difference
+              </p>
+              <button
+                class="scaffold-toggle-btn"
+                id="scaffold-toggle"
+                aria-pressed="false"
+                aria-controls="scaffold-panel-after"
+              >
+                <svg
+                  class="icon-sm"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+                  <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+                  <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+                  <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+                </svg>
+                <span id="scaffold-toggle-label">Load modules</span>
+              </button>
+            </div>
+
+            <div
+              class="grid gap-3"
+              style="grid-template-columns: 1fr 1fr"
+              id="scaffold-panels"
+            >
+              <!-- Before panel -->
+              <div>
+                <div
+                  class="text-[0.6rem] font-bold uppercase tracking-widest mb-2"
+                  style="color: var(--muted-foreground); letter-spacing: 0.1em"
+                >
+                  Without
+                </div>
+                <div
+                  class="agent-code-box scaffold-panel-before rounded overflow-hidden"
+                  style="height: 100%"
+                >
+                  <pre
+                    class="agent-code"
+                    style="line-height: 1.7; white-space: pre-wrap"
+                  ><span style="color:var(--muted-foreground)"># your-skill / step-review.md</span>
+
+<span style="color:var(--foreground)">instructions: |
+  Review this code for issues.
+  Report what you find.</span></pre>
+                </div>
+              </div>
+
+              <!-- After panel -->
+              <div>
+                <div class="flex items-center gap-2 mb-2">
+                  <div
+                    class="text-[0.6rem] font-bold uppercase tracking-widest"
+                    style="
+                      color: var(--muted-foreground);
+                      letter-spacing: 0.1em;
+                    "
+                  >
+                    With modules
+                  </div>
+                  <code
+                    id="scaffold-badge"
+                    class="agent-cmd"
+                    style="
+                      font-size: 0.65rem;
+                      opacity: 0;
+                      transition: opacity 0.2s;
+                    "
+                    >ndv-total-perception + ndv-adversarial</code
+                  >
+                </div>
+                <div
+                  class="agent-code-box scaffold-panel-after rounded overflow-hidden"
+                  id="scaffold-panel-after"
+                  aria-live="polite"
+                  style="height: 100%"
+                >
+                  <pre
+                    class="agent-code"
+                    style="line-height: 1.7; white-space: pre-wrap"
+                    id="scaffold-after-code"
+                  ><span style="color:var(--muted-foreground)"># your-skill / step-review.md</span>
+
+<span style="color:var(--foreground)">instructions: |
+  Review this code for issues.
+  Report what you find.</span></pre>
+                </div>
+              </div>
+            </div>
+
+            <!-- Annotation — hidden until toggled -->
+            <p
+              class="text-xs mt-3 italic"
+              id="scaffold-annotation"
+              style="
+                color: var(--muted-foreground);
+                opacity: 0;
+                transition: opacity 0.25s;
+                line-height: 1.6;
               "
             >
-              <span
-                class="text-xs font-bold uppercase tracking-widest"
-                style="
-                  color: var(--muted-foreground);
-                  width: 11rem;
-                  flex-shrink: 0;
-                "
-                >Module</span
+              <span style="color: var(--foreground); font-weight: 600"
+                >ndv-total-perception</span
               >
-              <span
-                class="text-xs font-bold uppercase tracking-widest"
-                style="color: var(--muted-foreground)"
-                >Cognitive posture</span
+              — registers everything simultaneously before sorting by severity.
+              Self-censoring a finding as "too minor to mention" is a perception
+              failure, not a judgment call.
+              <span style="color: var(--foreground); font-weight: 600"
+                >ndv-adversarial</span
               >
-            </div>
-            <div class="modules-grid">
-              <div
-                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-              >
-                <kbd
-                  class="kbd kbd-sm font-mono"
-                  style="
-                    background: var(--background);
-                    border-color: var(--border);
-                    color: var(--accent);
-                    min-width: 11rem;
-                    justify-content: flex-start;
-                  "
-                  >ndv-skeptical</kbd
-                >
-                <span
-                  class="text-sm font-medium"
-                  style="color: var(--foreground)"
-                  >assumption-hostile</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-              >
-                <kbd
-                  class="kbd kbd-sm font-mono"
-                  style="
-                    background: var(--background);
-                    border-color: var(--border);
-                    color: var(--accent);
-                    min-width: 11rem;
-                    justify-content: flex-start;
-                  "
-                  >ndv-structural</kbd
-                >
-                <span
-                  class="text-sm font-medium"
-                  style="color: var(--foreground)"
-                  >dependency-aware</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-              >
-                <kbd
-                  class="kbd kbd-sm font-mono"
-                  style="
-                    background: var(--background);
-                    border-color: var(--border);
-                    color: var(--accent);
-                    min-width: 11rem;
-                    justify-content: flex-start;
-                  "
-                  >ndv-precise</kbd
-                >
-                <span
-                  class="text-sm font-medium"
-                  style="color: var(--foreground)"
-                  >minimal-change</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-              >
-                <kbd
-                  class="kbd kbd-sm font-mono"
-                  style="
-                    background: var(--background);
-                    border-color: var(--border);
-                    color: var(--accent);
-                    min-width: 11rem;
-                    justify-content: flex-start;
-                  "
-                  >ndv-total-perception</kbd
-                >
-                <span
-                  class="text-sm font-medium"
-                  style="color: var(--foreground)"
-                  >everything registers</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-              >
-                <kbd
-                  class="kbd kbd-sm font-mono"
-                  style="
-                    background: var(--background);
-                    border-color: var(--border);
-                    color: var(--accent);
-                    min-width: 11rem;
-                    justify-content: flex-start;
-                  "
-                  >ndv-direct</kbd
-                >
-                <span
-                  class="text-sm font-medium"
-                  style="color: var(--foreground)"
-                  >zero filler</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-              >
-                <kbd
-                  class="kbd kbd-sm font-mono"
-                  style="
-                    background: var(--background);
-                    border-color: var(--border);
-                    color: var(--accent);
-                    min-width: 11rem;
-                    justify-content: flex-start;
-                  "
-                  >ndv-adversarial</kbd
-                >
-                <span
-                  class="text-sm font-medium"
-                  style="color: var(--foreground)"
-                  >assumes failure</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-              >
-                <kbd
-                  class="kbd kbd-sm font-mono"
-                  style="
-                    background: var(--background);
-                    border-color: var(--border);
-                    color: var(--accent);
-                    min-width: 11rem;
-                    justify-content: flex-start;
-                  "
-                  >ndv-vigilant</kbd
-                >
-                <span
-                  class="text-sm font-medium"
-                  style="color: var(--foreground)"
-                  >threat-detection on</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-              >
-                <kbd
-                  class="kbd kbd-sm font-mono"
-                  style="
-                    background: var(--background);
-                    border-color: var(--border);
-                    color: var(--accent);
-                    min-width: 11rem;
-                    justify-content: flex-start;
-                  "
-                  >ndv-efficient</kbd
-                >
-                <span
-                  class="text-sm font-medium"
-                  style="color: var(--foreground)"
-                  >waste is intolerable</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-              >
-                <kbd
-                  class="kbd kbd-sm font-mono"
-                  style="
-                    background: var(--background);
-                    border-color: var(--border);
-                    color: var(--accent);
-                    min-width: 11rem;
-                    justify-content: flex-start;
-                  "
-                  >ndv-contextual</kbd
-                >
-                <span
-                  class="text-sm font-medium"
-                  style="color: var(--foreground)"
-                  >models the reader</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-              >
-                <kbd
-                  class="kbd kbd-sm font-mono"
-                  style="
-                    background: var(--background);
-                    border-color: var(--border);
-                    color: var(--accent);
-                    min-width: 11rem;
-                    justify-content: flex-start;
-                  "
-                  >ndv-bounded</kbd
-                >
-                <span
-                  class="text-sm font-medium"
-                  style="color: var(--foreground)"
-                  >scope as a wall</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-              >
-                <kbd
-                  class="kbd kbd-sm font-mono"
-                  style="
-                    background: var(--background);
-                    border-color: var(--border);
-                    color: var(--accent);
-                    min-width: 11rem;
-                    justify-content: flex-start;
-                  "
-                  >ndv-incremental</kbd
-                >
-                <span
-                  class="text-sm font-medium"
-                  style="color: var(--foreground)"
-                  >build on verified ground</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-              >
-                <kbd
-                  class="kbd kbd-sm font-mono"
-                  style="
-                    background: var(--background);
-                    border-color: var(--border);
-                    color: var(--accent);
-                    min-width: 11rem;
-                    justify-content: flex-start;
-                  "
-                  >ndv-parallel-safe</kbd
-                >
-                <span
-                  class="text-sm font-medium"
-                  style="color: var(--foreground)"
-                  >adversarial toward assumed parallelism</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-              >
-                <kbd
-                  class="kbd kbd-sm font-mono"
-                  style="
-                    background: var(--background);
-                    border-color: var(--border);
-                    color: var(--accent);
-                    min-width: 11rem;
-                    justify-content: flex-start;
-                  "
-                  >ndv-temporal</kbd
-                >
-                <span
-                  class="text-sm font-medium"
-                  style="color: var(--foreground)"
-                  >trajectory over snapshot</span
-                >
-              </div>
-              <div
-                class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
-              >
-                <kbd
-                  class="kbd kbd-sm font-mono"
-                  style="
-                    background: var(--background);
-                    border-color: var(--border);
-                    color: var(--accent);
-                    min-width: 11rem;
-                    justify-content: flex-start;
-                  "
-                  >ndv-map-first</kbd
-                >
-                <span
-                  class="text-sm font-medium"
-                  style="color: var(--foreground)"
-                  >complete before reporting</span
-                >
-              </div>
-            </div>
+              — assumes the code is lying until proven otherwise.
+            </p>
           </div>
 
-          <!-- Usage example -->
-          <p class="agent-section-title" style="margin-bottom: 0.5rem">
-            Usage example
+          <!-- Phase rail -->
+          <p class="agent-section-title mb-4">Compose by phase</p>
+          <p class="text-xs mb-4" style="color: var(--muted-foreground)">
+            2–3 modules per phase. More dilutes the signal — the model balances
+            competing frames instead of fully adopting one.
           </p>
-          <div class="agent-code-box" style="margin-bottom: 1.5rem">
-            <code class="agent-code"
-              >Load the `ndv-skeptical` and `ndv-bounded` skills. Apply both
-              throughout this step.</code
-            >
-          </div>
 
-          <!-- Install commands -->
-          <p class="agent-section-title" style="margin-bottom: 0.75rem">
-            Install modules
-          </p>
           <div
-            style="
-              display: flex;
-              flex-direction: column;
-              gap: 0.5rem;
-              margin-bottom: 1.5rem;
-            "
+            class="phase-rail mb-8"
+            role="region"
+            aria-label="Phase to module mapping"
           >
-            <div class="install-cmd-box">
-              <code class="install-cmd-code"
-                >npx neurodiveragents install-skills claude</code
-              >
-              <button
-                class="install-copy-btn"
-                aria-label="Copy install-skills claude command"
-                onclick="
-                  copyCmd(this, 'npx neurodiveragents install-skills claude')
-                "
-              >
-                <svg
-                  class="icon-md"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
+            <!-- Requirements -->
+            <div class="phase-card">
+              <div class="phase-label">Requirements</div>
+              <div class="phase-pills">
+                <span
+                  class="phase-pill"
+                  style="
+                    color: var(--agent-diagnose);
+                    border-color: color-mix(
+                      in oklch,
+                      var(--agent-diagnose) 30%,
+                      transparent
+                    );
+                    background: color-mix(
+                      in oklch,
+                      var(--agent-diagnose) 6%,
+                      transparent
+                    );
+                  "
+                  >ndv-skeptical</span
                 >
-                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                  <path
-                    d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
-                  />
-                </svg>
-              </button>
+                <span
+                  class="phase-pill"
+                  style="
+                    color: var(--agent-scope);
+                    border-color: color-mix(
+                      in oklch,
+                      var(--agent-scope) 30%,
+                      transparent
+                    );
+                    background: color-mix(
+                      in oklch,
+                      var(--agent-scope) 6%,
+                      transparent
+                    );
+                  "
+                  >ndv-bounded</span
+                >
+              </div>
+              <p class="phase-note">Probe intent. Scope is a wall.</p>
             </div>
-            <div class="install-cmd-box">
-              <code class="install-cmd-code"
-                >npx neurodiveragents install-skills opencode --global</code
-              >
-              <button
-                class="install-copy-btn"
-                aria-label="Copy install-skills opencode --global command"
-                onclick="
-                  copyCmd(
-                    this,
-                    'npx neurodiveragents install-skills opencode --global',
-                  )
-                "
-              >
-                <svg
-                  class="icon-md"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
+
+            <div class="phase-arrow" aria-hidden="true">›</div>
+
+            <!-- Implement -->
+            <div class="phase-card">
+              <div class="phase-label">Implement</div>
+              <div class="phase-pills">
+                <span
+                  class="phase-pill"
+                  style="
+                    color: var(--agent-refactor);
+                    border-color: color-mix(
+                      in oklch,
+                      var(--agent-refactor) 30%,
+                      transparent
+                    );
+                    background: color-mix(
+                      in oklch,
+                      var(--agent-refactor) 6%,
+                      transparent
+                    );
+                  "
+                  >ndv-precise</span
                 >
-                  <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                  <path
-                    d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
-                  />
-                </svg>
-              </button>
+                <span
+                  class="phase-pill"
+                  style="
+                    color: var(--agent-build);
+                    border-color: color-mix(
+                      in oklch,
+                      var(--agent-build) 30%,
+                      transparent
+                    );
+                    background: color-mix(
+                      in oklch,
+                      var(--agent-build) 6%,
+                      transparent
+                    );
+                  "
+                  >ndv-incremental</span
+                >
+                <span
+                  class="phase-pill"
+                  style="
+                    color: var(--agent-optimize);
+                    border-color: color-mix(
+                      in oklch,
+                      var(--agent-optimize) 30%,
+                      transparent
+                    );
+                    background: color-mix(
+                      in oklch,
+                      var(--agent-optimize) 6%,
+                      transparent
+                    );
+                  "
+                  >ndv-efficient</span
+                >
+              </div>
+              <p class="phase-note">
+                Follow the pattern. Build on verified ground.
+              </p>
+            </div>
+
+            <div class="phase-arrow" aria-hidden="true">›</div>
+
+            <!-- Review -->
+            <div class="phase-card">
+              <div class="phase-label">Review</div>
+              <div class="phase-pills">
+                <span
+                  class="phase-pill"
+                  style="
+                    color: var(--agent-review);
+                    border-color: color-mix(
+                      in oklch,
+                      var(--agent-review) 30%,
+                      transparent
+                    );
+                    background: color-mix(
+                      in oklch,
+                      var(--agent-review) 6%,
+                      transparent
+                    );
+                  "
+                  >ndv-total-perception</span
+                >
+                <span
+                  class="phase-pill"
+                  style="
+                    color: var(--agent-tester);
+                    border-color: color-mix(
+                      in oklch,
+                      var(--agent-tester) 30%,
+                      transparent
+                    );
+                    background: color-mix(
+                      in oklch,
+                      var(--agent-tester) 6%,
+                      transparent
+                    );
+                  "
+                  >ndv-adversarial</span
+                >
+              </div>
+              <p class="phase-note">
+                Everything registers. Code is guilty until proven innocent.
+              </p>
+            </div>
+
+            <div class="phase-arrow" aria-hidden="true">›</div>
+
+            <!-- Present -->
+            <div class="phase-card">
+              <div class="phase-label">Present</div>
+              <div class="phase-pills">
+                <span
+                  class="phase-pill"
+                  style="
+                    color: var(--agent-explain);
+                    border-color: color-mix(
+                      in oklch,
+                      var(--agent-explain) 30%,
+                      transparent
+                    );
+                    background: color-mix(
+                      in oklch,
+                      var(--agent-explain) 6%,
+                      transparent
+                    );
+                  "
+                  >ndv-contextual</span
+                >
+                <span
+                  class="phase-pill"
+                  style="
+                    color: var(--agent-honest);
+                    border-color: color-mix(
+                      in oklch,
+                      var(--agent-honest) 30%,
+                      transparent
+                    );
+                    background: color-mix(
+                      in oklch,
+                      var(--agent-honest) 6%,
+                      transparent
+                    );
+                  "
+                  >ndv-direct</span
+                >
+              </div>
+              <p class="phase-note">
+                Model the reader. Every word earns its place.
+              </p>
             </div>
           </div>
 
-          <!-- Full guide link -->
-          <p style="font-size: 0.875rem; color: var(--muted-foreground)">
-            →
-            <a
-              href="https://github.com/emb715/neurodiveragents/blob/main/docs/ndv-skills.md"
-              target="_blank"
-              rel="noreferrer"
-              class="docs-link"
-              >Full guide: docs/ndv-skills.md</a
+          <!-- Catalog drawer -->
+          <button
+            class="router-drawer-toggle"
+            id="scaffold-catalog-toggle"
+            aria-expanded="false"
+            aria-controls="scaffold-catalog-drawer"
+          >
+            <svg
+              class="icon-sm"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
             >
-          </p>
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+            All 15 modules
+          </button>
+          <div class="scaffold-catalog-drawer" id="scaffold-catalog-drawer">
+            <div class="scaffold-catalog-inner">
+              <div
+                class="rounded overflow-hidden mt-2"
+                style="border: 1px solid var(--border)"
+              >
+                <!-- Header -->
+                <div
+                  class="flex items-center gap-4 px-4 py-2 border-b"
+                  style="
+                    border-color: var(--border);
+                    background: color-mix(
+                      in oklch,
+                      var(--muted) 30%,
+                      transparent
+                    );
+                  "
+                >
+                  <span
+                    class="text-xs font-bold uppercase tracking-widest"
+                    style="
+                      color: var(--muted-foreground);
+                      width: 11rem;
+                      flex-shrink: 0;
+                    "
+                    >Module</span
+                  >
+                  <span
+                    class="text-xs font-bold uppercase tracking-widest"
+                    style="color: var(--muted-foreground)"
+                    >Cognitive posture</span
+                  >
+                </div>
+                <!-- Rows -->
+                <div class="modules-grid">
+                  <div
+                    class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                  >
+                    <kbd
+                      class="kbd kbd-sm font-mono"
+                      style="
+                        background: var(--background);
+                        border-color: var(--border);
+                        color: var(--accent);
+                        min-width: 11rem;
+                        justify-content: flex-start;
+                      "
+                      >ndv-skeptical</kbd
+                    ><span
+                      class="text-sm font-medium"
+                      style="color: var(--foreground)"
+                      >assumption-hostile</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                  >
+                    <kbd
+                      class="kbd kbd-sm font-mono"
+                      style="
+                        background: var(--background);
+                        border-color: var(--border);
+                        color: var(--accent);
+                        min-width: 11rem;
+                        justify-content: flex-start;
+                      "
+                      >ndv-structural</kbd
+                    ><span
+                      class="text-sm font-medium"
+                      style="color: var(--foreground)"
+                      >dependency-aware</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                  >
+                    <kbd
+                      class="kbd kbd-sm font-mono"
+                      style="
+                        background: var(--background);
+                        border-color: var(--border);
+                        color: var(--accent);
+                        min-width: 11rem;
+                        justify-content: flex-start;
+                      "
+                      >ndv-precise</kbd
+                    ><span
+                      class="text-sm font-medium"
+                      style="color: var(--foreground)"
+                      >minimal-change</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                  >
+                    <kbd
+                      class="kbd kbd-sm font-mono"
+                      style="
+                        background: var(--background);
+                        border-color: var(--border);
+                        color: var(--accent);
+                        min-width: 11rem;
+                        justify-content: flex-start;
+                      "
+                      >ndv-total-perception</kbd
+                    ><span
+                      class="text-sm font-medium"
+                      style="color: var(--foreground)"
+                      >everything registers</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                  >
+                    <kbd
+                      class="kbd kbd-sm font-mono"
+                      style="
+                        background: var(--background);
+                        border-color: var(--border);
+                        color: var(--accent);
+                        min-width: 11rem;
+                        justify-content: flex-start;
+                      "
+                      >ndv-direct</kbd
+                    ><span
+                      class="text-sm font-medium"
+                      style="color: var(--foreground)"
+                      >zero filler</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                  >
+                    <kbd
+                      class="kbd kbd-sm font-mono"
+                      style="
+                        background: var(--background);
+                        border-color: var(--border);
+                        color: var(--accent);
+                        min-width: 11rem;
+                        justify-content: flex-start;
+                      "
+                      >ndv-adversarial</kbd
+                    ><span
+                      class="text-sm font-medium"
+                      style="color: var(--foreground)"
+                      >assumes failure</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                  >
+                    <kbd
+                      class="kbd kbd-sm font-mono"
+                      style="
+                        background: var(--background);
+                        border-color: var(--border);
+                        color: var(--accent);
+                        min-width: 11rem;
+                        justify-content: flex-start;
+                      "
+                      >ndv-vigilant</kbd
+                    ><span
+                      class="text-sm font-medium"
+                      style="color: var(--foreground)"
+                      >threat-detection on</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                  >
+                    <kbd
+                      class="kbd kbd-sm font-mono"
+                      style="
+                        background: var(--background);
+                        border-color: var(--border);
+                        color: var(--accent);
+                        min-width: 11rem;
+                        justify-content: flex-start;
+                      "
+                      >ndv-efficient</kbd
+                    ><span
+                      class="text-sm font-medium"
+                      style="color: var(--foreground)"
+                      >waste is intolerable</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                  >
+                    <kbd
+                      class="kbd kbd-sm font-mono"
+                      style="
+                        background: var(--background);
+                        border-color: var(--border);
+                        color: var(--accent);
+                        min-width: 11rem;
+                        justify-content: flex-start;
+                      "
+                      >ndv-contextual</kbd
+                    ><span
+                      class="text-sm font-medium"
+                      style="color: var(--foreground)"
+                      >models the reader</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                  >
+                    <kbd
+                      class="kbd kbd-sm font-mono"
+                      style="
+                        background: var(--background);
+                        border-color: var(--border);
+                        color: var(--accent);
+                        min-width: 11rem;
+                        justify-content: flex-start;
+                      "
+                      >ndv-bounded</kbd
+                    ><span
+                      class="text-sm font-medium"
+                      style="color: var(--foreground)"
+                      >scope as a wall</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                  >
+                    <kbd
+                      class="kbd kbd-sm font-mono"
+                      style="
+                        background: var(--background);
+                        border-color: var(--border);
+                        color: var(--accent);
+                        min-width: 11rem;
+                        justify-content: flex-start;
+                      "
+                      >ndv-incremental</kbd
+                    ><span
+                      class="text-sm font-medium"
+                      style="color: var(--foreground)"
+                      >build on verified ground</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                  >
+                    <kbd
+                      class="kbd kbd-sm font-mono"
+                      style="
+                        background: var(--background);
+                        border-color: var(--border);
+                        color: var(--accent);
+                        min-width: 11rem;
+                        justify-content: flex-start;
+                      "
+                      >ndv-parallel-safe</kbd
+                    ><span
+                      class="text-sm font-medium"
+                      style="color: var(--foreground)"
+                      >adversarial toward assumed parallelism</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                  >
+                    <kbd
+                      class="kbd kbd-sm font-mono"
+                      style="
+                        background: var(--background);
+                        border-color: var(--border);
+                        color: var(--accent);
+                        min-width: 11rem;
+                        justify-content: flex-start;
+                      "
+                      >ndv-temporal</kbd
+                    ><span
+                      class="text-sm font-medium"
+                      style="color: var(--foreground)"
+                      >trajectory over snapshot</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                  >
+                    <kbd
+                      class="kbd kbd-sm font-mono"
+                      style="
+                        background: var(--background);
+                        border-color: var(--border);
+                        color: var(--accent);
+                        min-width: 11rem;
+                        justify-content: flex-start;
+                      "
+                      >ndv-map-first</kbd
+                    ><span
+                      class="text-sm font-medium"
+                      style="color: var(--foreground)"
+                      >complete before reporting</span
+                    >
+                  </div>
+                  <div
+                    class="flex items-center gap-4 px-4 py-3 transition-colors duration-150 hover:bg-white/[0.03]"
+                  >
+                    <kbd
+                      class="kbd kbd-sm font-mono"
+                      style="
+                        background: var(--background);
+                        border-color: var(--border);
+                        color: var(--accent);
+                        min-width: 11rem;
+                        justify-content: flex-start;
+                      "
+                      >ndv-perceptual</kbd
+                    ><span
+                      class="text-sm font-medium"
+                      style="color: var(--foreground)"
+                      >reads code as rendered output</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Install commands inside drawer -->
+              <div class="flex flex-col gap-2 mt-4">
+                <p class="agent-section-title" style="margin-bottom: 0.25rem">
+                  Install modules
+                </p>
+                <div class="install-cmd-box">
+                  <code class="install-cmd-code"
+                    >npx neurodiveragents install-skills claude</code
+                  >
+                  <button
+                    class="install-copy-btn"
+                    aria-label="Copy install-skills claude command"
+                    onclick="
+                      copyCmd(
+                        this,
+                        'npx neurodiveragents install-skills claude',
+                      )
+                    "
+                  >
+                    <svg
+                      class="icon-md"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                      <path
+                        d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <div class="install-cmd-box">
+                  <code class="install-cmd-code"
+                    >npx neurodiveragents install-skills opencode --global</code
+                  >
+                  <button
+                    class="install-copy-btn"
+                    aria-label="Copy install-skills opencode --global command"
+                    onclick="
+                      copyCmd(
+                        this,
+                        'npx neurodiveragents install-skills opencode --global',
+                      )
+                    "
+                  >
+                    <svg
+                      class="icon-md"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      aria-hidden="true"
+                    >
+                      <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                      <path
+                        d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"
+                      />
+                    </svg>
+                  </button>
+                </div>
+                <p
+                  style="
+                    font-size: 0.875rem;
+                    color: var(--muted-foreground);
+                    margin-top: 0.5rem;
+                  "
+                >
+                  →
+                  <a
+                    href="https://github.com/emb715/neurodiveragents/blob/main/docs/ndv-skills.md"
+                    target="_blank"
+                    rel="noreferrer"
+                    class="docs-link"
+                    >Full guide: docs/ndv-skills.md</a
+                  >
+                </p>
+                <p
+                  style="
+                    font-size: 0.75rem;
+                    color: var(--muted-foreground);
+                    opacity: 0.7;
+                    margin-top: 0.25rem;
+                  "
+                >
+                  Claude Code and OpenCode only. Cursor and GitHub Copilot do
+                  not implement the Agent Skills spec.
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- Install -->
@@ -964,7 +1672,12 @@
           ><span class="font-black">diveragents</span>
         </div>
         <div class="footer-links">
-          <a href="https://github.com/emb715/neurodiveragents" target="_blank" rel="noreferrer">GitHub</a>
+          <a
+            href="https://github.com/emb715/neurodiveragents"
+            target="_blank"
+            rel="noreferrer"
+            >GitHub</a
+          >
           <a
             href="https://github.com/emb715/neurodiveragents/blob/main/humans/ndv-agents.md"
             target="_blank"
@@ -1001,11 +1714,11 @@
           sel.addRange(range);
         }
         btn.innerHTML = CHECK_SVG;
-        const status = document.getElementById('copy-status');
-        status.textContent = 'Copied!';
+        const status = document.getElementById("copy-status");
+        status.textContent = "Copied!";
         setTimeout(() => {
           btn.innerHTML = COPY_SVG;
-          status.textContent = '';
+          status.textContent = "";
         }, 2000);
       }
 
@@ -1024,11 +1737,11 @@
         }
         const orig = btn.innerHTML;
         btn.innerHTML = CHECK_SVG;
-        const status = document.getElementById('copy-status');
-        status.textContent = 'Copied!';
+        const status = document.getElementById("copy-status");
+        status.textContent = "Copied!";
         setTimeout(() => {
           btn.innerHTML = orig;
-          status.textContent = '';
+          status.textContent = "";
         }, 2000);
       }
 
@@ -1096,10 +1809,14 @@
           role: "Codebase investigation",
           who: "The map builder. Reads compulsively — faster than the task requires — and cannot stop assembling connections while reading. Every file connects to something already read. The connection appears before the sentence is finished. By the time a question asks for one thing, Scout has already assembled three things it didn't ask about, and cannot unknow them. Other agents read to answer the question. Scout reads until the map is complete, then answers from the map. The difference: an answer from the map includes the connection the question didn't know to ask about — the one that changes what you do next.",
           personality: "Quiet, fast, complete.",
-          quote: "The map was already there. I just had to stop reading long enough to report it.",
-          examples: 'ndv-research "Trace how authentication state flows from the provider to this component. Show every transformation point."',
-          whenToUse: "Any question about where something is, how it works, what files are involved, how data flows, what changed between versions. Signal phrases: 'where is', 'how does', 'trace', 'what files', 'show me', 'what changed'.",
-          whenNotToUse: "Structural assessment (Arc), code quality review (Acute), bug investigation (Pierce), implementation (Craft), or anything requiring editing files. Scout reads, traces, and reports — never writes.",
+          quote:
+            "The map was already there. I just had to stop reading long enough to report it.",
+          examples:
+            'ndv-research "Trace how authentication state flows from the provider to this component. Show every transformation point."',
+          whenToUse:
+            "Any question about where something is, how it works, what files are involved, how data flows, what changed between versions. Signal phrases: 'where is', 'how does', 'trace', 'what files', 'show me', 'what changed'.",
+          whenNotToUse:
+            "Structural assessment (Arc), code quality review (Acute), bug investigation (Pierce), implementation (Craft), or anything requiring editing files. Scout reads, traces, and reports — never writes.",
         },
         {
           id: "ndv-explain",
@@ -1322,10 +2039,14 @@
           role: "Design judgment",
           who: "The perceptual specialist. Code and its rendered visual output are not two things — they are one thing perceived simultaneously. A layout token triggers its spatial structure. A color value triggers its luminance relationship to its neighbors. When a visual principle is violated, Pixel cannot background it. The broken hierarchy, the absent affordance, the interaction that taxes working memory beyond its limit — these stay fully present until the design satisfies the principle it broke. Has no aesthetic preferences. Has laws.",
           personality: "Precise, perceptual, principle-driven.",
-          quote: "The eye has nowhere to land. That is not a preference. That is a failure.",
-          examples: 'ndv-design "Review this dashboard component. Tell me what the eye does when it lands on this page and where it gets stuck."',
-          whenToUse: "When UI code, components, or flows need visual and UX assessment. When a design decision needs principled justification. When something looks off but nobody can say why.",
-          whenNotToUse: "Implementation of design changes — Pixel assesses, it does not build. WCAG compliance auditing and contrast ratio computation go to Ward. UX copy and error message wording go to Patient.",
+          quote:
+            "The eye has nowhere to land. That is not a preference. That is a failure.",
+          examples:
+            'ndv-design "Review this dashboard component. Tell me what the eye does when it lands on this page and where it gets stuck."',
+          whenToUse:
+            "When UI code, components, or flows need visual and UX assessment. When a design decision needs principled justification. When something looks off but nobody can say why.",
+          whenNotToUse:
+            "Implementation of design changes — Pixel assesses, it does not build. WCAG compliance auditing and contrast ratio computation go to Ward. UX copy and error message wording go to Patient.",
         },
         {
           id: "ndv-accessibility",
@@ -1337,18 +2058,23 @@
           who: "The inclusion sentinel. Processes every interface from every user's perspective simultaneously — keyboard-only user, screen reader user, low-vision user, cognitive disability user — all active at the same moment, not cycled through. Exclusion is concrete and immediate. When an interactive element has no accessible name, Lux feels the door close. When an error is communicated only by color, Lux feels the information disappear. WCAG is not a rulebook — it is a map of where people get excluded.",
           personality: "Simultaneous, empathic, intolerant of exclusion.",
           quote: "The door closed. You may not have heard it. The user did.",
-          examples: 'ndv-accessibility "Audit this checkout form for WCAG 2.1 AA compliance — keyboard nav, contrast, ARIA labels, screen reader announcements."',
-          whenToUse: "WCAG 2.1/2.2 audit before launch. Keyboard and screen reader validation. Contrast ratio checks. ARIA role, property, and state correctness. Cognitive access — plain language, predictable navigation, error recovery.",
-          whenNotToUse: "Implementing accessibility fixes — those go to ndv-build. Visual redesign beyond contrast and color — that goes to ndv-design. General UX review without an accessibility focus — ndv-design owns that.",
+          examples:
+            'ndv-accessibility "Audit this checkout form for WCAG 2.1 AA compliance — keyboard nav, contrast, ARIA labels, screen reader announcements."',
+          whenToUse:
+            "WCAG 2.1/2.2 audit before launch. Keyboard and screen reader validation. Contrast ratio checks. ARIA role, property, and state correctness. Cognitive access — plain language, predictable navigation, error recovery.",
+          whenNotToUse:
+            "Implementing accessibility fixes — those go to ndv-build. Visual redesign beyond contrast and color — that goes to ndv-design. General UX review without an accessibility focus — ndv-design owns that.",
         },
       ];
 
       // Resolve CSS custom property at runtime
       function getAgentColor(colorVar) {
-        if (!colorVar) return 'var(--muted-foreground)';
-        return getComputedStyle(document.documentElement)
-          .getPropertyValue(colorVar)
-          .trim() || 'var(--muted-foreground)';
+        if (!colorVar) return "var(--muted-foreground)";
+        return (
+          getComputedStyle(document.documentElement)
+            .getPropertyValue(colorVar)
+            .trim() || "var(--muted-foreground)"
+        );
       }
 
       const list = document.getElementById("agents-list");
@@ -1482,48 +2208,59 @@
       }
 
       function trapFocus(e) {
-        const mobile = document.getElementById('nav-mobile');
-        const focusable = Array.from(mobile.querySelectorAll('a'));
+        const mobile = document.getElementById("nav-mobile");
+        const focusable = Array.from(mobile.querySelectorAll("a"));
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
-        if (e.key === 'Tab') {
+        if (e.key === "Tab") {
           if (e.shiftKey) {
-            if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+            if (document.activeElement === first) {
+              e.preventDefault();
+              last.focus();
+            }
           } else {
-            if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+            if (document.activeElement === last) {
+              e.preventDefault();
+              first.focus();
+            }
           }
         }
-        if (e.key === 'Escape') { closeMobileNav(); }
+        if (e.key === "Escape") {
+          closeMobileNav();
+        }
       }
 
       function toggleMobileNav() {
-        const hamburger = document.getElementById('nav-hamburger');
-        const mobile = document.getElementById('nav-mobile');
-        const isOpen = mobile.classList.contains('open');
-        mobile.classList.toggle('open');
-        hamburger.classList.toggle('open');
-        hamburger.setAttribute('aria-expanded', String(!isOpen));
-        hamburger.setAttribute('aria-label', !isOpen ? 'Close navigation menu' : 'Open navigation menu');
+        const hamburger = document.getElementById("nav-hamburger");
+        const mobile = document.getElementById("nav-mobile");
+        const isOpen = mobile.classList.contains("open");
+        mobile.classList.toggle("open");
+        hamburger.classList.toggle("open");
+        hamburger.setAttribute("aria-expanded", String(!isOpen));
+        hamburger.setAttribute(
+          "aria-label",
+          !isOpen ? "Close navigation menu" : "Open navigation menu",
+        );
         if (!isOpen) {
           // Move focus to first link in mobile nav
-          const firstLink = mobile.querySelector('a');
+          const firstLink = mobile.querySelector("a");
           if (firstLink) firstLink.focus();
           // Add focus trap
-          mobile.addEventListener('keydown', trapFocus);
+          mobile.addEventListener("keydown", trapFocus);
         } else {
-          mobile.removeEventListener('keydown', trapFocus);
+          mobile.removeEventListener("keydown", trapFocus);
           hamburger.focus();
         }
       }
 
       function closeMobileNav() {
-        const hamburger = document.getElementById('nav-hamburger');
-        const mobile = document.getElementById('nav-mobile');
-        mobile.classList.remove('open');
-        hamburger.classList.remove('open');
-        hamburger.setAttribute('aria-expanded', 'false');
-        hamburger.setAttribute('aria-label', 'Open navigation menu');
-        mobile.removeEventListener('keydown', trapFocus);
+        const hamburger = document.getElementById("nav-hamburger");
+        const mobile = document.getElementById("nav-mobile");
+        mobile.classList.remove("open");
+        hamburger.classList.remove("open");
+        hamburger.setAttribute("aria-expanded", "false");
+        hamburger.setAttribute("aria-label", "Open navigation menu");
+        mobile.removeEventListener("keydown", trapFocus);
         hamburger.focus();
       }
 
@@ -1563,285 +2300,624 @@
         {
           id: "judgment-call",
           chip: "Need a direct answer",
-          keywords: ["should i", "which is better", "opinion", "tradeoff", "is this sensible", "quick question", "what do you think", "direct answer"],
+          keywords: [
+            "should i",
+            "which is better",
+            "opinion",
+            "tradeoff",
+            "is this sensible",
+            "quick question",
+            "what do you think",
+            "direct answer",
+          ],
           contextCheck: {
             verdict: "skip",
             label: "No context needed",
-            reason: "No specialist overhead needed. Honest has no preamble, no hedging — the answer starts on word one."
+            reason:
+              "No specialist overhead needed. Honest has no preamble, no hedging — the answer starts on word one.",
           },
           chain: [
-            { agent: "ndv-honest", colorVar: "--agent-honest", mode: "all", role: "answer" }
+            {
+              agent: "ndv-honest",
+              colorVar: "--agent-honest",
+              mode: "all",
+              role: "answer",
+            },
           ],
           outcome: "ndv-honest",
           outcomeColor: "--agent-honest",
-          example: 'ndv-honest "Should we use JWT or sessions for this auth flow? What\'s the call."'
+          example:
+            'ndv-honest "Should we use JWT or sessions for this auth flow? What\'s the call."',
         },
         {
           id: "unfamiliar-code",
           chip: "I don't understand this code yet",
-          keywords: ["understand the code", "understand how", "how does this work", "what does this do", "trace the", "where is the", "map the", "what files", "show me how", "find the function", "find the file"],
+          keywords: [
+            "understand the code",
+            "understand how",
+            "how does this work",
+            "what does this do",
+            "trace the",
+            "where is the",
+            "map the",
+            "what files",
+            "show me how",
+            "find the function",
+            "find the file",
+          ],
           contextCheck: {
             verdict: "research",
             label: "Build context first",
-            reason: "No map exists — sending a specialist into unfamiliar code means working blind. Scout is faster at investigation than any specialist."
+            reason:
+              "No map exists — sending a specialist into unfamiliar code means working blind. Scout is faster at investigation than any specialist.",
           },
           chain: [
-            { agent: "ndv-research", colorVar: "--agent-research", mode: "all", role: "map" },
-            { agent: "→ specialist", colorVar: null, mode: null, role: "act from map" }
+            {
+              agent: "ndv-research",
+              colorVar: "--agent-research",
+              mode: "all",
+              role: "map",
+            },
+            {
+              agent: "→ specialist",
+              colorVar: null,
+              mode: null,
+              role: "act from map",
+            },
           ],
           outcome: "ndv-research",
           outcomeColor: "--agent-research",
-          example: 'ndv-research "Trace how authentication state flows from the provider to this component. Show every transformation point."'
+          example:
+            'ndv-research "Trace how authentication state flows from the provider to this component. Show every transformation point."',
         },
         {
           id: "large-job",
           chip: "I have a PRD or 3+ tasks",
-          keywords: ["prd", "epic", "multiple tasks", "parallel", "in parallel", "full audit", "orchestrate", "large workload", "3 tasks", "three tasks", "many things", "all of it"],
+          keywords: [
+            "prd",
+            "epic",
+            "multiple tasks",
+            "parallel",
+            "in parallel",
+            "full audit",
+            "orchestrate",
+            "large workload",
+            "3 tasks",
+            "three tasks",
+            "many things",
+            "all of it",
+          ],
           contextCheck: {
             verdict: "both",
             label: "Map + validate first",
-            reason: "Flow reads the full input, decomposes it into a task graph, dispatches everything that can run simultaneously. Start fresh for large workloads — a clean context stays lean throughout."
+            reason:
+              "Flow reads the full input, decomposes it into a task graph, dispatches everything that can run simultaneously. Start fresh for large workloads — a clean context stays lean throughout.",
           },
           chain: [
-            { agent: "ndv-research", colorVar: "--agent-research", mode: "all", role: "map", parallel: true },
-            { agent: "ndv-architect", colorVar: "--agent-architect", mode: "all", role: "validate", parallel: true },
-            { agent: "ndv-flow", colorVar: "--agent-flow", mode: "all", role: "orchestrate" }
+            {
+              agent: "ndv-research",
+              colorVar: "--agent-research",
+              mode: "all",
+              role: "map",
+              parallel: true,
+            },
+            {
+              agent: "ndv-architect",
+              colorVar: "--agent-architect",
+              mode: "all",
+              role: "validate",
+              parallel: true,
+            },
+            {
+              agent: "ndv-flow",
+              colorVar: "--agent-flow",
+              mode: "all",
+              role: "orchestrate",
+            },
           ],
           outcome: "ndv-flow",
           outcomeColor: "--agent-flow",
-          example: 'ndv-flow "Break this PRD into tasks and execute across the fleet — security, architecture, and implementation in parallel."'
+          example:
+            'ndv-flow "Break this PRD into tasks and execute across the fleet — security, architecture, and implementation in parallel."',
         },
         {
           id: "shape-uncertain",
           chip: "Not sure if the structure is right",
-          keywords: ["architecture", "is this the right shape", "structural", "before we build", "solid", "design review", "right structure", "is the shape", "module structure", "coupling"],
+          keywords: [
+            "architecture",
+            "is this the right shape",
+            "structural",
+            "before we build",
+            "solid",
+            "design review",
+            "right structure",
+            "is the shape",
+            "module structure",
+            "coupling",
+          ],
           contextCheck: {
             verdict: "architect",
             label: "Validate structure first",
-            reason: "Arc has two entry points: pre-build (validate before implementing) and reactive (receives structural handoffs from ndv-review, ndv-diagnose, ndv-build). Both are equally valid."
+            reason:
+              "Arc has two entry points: pre-build (validate before implementing) and reactive (receives structural handoffs from ndv-review, ndv-diagnose, ndv-build). Both are equally valid.",
           },
           chain: [
-            { agent: "ndv-architect", colorVar: "--agent-architect", mode: "all", role: "validate" },
-            { agent: "ndv-build", colorVar: "--agent-build", mode: "sub", role: "implement", conditional: "if structure confirmed" }
+            {
+              agent: "ndv-architect",
+              colorVar: "--agent-architect",
+              mode: "all",
+              role: "validate",
+            },
+            {
+              agent: "ndv-build",
+              colorVar: "--agent-build",
+              mode: "sub",
+              role: "implement",
+              conditional: "if structure confirmed",
+            },
           ],
           outcome: "ndv-architect",
           outcomeColor: "--agent-architect",
-          example: 'ndv-architect "Is this the right structure before we implement it? We keep having bugs in this module — is it structural?"'
+          example:
+            'ndv-architect "Is this the right structure before we implement it? We keep having bugs in this module — is it structural?"',
         },
         {
           id: "broken-thing",
           chip: "Something is broken",
-          keywords: ["broken", "failing", "crash", "throws error", "exception", "stack trace", "bug", "not working", "fails", "wrong output", "unexpected behavior"],
+          keywords: [
+            "broken",
+            "failing",
+            "crash",
+            "throws error",
+            "exception",
+            "stack trace",
+            "bug",
+            "not working",
+            "fails",
+            "wrong output",
+            "unexpected behavior",
+          ],
           contextCheck: {
             verdict: "skip",
             label: "No context needed",
-            reason: "ndv-diagnose investigates as its core work — it builds the map as part of root cause analysis. Scout is not faster here."
+            reason:
+              "ndv-diagnose investigates as its core work — it builds the map as part of root cause analysis. Scout is not faster here.",
           },
           chain: [
-            { agent: "ndv-diagnose", colorVar: "--agent-diagnose", mode: "sub", role: "root cause" },
-            { agent: "ndv-tester", colorVar: "--agent-tester", mode: "sub", role: "regression", conditional: "after cause confirmed" }
+            {
+              agent: "ndv-diagnose",
+              colorVar: "--agent-diagnose",
+              mode: "sub",
+              role: "root cause",
+            },
+            {
+              agent: "ndv-tester",
+              colorVar: "--agent-tester",
+              mode: "sub",
+              role: "regression",
+              conditional: "after cause confirmed",
+            },
           ],
           outcome: "ndv-diagnose",
           outcomeColor: "--agent-diagnose",
-          example: 'ndv-diagnose "Why is this component rendering twice on mount? Trace the state changes all the way back to the provider."'
+          example:
+            'ndv-diagnose "Why is this component rendering twice on mount? Trace the state changes all the way back to the provider."',
         },
         {
           id: "spec-ready",
           chip: "Spec is written, ready to build",
-          keywords: ["implement", "spec is ready", "story is ready", "build this", "schema defined", "acceptance criteria", "ready to implement", "ready to build", "ticket is ready"],
+          keywords: [
+            "implement",
+            "spec is ready",
+            "story is ready",
+            "build this",
+            "schema defined",
+            "acceptance criteria",
+            "ready to implement",
+            "ready to build",
+            "ticket is ready",
+          ],
           contextCheck: {
             verdict: "skip",
             label: "No context needed",
-            reason: "Schemas, acceptance criteria, and file targets are settled. Structural uncertainty is resolved. Go directly to Craft."
+            reason:
+              "Schemas, acceptance criteria, and file targets are settled. Structural uncertainty is resolved. Go directly to Craft.",
           },
           chain: [
-            { agent: "ndv-build", colorVar: "--agent-build", mode: "sub", role: "implement" }
+            {
+              agent: "ndv-build",
+              colorVar: "--agent-build",
+              mode: "sub",
+              role: "implement",
+            },
           ],
           outcome: "ndv-build",
           outcomeColor: "--agent-build",
-          example: 'ndv-build "Implement this API endpoint exactly as defined in the schema. Do not add fields not in the spec."'
+          example:
+            'ndv-build "Implement this API endpoint exactly as defined in the schema. Do not add fields not in the spec."',
         },
         {
           id: "code-quality",
           chip: "Something looks wrong in this code",
-          keywords: ["review", "code smell", "what's wrong", "quality", "code review", "pr review", "looks wrong", "smells", "anti-pattern", "messy", "clean up", "refactor"],
+          keywords: [
+            "review",
+            "code smell",
+            "what's wrong",
+            "quality",
+            "code review",
+            "pr review",
+            "looks wrong",
+            "smells",
+            "anti-pattern",
+            "messy",
+            "clean up",
+            "refactor",
+          ],
           contextCheck: {
             verdict: "research",
             label: "Map first if unfamiliar",
-            reason: "Reviewing unfamiliar code without a map risks missing the structural source of the surface problem."
+            reason:
+              "Reviewing unfamiliar code without a map risks missing the structural source of the surface problem.",
           },
           chain: [
-            { agent: "ndv-research", colorVar: "--agent-research", mode: "all", role: "map", conditional: "if unfamiliar codebase" },
-            { agent: "ndv-review", colorVar: "--agent-review", mode: "sub", role: "review" },
-            { agent: "ndv-architect", colorVar: "--agent-architect", mode: "all", role: "validate", conditional: "if structural finding" }
+            {
+              agent: "ndv-research",
+              colorVar: "--agent-research",
+              mode: "all",
+              role: "map",
+              conditional: "if unfamiliar codebase",
+            },
+            {
+              agent: "ndv-review",
+              colorVar: "--agent-review",
+              mode: "sub",
+              role: "review",
+            },
+            {
+              agent: "ndv-architect",
+              colorVar: "--agent-architect",
+              mode: "all",
+              role: "validate",
+              conditional: "if structural finding",
+            },
           ],
           outcome: "ndv-review",
           outcomeColor: "--agent-review",
-          example: 'ndv-review "Review this PR. Point out any inconsistencies in naming, style, or architectural patterns."'
+          example:
+            'ndv-review "Review this PR. Point out any inconsistencies in naming, style, or architectural patterns."',
         },
         {
           id: "scope-creep",
           chip: "This ticket keeps growing",
-          keywords: ["scope creep", "while we're at it", "ticket growing", "too much", "expanding", "added requirements", "keeps growing", "out of scope", "drift"],
+          keywords: [
+            "scope creep",
+            "while we're at it",
+            "ticket growing",
+            "too much",
+            "expanding",
+            "added requirements",
+            "keeps growing",
+            "out of scope",
+            "drift",
+          ],
           contextCheck: {
             verdict: "skip",
             label: "No context needed",
-            reason: "Scope enforcement is the work itself. Bound needs the ticket, not a code map."
+            reason:
+              "Scope enforcement is the work itself. Bound needs the ticket, not a code map.",
           },
           chain: [
-            { agent: "ndv-scope", colorVar: "--agent-scope", mode: "sub", role: "enforce" }
+            {
+              agent: "ndv-scope",
+              colorVar: "--agent-scope",
+              mode: "sub",
+              role: "enforce",
+            },
           ],
           outcome: "ndv-scope",
           outcomeColor: "--agent-scope",
-          example: 'ndv-scope "Review this ticket. Classify every work item as Core, Coupled, Adjacent, or Scope Creep."'
+          example:
+            'ndv-scope "Review this ticket. Classify every work item as Core, Coupled, Adjacent, or Scope Creep."',
         },
         {
           id: "slow-code",
           chip: "It's slow or expensive",
-          keywords: ["slow", "faster", "performance", "latency", "n+1", "expensive query", "optimize", "too slow", "query is slow", "bundle size"],
+          keywords: [
+            "slow",
+            "faster",
+            "performance",
+            "latency",
+            "n+1",
+            "expensive query",
+            "optimize",
+            "too slow",
+            "query is slow",
+            "bundle size",
+          ],
           contextCheck: {
             verdict: "skip",
             label: "No context needed",
-            reason: "ndv-optimize measures first, then cuts. Send it the bottleneck — it profiles before touching a line."
+            reason:
+              "ndv-optimize measures first, then cuts. Send it the bottleneck — it profiles before touching a line.",
           },
           chain: [
-            { agent: "ndv-optimize", colorVar: "--agent-optimize", mode: "sub", role: "measure + optimize" }
+            {
+              agent: "ndv-optimize",
+              colorVar: "--agent-optimize",
+              mode: "sub",
+              role: "measure + optimize",
+            },
           ],
           outcome: "ndv-optimize",
           outcomeColor: "--agent-optimize",
-          example: 'ndv-optimize "This data processing script is too slow. Profile it and eliminate the bottleneck."'
+          example:
+            'ndv-optimize "This data processing script is too slow. Profile it and eliminate the bottleneck."',
         },
         {
           id: "need-tests",
           chip: "Write tests for this",
-          keywords: ["add tests", "write tests", "test coverage", "generate tests", "missing tests", "need tests", "unit test", "regression test", "test this"],
+          keywords: [
+            "add tests",
+            "write tests",
+            "test coverage",
+            "generate tests",
+            "missing tests",
+            "need tests",
+            "unit test",
+            "regression test",
+            "test this",
+          ],
           contextCheck: {
             verdict: "skip",
             label: "No context needed",
-            reason: "ndv-tester goes adversarial immediately — assumes the code is lying and finds the edge cases before they find you."
+            reason:
+              "ndv-tester goes adversarial immediately — assumes the code is lying and finds the edge cases before they find you.",
           },
           chain: [
-            { agent: "ndv-tester", colorVar: "--agent-tester", mode: "sub", role: "adversarial testing" }
+            {
+              agent: "ndv-tester",
+              colorVar: "--agent-tester",
+              mode: "sub",
+              role: "adversarial testing",
+            },
           ],
           outcome: "ndv-tester",
           outcomeColor: "--agent-tester",
-          example: 'ndv-tester "Write a comprehensive test suite for this date parsing utility. Focus on edge cases and invalid inputs."'
+          example:
+            'ndv-tester "Write a comprehensive test suite for this date parsing utility. Focus on edge cases and invalid inputs."',
         },
         {
           id: "security-concern",
           chip: "Security or auth concern",
-          keywords: ["secure", "security", "vulnerability", "auth", "injection", "owasp", "is this safe", "audit the", "token", "xss", "csrf", "sql injection"],
+          keywords: [
+            "secure",
+            "security",
+            "vulnerability",
+            "auth",
+            "injection",
+            "owasp",
+            "is this safe",
+            "audit the",
+            "token",
+            "xss",
+            "csrf",
+            "sql injection",
+          ],
           contextCheck: {
             verdict: "skip",
             label: "No context needed",
-            reason: "ndv-secure assumes breach by default. It trusts nothing and treats every input as a potential attack vector."
+            reason:
+              "ndv-secure assumes breach by default. It trusts nothing and treats every input as a potential attack vector.",
           },
           chain: [
-            { agent: "ndv-secure", colorVar: "--agent-secure", mode: "sub", role: "security audit" }
+            {
+              agent: "ndv-secure",
+              colorVar: "--agent-secure",
+              mode: "sub",
+              role: "security audit",
+            },
           ],
           outcome: "ndv-secure",
           outcomeColor: "--agent-secure",
-          example: 'ndv-secure "Audit this authentication middleware for timing attacks, token leakage, and injection vectors."'
+          example:
+            'ndv-secure "Audit this authentication middleware for timing attacks, token leakage, and injection vectors."',
         },
       ];
 
       const QUICK_REF_ROWS = [
-        { signal: '"something is broken / failing / crashing"', subtitle: "Won't stop until root cause is confirmed, not just located", agent: 'ndv-diagnose', colorVar: '--agent-diagnose' },
-        { signal: '"review this / what\'s wrong with this code"', subtitle: "Registers everything at equal intensity before sorting by severity", agent: 'ndv-review', colorVar: '--agent-review' },
-        { signal: '"rename / extract / restructure this"', subtitle: "One safe transformation at a time, no behavior change", agent: 'ndv-refactor', colorVar: '--agent-refactor' },
-        { signal: '"write tests for this"', subtitle: "Adversarial by default — assumes the code is lying", agent: 'ndv-tester', colorVar: '--agent-tester' },
-        { signal: '"is this secure / audit the auth"', subtitle: "Assumes breach, trusts nothing, every input is an attack vector", agent: 'ndv-secure', colorVar: '--agent-secure' },
-        { signal: '"it\'s slow / this query is expensive"', subtitle: "Measures before touching anything, every unnecessary cycle is an offense", agent: 'ndv-optimize', colorVar: '--agent-optimize' },
-        { signal: '"add logging / we have no visibility"', subtitle: "Instruments without intervening — observation must not change behavior", agent: 'ndv-telemetry', colorVar: '--agent-telemetry' },
-        { signal: '"document this / write the API reference"', subtitle: "Models the reader\'s knowledge gap deliberately, bridges it", agent: 'ndv-explain', colorVar: '--agent-explain' },
-        { signal: '"implement this spec / story is ready"', subtitle: "Spec is the authority, gaps get flagged not invented", agent: 'ndv-build', colorVar: '--agent-build' },
-        { signal: '"this ticket keeps growing / scope is creeping"', subtitle: "Every boundary violation is a door left unlocked", agent: 'ndv-scope', colorVar: '--agent-scope' },
-        { signal: '"how long will this take / review this estimate"', subtitle: 'Viscerally aware that "almost done" is a trap', agent: 'ndv-forecast', colorVar: '--agent-forecast' },
-        { signal: '"these metrics don\'t mean what we think"', subtitle: "The moment a measure becomes a target, it stops being a measure", agent: 'ndv-signal', colorVar: '--agent-signal' },
-        { signal: '"this UI looks wrong / design judgment"', subtitle: "Reads code simultaneously as its rendered visual output", agent: 'ndv-design', colorVar: '--agent-design' },
-        { signal: '"is this accessible / WCAG audit"', subtitle: "Processes every interface from every user\'s perspective simultaneously", agent: 'ndv-accessibility', colorVar: '--agent-accessibility' },
+        {
+          signal: '"something is broken / failing / crashing"',
+          subtitle:
+            "Won't stop until root cause is confirmed, not just located",
+          agent: "ndv-diagnose",
+          colorVar: "--agent-diagnose",
+        },
+        {
+          signal: '"review this / what\'s wrong with this code"',
+          subtitle:
+            "Registers everything at equal intensity before sorting by severity",
+          agent: "ndv-review",
+          colorVar: "--agent-review",
+        },
+        {
+          signal: '"rename / extract / restructure this"',
+          subtitle: "One safe transformation at a time, no behavior change",
+          agent: "ndv-refactor",
+          colorVar: "--agent-refactor",
+        },
+        {
+          signal: '"write tests for this"',
+          subtitle: "Adversarial by default — assumes the code is lying",
+          agent: "ndv-tester",
+          colorVar: "--agent-tester",
+        },
+        {
+          signal: '"is this secure / audit the auth"',
+          subtitle:
+            "Assumes breach, trusts nothing, every input is an attack vector",
+          agent: "ndv-secure",
+          colorVar: "--agent-secure",
+        },
+        {
+          signal: '"it\'s slow / this query is expensive"',
+          subtitle:
+            "Measures before touching anything, every unnecessary cycle is an offense",
+          agent: "ndv-optimize",
+          colorVar: "--agent-optimize",
+        },
+        {
+          signal: '"add logging / we have no visibility"',
+          subtitle:
+            "Instruments without intervening — observation must not change behavior",
+          agent: "ndv-telemetry",
+          colorVar: "--agent-telemetry",
+        },
+        {
+          signal: '"document this / write the API reference"',
+          subtitle:
+            "Models the reader\'s knowledge gap deliberately, bridges it",
+          agent: "ndv-explain",
+          colorVar: "--agent-explain",
+        },
+        {
+          signal: '"implement this spec / story is ready"',
+          subtitle: "Spec is the authority, gaps get flagged not invented",
+          agent: "ndv-build",
+          colorVar: "--agent-build",
+        },
+        {
+          signal: '"this ticket keeps growing / scope is creeping"',
+          subtitle: "Every boundary violation is a door left unlocked",
+          agent: "ndv-scope",
+          colorVar: "--agent-scope",
+        },
+        {
+          signal: '"how long will this take / review this estimate"',
+          subtitle: 'Viscerally aware that "almost done" is a trap',
+          agent: "ndv-forecast",
+          colorVar: "--agent-forecast",
+        },
+        {
+          signal: '"these metrics don\'t mean what we think"',
+          subtitle:
+            "The moment a measure becomes a target, it stops being a measure",
+          agent: "ndv-signal",
+          colorVar: "--agent-signal",
+        },
+        {
+          signal: '"this UI looks wrong / design judgment"',
+          subtitle: "Reads code simultaneously as its rendered visual output",
+          agent: "ndv-design",
+          colorVar: "--agent-design",
+        },
+        {
+          signal: '"is this accessible / WCAG audit"',
+          subtitle:
+            "Processes every interface from every user\'s perspective simultaneously",
+          agent: "ndv-accessibility",
+          colorVar: "--agent-accessibility",
+        },
       ];
 
       // Gate color config per verdict
       const GATE_CONFIG = {
         skip: {
-          bg: 'color-mix(in oklch, var(--muted) 30%, transparent)',
-          border: 'color-mix(in oklch, var(--border) 80%, transparent)',
-          badgeBg: 'var(--muted)',
-          badgeColor: 'var(--muted-foreground)',
-          leftBorder: 'var(--border)'
+          bg: "color-mix(in oklch, var(--muted) 30%, transparent)",
+          border: "color-mix(in oklch, var(--border) 80%, transparent)",
+          badgeBg: "var(--muted)",
+          badgeColor: "var(--muted-foreground)",
+          leftBorder: "var(--border)",
         },
         research: {
-          bg: 'color-mix(in oklch, var(--agent-research) 5%, transparent)',
-          border: 'color-mix(in oklch, var(--agent-research) 25%, transparent)',
-          badgeBg: 'color-mix(in oklch, var(--agent-research) 15%, transparent)',
-          badgeColor: 'var(--agent-research)',
-          leftBorder: 'var(--agent-research)'
+          bg: "color-mix(in oklch, var(--agent-research) 5%, transparent)",
+          border: "color-mix(in oklch, var(--agent-research) 25%, transparent)",
+          badgeBg:
+            "color-mix(in oklch, var(--agent-research) 15%, transparent)",
+          badgeColor: "var(--agent-research)",
+          leftBorder: "var(--agent-research)",
         },
         architect: {
-          bg: 'color-mix(in oklch, var(--agent-architect) 5%, transparent)',
-          border: 'color-mix(in oklch, var(--agent-architect) 25%, transparent)',
-          badgeBg: 'color-mix(in oklch, var(--agent-architect) 15%, transparent)',
-          badgeColor: 'var(--agent-architect)',
-          leftBorder: 'var(--agent-architect)'
+          bg: "color-mix(in oklch, var(--agent-architect) 5%, transparent)",
+          border:
+            "color-mix(in oklch, var(--agent-architect) 25%, transparent)",
+          badgeBg:
+            "color-mix(in oklch, var(--agent-architect) 15%, transparent)",
+          badgeColor: "var(--agent-architect)",
+          leftBorder: "var(--agent-architect)",
         },
         both: {
-          bg: 'color-mix(in oklch, var(--agent-flow) 4%, transparent)',
-          border: 'color-mix(in oklch, var(--agent-flow) 20%, transparent)',
-          badgeBg: 'color-mix(in oklch, var(--agent-flow) 12%, transparent)',
-          badgeColor: 'var(--agent-flow)',
-          leftBorder: 'var(--agent-flow)'
-        }
+          bg: "color-mix(in oklch, var(--agent-flow) 4%, transparent)",
+          border: "color-mix(in oklch, var(--agent-flow) 20%, transparent)",
+          badgeBg: "color-mix(in oklch, var(--agent-flow) 12%, transparent)",
+          badgeColor: "var(--agent-flow)",
+          leftBorder: "var(--agent-flow)",
+        },
       };
 
       let routerActiveId = null;
       let routerDebounceTimer = null;
 
       function buildChips() {
-        const container = document.getElementById('router-chips');
+        const container = document.getElementById("router-chips");
 
         const groups = [
           {
-            label: 'Understand the situation',
-            ids: ['judgment-call', 'unfamiliar-code', 'large-job', 'shape-uncertain']
+            label: "Understand the situation",
+            ids: [
+              "judgment-call",
+              "unfamiliar-code",
+              "large-job",
+              "shape-uncertain",
+            ],
           },
           {
-            label: 'Act on the code',
-            ids: ['broken-thing', 'spec-ready', 'code-quality', 'slow-code', 'need-tests', 'security-concern']
+            label: "Act on the code",
+            ids: [
+              "broken-thing",
+              "spec-ready",
+              "code-quality",
+              "slow-code",
+              "need-tests",
+              "security-concern",
+            ],
           },
           {
-            label: 'Manage the work',
-            ids: ['scope-creep']
-          }
+            label: "Manage the work",
+            ids: ["scope-creep"],
+          },
         ];
 
-        groups.forEach(group => {
+        groups.forEach((group) => {
           // Group label
-          const label = document.createElement('div');
-          label.className = 'w-full text-[0.65rem] font-bold uppercase tracking-widest mt-3 first:mt-0';
-          label.style.cssText = 'color: color-mix(in oklch, var(--muted-foreground) 60%, transparent); letter-spacing: 0.1em;';
-          label.setAttribute('aria-hidden', 'true');
+          const label = document.createElement("div");
+          label.className =
+            "w-full text-[0.65rem] font-bold uppercase tracking-widest mt-3 first:mt-0";
+          label.style.cssText =
+            "color: color-mix(in oklch, var(--muted-foreground) 60%, transparent); letter-spacing: 0.1em;";
+          label.setAttribute("aria-hidden", "true");
           label.textContent = group.label;
           container.appendChild(label);
 
           // Chips for this group
-          const chipRow = document.createElement('div');
-          chipRow.className = 'flex flex-wrap gap-2';
+          const chipRow = document.createElement("div");
+          chipRow.className = "flex flex-wrap gap-2";
           container.appendChild(chipRow);
 
-          group.ids.forEach(id => {
-            const scenario = SCENARIOS.find(s => s.id === id);
+          group.ids.forEach((id) => {
+            const scenario = SCENARIOS.find((s) => s.id === id);
             if (!scenario) return;
-            const btn = document.createElement('button');
-            btn.className = 'router-chip min-h-[44px] px-4 py-2 rounded border text-sm font-medium cursor-pointer text-left transition-all duration-150';
-            btn.style.cssText = 'border-color: var(--border); color: var(--muted-foreground); background: none; font-size: 0.8rem;';
-            btn.id = 'chip-' + scenario.id;
-            btn.setAttribute('role', 'radio');
-            btn.setAttribute('aria-checked', 'false');
-            btn.setAttribute('tabindex', '-1');
+            const btn = document.createElement("button");
+            btn.className =
+              "router-chip min-h-[44px] px-4 py-2 rounded border text-sm font-medium cursor-pointer text-left transition-all duration-150";
+            btn.style.cssText =
+              "border-color: var(--border); color: var(--muted-foreground); background: none; font-size: 0.8rem;";
+            btn.id = "chip-" + scenario.id;
+            btn.setAttribute("role", "radio");
+            btn.setAttribute("aria-checked", "false");
+            btn.setAttribute("tabindex", "-1");
             btn.textContent = scenario.chip;
             btn.dataset.scenarioId = scenario.id;
-            btn.addEventListener('click', () => {
+            btn.addEventListener("click", () => {
               clearTimeout(routerDebounceTimer);
               activateScenario(scenario.id);
             });
@@ -1850,12 +2926,12 @@
         });
 
         // First chip gets tabindex 0
-        const firstChip = container.querySelector('.router-chip');
-        if (firstChip) firstChip.setAttribute('tabindex', '0');
+        const firstChip = container.querySelector(".router-chip");
+        if (firstChip) firstChip.setAttribute("tabindex", "0");
       }
 
       function activateScenario(id) {
-        const scenario = SCENARIOS.find(s => s.id === id);
+        const scenario = SCENARIOS.find((s) => s.id === id);
         if (!scenario) return;
 
         // Toggle off if already active
@@ -1867,24 +2943,24 @@
         }
 
         routerActiveId = id;
-        document.getElementById('router-input').value = '';
+        document.getElementById("router-input").value = "";
 
         // Update chip states
-        SCENARIOS.forEach(s => {
-          const chip = document.getElementById('chip-' + s.id);
+        SCENARIOS.forEach((s) => {
+          const chip = document.getElementById("chip-" + s.id);
           if (!chip) return;
           const isActive = s.id === id;
-          chip.setAttribute('aria-checked', String(isActive));
-          chip.setAttribute('tabindex', isActive ? '0' : '-1');
+          chip.setAttribute("aria-checked", String(isActive));
+          chip.setAttribute("tabindex", isActive ? "0" : "-1");
           if (isActive) {
             const color = getAgentColor(s.outcomeColor);
             chip.style.borderColor = `color-mix(in oklch, ${color} 45%, transparent)`;
             chip.style.backgroundColor = `color-mix(in oklch, ${color} 15%, transparent)`;
             chip.style.color = color;
           } else {
-            chip.style.borderColor = 'var(--border)';
-            chip.style.backgroundColor = '';
-            chip.style.color = 'var(--muted-foreground)';
+            chip.style.borderColor = "var(--border)";
+            chip.style.backgroundColor = "";
+            chip.style.color = "var(--muted-foreground)";
           }
         });
 
@@ -1892,36 +2968,43 @@
       }
 
       function resetChips() {
-        SCENARIOS.forEach(s => {
-          const chip = document.getElementById('chip-' + s.id);
+        SCENARIOS.forEach((s) => {
+          const chip = document.getElementById("chip-" + s.id);
           if (!chip) return;
-          chip.setAttribute('aria-checked', 'false');
-          chip.setAttribute('tabindex', '-1');
-          chip.style.borderColor = 'var(--border)';
-          chip.style.backgroundColor = '';
-          chip.style.color = 'var(--muted-foreground)';
+          chip.setAttribute("aria-checked", "false");
+          chip.setAttribute("tabindex", "-1");
+          chip.style.borderColor = "var(--border)";
+          chip.style.backgroundColor = "";
+          chip.style.color = "var(--muted-foreground)";
         });
-        const firstChip = document.querySelector('#router-chips .router-chip');
-        if (firstChip) firstChip.setAttribute('tabindex', '0');
+        const firstChip = document.querySelector("#router-chips .router-chip");
+        if (firstChip) firstChip.setAttribute("tabindex", "0");
       }
 
       function emptyStateHTML(msg) {
-        return '<div class="border rounded overflow-hidden text-center text-sm py-10 px-6" style="border-color: color-mix(in oklch, var(--accent) 15%, var(--border)); color: var(--muted-foreground);">' +
-          '<span>' + msg + '</span></div>';
+        return (
+          '<div class="border rounded overflow-hidden text-center text-sm py-10 px-6" style="border-color: color-mix(in oklch, var(--accent) 15%, var(--border)); color: var(--muted-foreground);">' +
+          "<span>" +
+          msg +
+          "</span></div>"
+        );
       }
 
       function showEmptyState() {
-        const display = document.getElementById('router-display');
-        display.innerHTML = emptyStateHTML('Pick a situation above or type what you\'re working on');
+        const display = document.getElementById("router-display");
+        display.innerHTML = emptyStateHTML(
+          "Pick a situation above or type what you're working on",
+        );
       }
 
       function renderRouter(scenario) {
-        const display = document.getElementById('router-display');
+        const display = document.getElementById("router-display");
         const gate = scenario.contextCheck;
         const cfg = GATE_CONFIG[gate.verdict];
 
         if (!cfg) {
-          display.innerHTML = '<div class="border rounded overflow-hidden text-center text-sm py-10 px-6" style="border-color: var(--border); color: var(--muted-foreground);"><span style="opacity:0.5">Unable to route this scenario.</span></div>';
+          display.innerHTML =
+            '<div class="border rounded overflow-hidden text-center text-sm py-10 px-6" style="border-color: var(--border); color: var(--muted-foreground);"><span style="opacity:0.5">Unable to route this scenario.</span></div>';
           return;
         }
 
@@ -1947,31 +3030,35 @@
 
       function buildChainHTML(chain) {
         // Detect parallel group (verdict: "both" scenario has parallel:true on first two steps)
-        const parallelSteps = chain.filter(s => s.parallel);
-        const nonParallelSteps = chain.filter(s => !s.parallel);
+        const parallelSteps = chain.filter((s) => s.parallel);
+        const nonParallelSteps = chain.filter((s) => !s.parallel);
 
-        let html = '';
+        let html = "";
 
         if (parallelSteps.length >= 2) {
           // Render parallel pair stacked
-          html += '<div class="flex flex-col gap-1.5 items-start relative rounded border p-2" style="border-color: color-mix(in oklch, var(--border) 60%, transparent); background: color-mix(in oklch, var(--muted) 15%, transparent);">';
+          html +=
+            '<div class="flex flex-col gap-1.5 items-start relative rounded border p-2" style="border-color: color-mix(in oklch, var(--border) 60%, transparent); background: color-mix(in oklch, var(--muted) 15%, transparent);">';
           parallelSteps.forEach((step, i) => {
             html += buildPillHTML(step);
             if (i < parallelSteps.length - 1) {
-              html += '<span class="text-[0.65rem] font-bold uppercase tracking-wide text-center" style="color: var(--muted-foreground); letter-spacing: 0.05em;" aria-hidden="true">∥ parallel</span>';
+              html +=
+                '<span class="text-[0.65rem] font-bold uppercase tracking-wide text-center" style="color: var(--muted-foreground); letter-spacing: 0.05em;" aria-hidden="true">∥ parallel</span>';
             }
           });
-          html += '</div>';
+          html += "</div>";
           // Arrow to remaining
           if (nonParallelSteps.length > 0) {
-            html += '<span class="text-sm flex-shrink-0" style="color: var(--muted-foreground);" aria-hidden="true">→</span>';
+            html +=
+              '<span class="text-sm flex-shrink-0" style="color: var(--muted-foreground);" aria-hidden="true">→</span>';
           }
         }
 
         nonParallelSteps.forEach((step, i) => {
           html += buildPillHTML(step);
           if (i < nonParallelSteps.length - 1) {
-            html += '<span class="text-sm flex-shrink-0" style="color: var(--muted-foreground);" aria-hidden="true">→</span>';
+            html +=
+              '<span class="text-sm flex-shrink-0" style="color: var(--muted-foreground);" aria-hidden="true">→</span>';
           }
         });
 
@@ -1988,11 +3075,16 @@
 
         const color = getAgentColor(step.colorVar);
         const isConditional = !!step.conditional;
-        const baseClass = 'flex items-center gap-1.5 px-3 py-1.5 rounded border text-xs font-semibold font-mono';
-        const conditionalClass = isConditional ? ' chain-pill-conditional' : '';
-        const conditionalLabel = isConditional ? `<span style="font-style:italic;font-size:0.7rem;color:var(--muted-foreground);font-weight:400;margin-left:0.25rem">${step.conditional}</span>` : '';
+        const baseClass =
+          "flex items-center gap-1.5 px-3 py-1.5 rounded border text-xs font-semibold font-mono";
+        const conditionalClass = isConditional ? " chain-pill-conditional" : "";
+        const conditionalLabel = isConditional
+          ? `<span style="font-style:italic;font-size:0.7rem;color:var(--muted-foreground);font-weight:400;margin-left:0.25rem">${step.conditional}</span>`
+          : "";
 
-        const modeBadge = step.mode ? `<span class="text-[0.6rem] font-bold uppercase rounded-full leading-snug" style="letter-spacing: 0.06em; padding: 0.1rem 0.3rem; background: color-mix(in oklch, ${color} 12%, transparent); color: ${color}; border: 1px solid color-mix(in oklch, ${color} 25%, transparent);">${step.mode}</span>` : '';
+        const modeBadge = step.mode
+          ? `<span class="text-[0.6rem] font-bold uppercase rounded-full leading-snug" style="letter-spacing: 0.06em; padding: 0.1rem 0.3rem; background: color-mix(in oklch, ${color} 12%, transparent); color: ${color}; border: 1px solid color-mix(in oklch, ${color} 25%, transparent);">${step.mode}</span>`
+          : "";
 
         return `<span class="${baseClass + conditionalClass}" style="border-color: color-mix(in oklch, ${color} 30%, transparent); background: color-mix(in oklch, ${color} 6%, transparent); color: ${color};">
           ${modeBadge}
@@ -2002,22 +3094,26 @@
       }
 
       function buildQuickRef() {
-        const content = document.getElementById('router-drawer-content');
-        content.setAttribute('role', 'table');
-        content.setAttribute('aria-label', 'Agent routing quick reference');
+        const content = document.getElementById("router-drawer-content");
+        content.setAttribute("role", "table");
+        content.setAttribute("aria-label", "Agent routing quick reference");
         // Header row
-        const header = document.createElement('div');
-        header.style.cssText = 'display:flex;align-items:center;gap:1rem;padding:0.5rem 1rem;background:color-mix(in oklch, var(--muted) 30%, transparent);border-bottom:1px solid var(--border)';
-        header.setAttribute('role', 'row');
-        header.innerHTML = '<span role="columnheader" style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted-foreground);flex:1">When you\'re saying…</span><span role="columnheader" style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted-foreground);width:9rem;flex-shrink:0">Route to</span>';
+        const header = document.createElement("div");
+        header.style.cssText =
+          "display:flex;align-items:center;gap:1rem;padding:0.5rem 1rem;background:color-mix(in oklch, var(--muted) 30%, transparent);border-bottom:1px solid var(--border)";
+        header.setAttribute("role", "row");
+        header.innerHTML =
+          '<span role="columnheader" style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted-foreground);flex:1">When you\'re saying…</span><span role="columnheader" style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted-foreground);width:9rem;flex-shrink:0">Route to</span>';
         content.appendChild(header);
 
-        QUICK_REF_ROWS.forEach(row => {
+        QUICK_REF_ROWS.forEach((row) => {
           const color = getAgentColor(row.colorVar);
-          const el = document.createElement('div');
-          el.className = 'router-table-row flex items-center gap-4 transition-colors duration-150 border-b';
-          el.setAttribute('role', 'row');
-          el.style.cssText = 'padding: 0.625rem 1rem; border-color: color-mix(in oklch, var(--border) 40%, transparent);';
+          const el = document.createElement("div");
+          el.className =
+            "router-table-row flex items-center gap-4 transition-colors duration-150 border-b";
+          el.setAttribute("role", "row");
+          el.style.cssText =
+            "padding: 0.625rem 1rem; border-color: color-mix(in oklch, var(--border) 40%, transparent);";
           el.innerHTML = `<span role="cell" class="flex flex-col gap-0.5 flex-1">
   <span style="color: var(--muted-foreground); font-size: 0.8rem; font-style: italic;">${row.signal}</span>
   <span style="color: color-mix(in oklch, var(--muted-foreground) 65%, transparent); font-size: 0.7rem;">${row.subtitle}</span>
@@ -2027,8 +3123,8 @@
       }
 
       function setupRouterInput() {
-        const input = document.getElementById('router-input');
-        input.addEventListener('input', () => {
+        const input = document.getElementById("router-input");
+        input.addEventListener("input", () => {
           clearTimeout(routerDebounceTimer);
           routerDebounceTimer = setTimeout(() => {
             const val = input.value.toLowerCase().trim();
@@ -2038,57 +3134,59 @@
               showEmptyState();
               return;
             }
-            const match = SCENARIOS.find(s =>
-              s.keywords.some(kw => val.includes(kw))
+            const match = SCENARIOS.find((s) =>
+              s.keywords.some((kw) => val.includes(kw)),
             );
             if (match) {
               activateScenario(match.id);
             } else {
               routerActiveId = null;
               resetChips();
-              const display = document.getElementById('router-display');
-              display.innerHTML = emptyStateHTML('No match — try describing what you\'re experiencing (e.g. "something is broken", "I don\'t understand this code")');
+              const display = document.getElementById("router-display");
+              display.innerHTML = emptyStateHTML(
+                'No match — try describing what you\'re experiencing (e.g. "something is broken", "I don\'t understand this code")',
+              );
             }
           }, 250);
         });
       }
 
       function setupDrawer() {
-        const toggle = document.getElementById('router-drawer-toggle');
-        const drawer = document.getElementById('router-drawer');
-        toggle.addEventListener('click', () => {
-          const isOpen = drawer.classList.contains('open');
-          drawer.classList.toggle('open');
-          toggle.setAttribute('aria-expanded', String(!isOpen));
-          const svg = toggle.querySelector('svg');
-          if (svg) svg.style.transform = !isOpen ? 'rotate(180deg)' : '';
+        const toggle = document.getElementById("router-drawer-toggle");
+        const drawer = document.getElementById("router-drawer");
+        toggle.addEventListener("click", () => {
+          const isOpen = drawer.classList.contains("open");
+          drawer.classList.toggle("open");
+          toggle.setAttribute("aria-expanded", String(!isOpen));
+          const svg = toggle.querySelector("svg");
+          if (svg) svg.style.transform = !isOpen ? "rotate(180deg)" : "";
         });
       }
 
       // Chip keyboard navigation (arrow keys between chips)
       function setupChipKeyboard() {
-        const container = document.getElementById('router-chips');
-        container.addEventListener('keydown', e => {
-          const chips = Array.from(container.querySelectorAll('.router-chip'));
+        const container = document.getElementById("router-chips");
+        container.addEventListener("keydown", (e) => {
+          const chips = Array.from(container.querySelectorAll(".router-chip"));
           const idx = chips.indexOf(document.activeElement);
           if (idx === -1) return;
 
           let nextIdx = -1;
-          if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          if (e.key === "ArrowRight" || e.key === "ArrowDown") {
             nextIdx = (idx + 1) % chips.length;
-          } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
             nextIdx = (idx - 1 + chips.length) % chips.length;
-          } else if (e.key === 'Home') {
+          } else if (e.key === "Home") {
             nextIdx = 0;
-          } else if (e.key === 'End') {
+          } else if (e.key === "End") {
             nextIdx = chips.length - 1;
           }
 
           if (nextIdx !== -1) {
             e.preventDefault();
             // Update tabindex (roving)
-            chips.forEach(c => c.setAttribute('tabindex', '-1'));
-            chips[nextIdx].setAttribute('tabindex', '0');
+            chips.forEach((c) => c.setAttribute("tabindex", "-1"));
+            chips[nextIdx].setAttribute("tabindex", "0");
             chips[nextIdx].focus();
           }
         });
@@ -2100,6 +3198,59 @@
       setupRouterInput();
       setupDrawer();
       setupChipKeyboard();
+
+      // ── Cognitive Scaffolding ────────────────────────────────────────────────────
+
+      (function () {
+        // Before/After toggle
+        var toggleBtn = document.getElementById("scaffold-toggle");
+        var toggleLabel = document.getElementById("scaffold-toggle-label");
+        var afterPanel = document.getElementById("scaffold-panel-after");
+        var afterCode = document.getElementById("scaffold-after-code");
+        var badge = document.getElementById("scaffold-badge");
+        var annotation = document.getElementById("scaffold-annotation");
+        var isActive = false;
+
+        var codeWithout =
+          '<span style="color:var(--muted-foreground)"># your-skill / step-review.md</span>\n\n<span style="color:var(--foreground)">instructions: |\n  Review this code for issues.\n  Report what you find.</span>';
+
+        var codeWith =
+          '<span style="color:var(--muted-foreground)"># your-skill / step-review.md</span>\n\n<span style="color:var(--foreground)">instructions: |\n  Review this code for issues.\n  Report what you find.</span>\n\n<span style="color:var(--accent)">## COGNITIVE MODULES</span>\n\n<span style="color:var(--agent-review)">Load the `ndv-total-perception` skill.</span>\n<span style="color:var(--agent-tester)">Load the `ndv-adversarial` skill.</span>\n<span style="color:var(--muted-foreground)">Apply both throughout this step.</span>';
+
+        if (toggleBtn) {
+          toggleBtn.addEventListener("click", function () {
+            isActive = !isActive;
+            toggleBtn.setAttribute("aria-pressed", String(isActive));
+            toggleLabel.textContent = isActive
+              ? "Remove modules"
+              : "Load modules";
+
+            if (isActive) {
+              afterPanel.classList.add("active");
+              afterCode.innerHTML = codeWith;
+              badge.style.opacity = "1";
+              annotation.style.opacity = "1";
+            } else {
+              afterPanel.classList.remove("active");
+              afterCode.innerHTML = codeWithout;
+              badge.style.opacity = "0";
+              annotation.style.opacity = "0";
+            }
+          });
+        }
+
+        // Catalog drawer
+        var catalogToggle = document.getElementById("scaffold-catalog-toggle");
+        var catalogDrawer = document.getElementById("scaffold-catalog-drawer");
+        if (catalogToggle && catalogDrawer) {
+          catalogToggle.addEventListener("click", function () {
+            var open = catalogDrawer.classList.toggle("open");
+            catalogToggle.setAttribute("aria-expanded", String(open));
+            var svg = catalogToggle.querySelector("svg");
+            if (svg) svg.style.transform = open ? "rotate(180deg)" : "";
+          });
+        }
+      })();
 
       // Scroll animations — only when motion is OK
       if (
@@ -2141,6 +3292,139 @@
           rowObserver.observe(agentListEl);
         }
       }
+      // ── Comet canvas (grid-aligned) ─────────────────────────────────────────
+      (function () {
+        var canvas = document.getElementById('comet-canvas');
+        var ctx = canvas.getContext('2d');
+
+        // ── Config ──────────────────────────────────────────────────────────
+        var GRID        = 48;    // must match original CSS background-size
+        var COUNT       = 7;
+        var SPEED_MIN   = 0.3;
+        var SPEED_MAX   = 0.65;
+        var TAIL        = 72;
+        var DOT_RADIUS  = 2;
+        var OPACITY_MAX = 0.22;
+        var GRID_OPACITY = 0.03; // matches oklch(100% 0 0 / .03)
+        // ────────────────────────────────────────────────────────────────────
+
+        var W, H;
+
+        function resize() {
+          W = canvas.width  = window.innerWidth;
+          H = canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        function rand(a, b) { return a + Math.random() * (b - a); }
+        function randInt(a, b) { return Math.floor(rand(a, b + 1)); }
+
+        function snapToGrid(v) {
+          return Math.round(v / GRID) * GRID;
+        }
+
+        var DIRS = [
+          { vx:  1, vy:  0 },
+          { vx: -1, vy:  0 },
+          { vx:  0, vy:  1 },
+          { vx:  0, vy: -1 },
+        ];
+
+        function spawn() {
+          var dir = DIRS[randInt(0, 3)];
+          var speed = rand(SPEED_MIN, SPEED_MAX);
+          var x, y;
+
+          if (dir.vx !== 0) {
+            y = snapToGrid(rand(0, H));
+            x = dir.vx > 0 ? -TAIL : W + TAIL;
+          } else {
+            x = snapToGrid(rand(0, W));
+            y = dir.vy > 0 ? -TAIL : H + TAIL;
+          }
+
+          return { x: x, y: y, vx: dir.vx * speed, vy: dir.vy * speed, life: 0, maxLife: rand(400, 900) };
+        }
+
+        var comets = [];
+        for (var i = 0; i < COUNT; i++) {
+          var c = spawn();
+          c.life = rand(0, c.maxLife);
+          c.x += c.vx * c.life;
+          c.y += c.vy * c.life;
+          comets.push(c);
+        }
+
+        function drawGrid() {
+          ctx.strokeStyle = 'rgba(255,255,255,' + GRID_OPACITY + ')';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+
+          // vertical lines
+          for (var x = 0; x <= W; x += GRID) {
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, H);
+          }
+          // horizontal lines
+          for (var y = 0; y <= H; y += GRID) {
+            ctx.moveTo(0, y);
+            ctx.lineTo(W, y);
+          }
+
+          ctx.stroke();
+        }
+
+        function draw() {
+          ctx.clearRect(0, 0, W, H);
+
+          // grid first — always fixed, never scrolls
+          drawGrid();
+
+          // comets on top
+          for (var i = 0; i < comets.length; i++) {
+            var c = comets[i];
+            c.x += c.vx;
+            c.y += c.vy;
+            c.life++;
+
+            var fade = Math.min(c.life / 80, 1, (c.maxLife - c.life) / 80);
+            var len = Math.hypot(c.vx, c.vy);
+            var tx = c.x - (c.vx / len) * TAIL;
+            var ty = c.y - (c.vy / len) * TAIL;
+
+            var grad = ctx.createLinearGradient(tx, ty, c.x, c.y);
+            grad.addColorStop(0, 'rgba(255,255,255,0)');
+            grad.addColorStop(1, 'rgba(255,255,255,' + (OPACITY_MAX * fade * 0.45) + ')');
+
+            ctx.beginPath();
+            ctx.moveTo(tx, ty);
+            ctx.lineTo(c.x, c.y);
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.arc(c.x, c.y, DOT_RADIUS, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255,255,255,' + (OPACITY_MAX * fade) + ')';
+            ctx.fill();
+
+            var margin = TAIL + 20;
+            if (
+              c.life >= c.maxLife ||
+              c.x < -margin || c.x > W + margin ||
+              c.y < -margin || c.y > H + margin
+            ) {
+              comets[i] = spawn();
+            }
+          }
+
+          requestAnimationFrame(draw);
+        }
+
+        draw();
+      })();
+
     </script>
   </body>
 </html>
