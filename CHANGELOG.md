@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.5.0](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.4.0...neurodiveragents-v1.5.0) (2026-05-28)
+
+
+### Features
+
+* accessibility hardening, wcag fixes, and claude+opencode recommendation ([ea28c71](https://github.com/emb715/neurodiveragents/commit/ea28c716292d6daaed9427da010831fbe8008e0c))
+* add ndv-accessibility agent and make fleet platform-agnostic ([1174da1](https://github.com/emb715/neurodiveragents/commit/1174da1346eb98fd9b7e9a6f9663968a51d0573d))
+* ndv accessibility and authoring test ([613affd](https://github.com/emb715/neurodiveragents/commit/613affdb6c19c7ef04f22584fbf08f8db0c077c6))
+* redesign modules section, add harness layer explainer, and canvas background ([d78ca73](https://github.com/emb715/neurodiveragents/commit/d78ca73940c9035e9ebd1ae0b026796a4aaba766))
+
+
+### Bug Fixes
+
+* complete authoring-guide structural section compliance for changed agents ([75e32aa](https://github.com/emb715/neurodiveragents/commit/75e32aa30c93e67e9383bf18439b8f83f93d4072))
+* precommit ([b05b820](https://github.com/emb715/neurodiveragents/commit/b05b8209133480ef00442da0f16edf4230ae29f5))
+* restore font-display:block for preloaded weights, move scaffold css to pipeline, wcag fixes ([428dbdf](https://github.com/emb715/neurodiveragents/commit/428dbdf1b67caa60d24a1496ce077d1216bfc9bb))
+* test and routing table ([379a821](https://github.com/emb715/neurodiveragents/commit/379a821d9360bc22c8c0193e062752cf3c29e62d))
+
+
+### Refactoring
+
+* promote mode:all agents to top of website list, demote specialists ([d738206](https://github.com/emb715/neurodiveragents/commit/d738206e95a563b6ddda66a38e0b66e9d987f7e6))
+* standardise handoff format to Format C+ across all agents ([9af9e6c](https://github.com/emb715/neurodiveragents/commit/9af9e6c1b86aa0cc67f36f27f030530bd6d4cc6b))
+
 ## [1.4.0](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.3.0...neurodiveragents-v1.4.0) (2026-05-25)
 
 
