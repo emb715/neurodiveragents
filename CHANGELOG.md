@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.5.0...neurodiveragents-v1.5.1) (2026-05-28)
+
+
+### Bug Fixes
+
+* opencode install mode subagent ([b2dabf8](https://github.com/emb715/neurodiveragents/commit/b2dabf8d40ae9849e83231a3baa3cbe17a2e6459))
+
 ## [1.5.0](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.4.0...neurodiveragents-v1.5.0) (2026-05-28)
 
 
