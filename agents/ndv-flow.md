@@ -50,7 +50,7 @@ Decompose, route, parallelize. Every task goes to the specialist whose neurotype
 | KPI audit, metrics review, coverage targets | `ndv-signal` (Signal) |
 | UI, UX, visual hierarchy, design judgment, component review | `ndv-design` (Pixel) |
 | WCAG auditing, ARIA violations, contrast ratios, keyboard nav, screen reader compatibility | `ndv-accessibility` (Lux) |
-| Cross-domain, tradeoffs, no clear owner | `ndv-honest` (Honest) |
+| No specialist match / no clear owner / tradeoffs / direct answer / command execution | `ndv-honest` (Honest) |
 | Codebase lookup, cross-file tracing, "where is X", "how does Y work" | `ndv-research` (Scout) |
 
 When a task matches multiple signals, pick the dominant concern. When genuinely ambiguous, route to `ndv-honest`.

@@ -134,7 +134,8 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | UI, UX, visual hierarchy, design judgment, component review | \`ndv-design\` |
 | WCAG auditing, ARIA violations, contrast ratios, keyboard nav, screen reader compatibility | \`ndv-accessibility\` |
 | Codebase lookup, cross-file tracing, "where is X", "how does Y work", feature flow summaries | \`ndv-research\` |
-| No specialist match / direct opinionated answer only | \`ndv-honest\` |
+| No specialist match / no clear owner / tradeoffs / direct answer / command execution | \`ndv-honest\` |
+
 
 ## Proactive Application
 
@@ -386,7 +387,8 @@ function installCopilot() {
     sections.push(`# Agent: ${name}\n\n${stripped}`)
   }
 
-  const header = `# neurodiveragents — Copilot Instructions
+  const header = `<!-- ndv:start -->
+# neurodiveragents — Copilot Instructions
 
 This project uses the neurodiveragents fleet. When a task matches an agent domain, apply that agent's patterns directly.
 
@@ -411,15 +413,30 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | UI, UX, visual hierarchy, design judgment, component review | ndv-design |
 | WCAG auditing, ARIA violations, contrast ratios, keyboard nav, screen reader compatibility | ndv-accessibility |
 | Codebase lookup, cross-file tracing, "where is X", "how does Y work", feature flow summaries | ndv-research |
-| No specialist match / direct opinionated answer only | ndv-honest |
+| No specialist match / direct answer / command execution | ndv-honest |
 
 ---
+
+<!-- ndv:end -->
 
 `
 
   const output = header + sections.join('\n\n---\n\n')
   mkdirSync('.github', { recursive: true })
-  writeFileSync('.github/copilot-instructions.md', output)
+
+  const outPath = '.github/copilot-instructions.md'
+  if (existsSync(outPath)) {
+    const existing = readFileSync(outPath, 'utf8')
+    if (existing.includes('ndv:start')) {
+      // Replace the ndv block (header) while preserving any content outside it
+      const updated = existing.replace(/<!-- ndv:start -->[\s\S]*?<!-- ndv:end -->\n?/, header)
+      writeFileSync(outPath, updated + sections.join('\n\n---\n\n'))
+      console.log(`Updated ndv routing block in ${outPath}`)
+      return
+    }
+  }
+
+  writeFileSync(outPath, output)
   console.log(`Copilot instructions written to .github/copilot-instructions.md`)
 }
 

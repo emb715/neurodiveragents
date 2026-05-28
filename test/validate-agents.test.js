@@ -505,9 +505,11 @@ describe('authoring-guide: routing completeness', () => {
       test('bin/ndv.js NDV_BLOCK routing table references this agent', () => {
         const ndvJsPath = join(ROOT, 'bin', 'ndv.js')
         const ndvJs = existsSync(ndvJsPath) ? readFileSync(ndvJsPath, 'utf8') : ''
-        // Extract NDV_BLOCK constant — between the template literal delimiters
-        const ndvBlockMatch = ndvJs.match(/const NDV_BLOCK\s*=\s*`([\s\S]*?)`/)
-        const ndvBlock = ndvBlockMatch ? ndvBlockMatch[1] : ''
+        // Extract NDV_BLOCK constant — slice from marker to <!-- ndv:end --> to avoid
+        // backtick-in-template-literal regex issues (escaped backticks end the capture early)
+        const ndvBlockStart = ndvJs.indexOf('const NDV_BLOCK')
+        const ndvBlockEnd = ndvJs.indexOf('<!-- ndv:end -->', ndvBlockStart)
+        const ndvBlock = ndvBlockStart >= 0 ? ndvJs.slice(ndvBlockStart, ndvBlockEnd > 0 ? ndvBlockEnd : undefined) : ''
         assert.ok(
           ndvBlock.includes(agent.name),
           `${agent.file}: not found in NDV_BLOCK constant in bin/ndv.js — add a routing row`
