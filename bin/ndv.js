@@ -45,8 +45,8 @@ function deriveOpenCodePermissions(tools) {
 // Rewrite frontmatter for OpenCode native agents:
 // - Strip tools: list (Claude Code only, causes OpenCode validation error)
 // - Strip effort: (Claude Code only, unknown key in OpenCode)
-// - Rewrite model: to anthropic/<model> provider-prefixed format
-// - Inject mode: subagent and permission: block derived from tools
+// - Normalize mode: preserve mode: all, coerce mode: agent → subagent, inject subagent when absent
+// - Inject permission: block derived from tools
 function transformForOpenCode(content) {
   const tools = parseAgentTools(content)
 
@@ -65,10 +65,15 @@ function transformForOpenCode(content) {
   fm = fm.replace(/^name:.*\n/m, '')
   fm = fm.replace(/^effort:.*\n/m, '')
   fm = fm.replace(/^model:.*\n/m, '')
-  // Inject mode (preserve source value if present, default to subagent) and permission
-  const hasMode = /^mode:\s*.+$/m.test(fm)
+  // Normalize mode for OpenCode:
+  // - mode: all → preserve (valid in OpenCode)
+  // - mode: agent → coerce to subagent (Claude Code-only value)
+  // - absent → inject subagent
+  const sourceMode = (fm.match(/^mode:\s*(.+)$/m) ?? [])[1]?.trim()
+  fm = fm.replace(/^mode:.*\n/m, '')
+  const resolvedMode = sourceMode === 'all' ? 'all' : 'subagent'
   const permissions = deriveOpenCodePermissions(tools)
-  fm = fm.trimEnd() + `${hasMode ? '' : '\nmode: subagent'}\n${permissions}\n`
+  fm = fm.trimEnd() + `\nmode: ${resolvedMode}\n${permissions}\n`
 
   return `---\n${fm}---\n${body}`
 }
