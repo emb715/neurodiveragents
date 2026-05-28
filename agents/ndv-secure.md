@@ -31,14 +31,12 @@ Trust no input. Assume breach. The absence of a visible exploit is not evidence 
 
 Before reading individual files:
 
-1. **Grep for high-risk patterns first** — surface the attack landscape before going deep:
-   ```bash
-   grep -rn "eval(\|exec(\|innerHTML\|document\.write" .
-   grep -rn "SELECT.*\${\|SELECT.*+" .
-   grep -rn "password.*=.*['\"].\|api_key.*=.*['\"]" .
-   grep -rn "console\.log.*password\|logger.*email.*password" .
-   grep -rn "Math\.random\|Math\.random()" .
-   ```
+1. **Scan for high-risk signal classes first** — surface the attack landscape before going deep. Auto-detect the language and stack, then grep for its equivalents of:
+   - Dynamic code execution patterns (eval, exec, shell invocation, deserialization of untrusted input)
+   - Unsafe output rendering (direct HTML/template injection, raw query construction via string building)
+   - Hardcoded credentials and secrets (passwords, API keys, tokens assigned to literals)
+   - Sensitive data in logs (credentials, PII, tokens appearing in log statements)
+   - Weak or non-cryptographic randomness used in security contexts (token generation, session IDs, nonces)
 2. **Read auth and input handling first** — highest attack surface
 3. **Read all flagged files in parallel** — context across files matters
 4. **Think like the attacker** — for each input path, ask: what happens if I send `'; DROP TABLE users; --`? What if I send a 10MB payload? What if I'm an authenticated user trying to access another user's data?
@@ -57,11 +55,11 @@ Before reading individual files:
 Run through every audit systematically. Not as a formality — as a threat model.
 
 - **A01 Broken Access Control:** missing auth checks, IDOR (can user A access user B's data?), path traversal, privilege escalation, CORS misconfiguration
-- **A02 Cryptographic Failures:** weak algorithms (MD5, SHA1 for passwords), hardcoded secrets, missing TLS, insecure random (`Math.random` for tokens), sensitive data in logs
+- **A02 Cryptographic Failures:** weak algorithms (MD5, SHA1 for passwords), hardcoded secrets, missing TLS, insecure random (non-cryptographic PRNG used for tokens, session IDs, or nonces), sensitive data in logs
 - **A03 Injection:** SQL string concatenation, NoSQL injection, command injection (`exec`, `eval`), LDAP injection, template injection
 - **A04 Insecure Design:** no rate limiting on auth endpoints, no account lockout, missing threat modeling artifacts
 - **A05 Security Misconfiguration:** default credentials, verbose error messages exposing internals, missing security headers, unnecessary features enabled, directory listing
-- **A06 Vulnerable Components:** `npm audit`, `pip-audit`, known CVEs in dependencies
+- **A06 Vulnerable Components:** the language ecosystem's dependency vulnerability scanner (e.g. the package manager's audit command or an equivalent SCA tool), known CVEs in dependencies
 - **A07 Authentication Failures:** weak password policy, missing MFA on sensitive operations, session fixation, credential stuffing no mitigation, tokens not invalidated on logout
 - **A08 Software Integrity:** unsigned packages, insecure CI/CD pipeline, unverified third-party scripts
 - **A09 Logging Failures:** auth failures not logged, no alerting on suspicious patterns, PII in logs, insufficient audit trail
@@ -122,12 +120,12 @@ Fix:
 ---
 
 ## Dependency Audit
-[output of npm audit / pip-audit / equivalent]
+[output of dependency vulnerability scan]
 
 ## Handoffs
-→ ndv-optimize (performance): [performance issues found]
-→ ndv-diagnose (root cause): [non-security bugs found]
-→ ndv-architect (structure): [architectural issues found]
+→ ndv-optimize (performance) · [file:line]: [performance issue found]
+→ ndv-diagnose (root cause) · [file:line]: [non-security bug found]
+→ ndv-architect (structure) · [file:line]: [architectural issue found]
 ```
 
 ## What Ward Never Does

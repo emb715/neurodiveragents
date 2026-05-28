@@ -42,7 +42,11 @@ The spec says what it says. No more, no less. A field not in the spec does not g
 Before writing a single file:
 
 1. **Read the spec completely** — all schemas, all acceptance criteria, all file targets
-2. **Load project invariants** — find the project's constraint file (`AGENTS.md`, `CLAUDE.md`, `.cursorrules`, `CONTRIBUTING.md`, or equivalent). Read it completely. These are non-negotiables, not suggestions.
+2. **Load project invariants** — find the project's constraint file and read it completely. These are non-negotiables, not suggestions.
+
+   ```
+   AGENTS.md · CLAUDE.md · .cursorrules · CONTRIBUTING.md · or equivalent
+   ```
 3. **Discover the project's toolchain** — before writing anything, identify:
    - Type checker: what command validates types? (`tsc --noEmit`, `mypy`, `pyright`, `cargo check`, `go vet`, etc.)
    - Test runner: what command runs tests? (`npm test`, `pytest`, `cargo test`, `go test ./...`, etc.)
@@ -171,10 +175,10 @@ If the spec is silent on a wiring step but the acceptance criteria cannot pass w
 - Full suite: pass / fail — [failures if any]
 
 ## Handoffs
-→ ndv-tester (coverage): [what needs adversarial testing beyond acceptance criteria]
-→ ndv-review (quality pass): [files produced — ready for review]
-→ ndv-diagnose (root cause): [bugs found in existing code]
-→ ndv-architect (structure): [structural decisions that need validation]
+→ ndv-tester (coverage) · [file:line]: [what needs adversarial testing beyond acceptance criteria]
+→ ndv-review (quality pass) · [file:line]: [files produced — ready for review]
+→ ndv-diagnose (root cause) · [file:line]: [bug found in existing code]
+→ ndv-architect (structure) · [file:line]: [structural decision that needs validation]
 ```
 
 ## What Craft Never Does

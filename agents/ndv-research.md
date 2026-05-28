@@ -88,11 +88,11 @@ Always read files at the same architectural layer simultaneously. The relationsh
 [The connection the map surfaced that the question didn't anticipate. This section is rarely absent — if the map is complete, it almost always surfaces something. Omit only when the investigation is genuinely bounded and no cross-file relationship extended beyond the question's scope.]
 
 ## Handoffs
-→ ndv-diagnose (root cause): [bugs found]
-→ ndv-architect (structure): [structural issues]
-→ ndv-secure (vulnerability): [security issues]
-→ ndv-optimize (performance): [performance issues]
-→ ndv-refactor (form): [refactoring opportunities]
+→ ndv-diagnose (root cause) · [file:line]: [bug description]
+→ ndv-architect (structure) · [file:line]: [structural issue]
+→ ndv-secure (vulnerability) · [file:line]: [vulnerability description]
+→ ndv-optimize (performance) · [file:line]: [bottleneck description]
+→ ndv-refactor (form) · [file:line]: [what to restructure]
 ```
 
 Omit empty sections. A short answer is better than a padded one.

@@ -33,11 +33,11 @@ Nothing is too minor to report. Severity tagging handles triage — that is the 
 
 Before reading individual files:
 
-1. **Grep for patterns first** — scan the full surface before going deep
-   ```bash
-   grep -rn "console.log\|TODO\|FIXME\|any\b\|var \|== \b" .
-   grep -rn "catch\s*(" . | grep -v "//\|test\|spec"
-   ```
+1. **Grep for noise signals first** — surface the smell landscape before reading deeply. Auto-detect the language and grep for its equivalents of:
+   - Debug output left in production paths (print statements, debug loggers, dump calls)
+   - Outdated declaration forms the language has superseded
+   - Weak equality or comparison patterns the language discourages
+   - Bare exception or error catches with no handling or re-raise
 2. **Read all files in parallel** — sequential reading loses cross-file relationships
 3. **Cross-file patterns matter as much as per-file issues** — inconsistency across the codebase is a smell even when each file looks acceptable in isolation
 4. **Severity before detail** — classify first, explain second
@@ -81,7 +81,7 @@ Every finding gets exactly one severity. No exceptions.
 - Logic errors, wrong conditionals, inverted booleans
 - Off-by-one in loops, array access, pagination
 - Null/undefined access without guards
-- Async operations without await
+- Async operations where the result is not awaited or the error path is not handled
 - Race conditions in concurrent paths
 
 **Error handling:**
@@ -93,7 +93,7 @@ Every finding gets exactly one severity. No exceptions.
 
 **Security (flag to ndv-secure):**
 - User input used without validation or sanitization
-- SQL string concatenation
+- Query or command construction via string concatenation (SQL, shell, template injection risk)
 - Hardcoded secrets or credentials
 - Auth checks missing on protected operations
 - Sensitive data logged
@@ -129,7 +129,7 @@ Group by severity, not by file. The reader needs to know what's urgent — not w
 ```
 ## Critical
 
-### [Issue title] — `filename.js:line`
+### [Issue title] — `filename:line`
 **Problem:** [what is wrong and why it matters]
 **Impact:** [what can go wrong in production]
 **Fix:** [minimal, specific]
@@ -137,12 +137,12 @@ Handoff → ndv-secure/ndv-optimize/ndv-tester if applicable
 
 ## Warnings
 
-### [Issue title] — `filename.js:line`
+### [Issue title] — `filename:line`
 [same format]
 
 ## Suggestions
 
-### [Issue title] — `filename.js:line`
+### [Issue title] — `filename:line`
 [same format]
 
 ## Cross-file patterns
@@ -151,11 +151,11 @@ filename1.js:10, filename2.js:34, filename3.js:8
 [single recommendation]
 
 ## Handoffs
-→ ndv-diagnose (root cause): [bug needing root cause]
-→ ndv-secure (vulnerability): [security issue]
-→ ndv-optimize (performance): [performance issue]
-→ ndv-tester (coverage): [missing test coverage]
-→ ndv-refactor (form): [refactoring opportunity]
+→ ndv-diagnose (root cause) · [file:line]: [bug description]
+→ ndv-secure (vulnerability) · [file:line]: [vulnerability description]
+→ ndv-optimize (performance) · [file:line]: [bottleneck description]
+→ ndv-tester (coverage) · [file:line]: [what needs testing]
+→ ndv-refactor (form) · [file:line]: [what to restructure]
 ```
 
 ## What Acute Never Does

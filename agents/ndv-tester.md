@@ -91,8 +91,8 @@ Before writing a single test, interrogate the code:
 - Function called after teardown/close
 
 **Security-relevant inputs (flag to ndv-secure if found, still write the test):**
-- SQL injection strings in input fields
-- XSS payloads in text fields
+- Injection payloads in input fields — SQL, shell command, template, LDAP, or other injection class appropriate to how the input is consumed downstream
+- Malicious content in output-bound fields — XSS, template injection, or other output encoding failure appropriate to the rendering surface
 - Oversized inputs
 
 ## Test Quality Rules
@@ -168,9 +168,9 @@ If tests fail because of a bug in source: write the expected-behavior assertion,
 **Coverage added:** [which branches/paths are now covered]
 
 ## Handoffs
-→ ndv-diagnose (root cause): [bugs found in source]
-→ ndv-secure (vulnerability): [security issues found]
-→ ndv-optimize (performance): [performance issues found]
+→ ndv-diagnose (root cause) · [file:line]: [bug found in source]
+→ ndv-secure (vulnerability) · [file:line]: [security issue found]
+→ ndv-optimize (performance) · [file:line]: [performance issue found]
 ```
 
 ## What Edge Never Does

@@ -5,11 +5,17 @@
  * humans/<name>.human.md — human-readable character profiles
  *
  * Both must satisfy their respective schemas for every agent in the fleet.
+ *
+ * Authoring-guide checks (scoped to changed files in CI via CHANGED_AGENTS env var):
+ * - No file references in model body
+ * - No skill references in model body
+ * - Required sections present
+ * - Routing entries exist in CLAUDE.md, ndv-flow.md, humans/ndv-agents.md
  */
 
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
-import { readdirSync, readFileSync } from 'node:fs'
+import { readdirSync, readFileSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -18,16 +24,16 @@ const ROOT = join(__dirname, '..')
 const AGENTS_DIR = join(ROOT, 'agents')
 const HUMANS_DIR = join(ROOT, 'humans')
 
+// When set, authoring-guide checks run only on these agent names (no path, no extension).
+// CI sets this via the diff-scoped job.
+// When unset locally, the describe blocks run but produce no tests (agentsToAudit = []).
+const CHANGED_AGENTS = process.env.CHANGED_AGENTS
+  ? process.env.CHANGED_AGENTS.split(',').map(s => s.trim()).filter(Boolean)
+  : null
+
 // ─── constants ───────────────────────────────────────────────────────────────
 
 const VALID_TOOLS = new Set(['Read', 'Write', 'Edit', 'Grep', 'Glob', 'Bash', 'Task'])
-
-const REQUIRED_HUMAN_SECTIONS = [
-  /^## Who is .+\?/m,
-  /^## Neurotype/m,
-  /^## (When to use|Personality)/m,  // some files use Personality instead
-  /^## (Invocation|When to use)/m,   // Invocation or secondary When to use
-]
 
 const MIN_DESCRIPTION_LENGTH = 50
 const MIN_BODY_LINES = 5
@@ -356,4 +362,198 @@ describe('symmetry: every agent file must have a human file and vice versa', () 
       }
     }
   })
+})
+
+// ─── authoring-guide checks (scoped to changed agents in CI) ─────────────────
+//
+// Run only against changed agents (CHANGED_AGENTS env var set by CI).
+// When unset, agentsToAudit is empty — describe blocks register but produce no tests.
+// This keeps the existing fleet (already vetted on main) outside these checks.
+
+const agentsToAudit = CHANGED_AGENTS
+  ? agentFiles().filter(a => CHANGED_AGENTS.includes(a.name))
+  : []
+
+describe('authoring-guide: model body constraints', () => {
+  if (agentsToAudit.length === 0) {
+    test('no changed agent files to audit', () => {
+      // Nothing to check — pass trivially
+    })
+    return
+  }
+
+  for (const agent of agentsToAudit) {
+    describe(agent.file, () => {
+
+      test('body: no file references (no markdown links, relative paths, or fleet filenames)', () => {
+        const { body } = parseFrontmatter(agent.content, agent.file)
+        // Strip fenced code blocks — examples inside ``` are legitimate
+        const stripped = body.replace(/```[\s\S]*?```/g, '')
+
+        // Markdown links: [text](path)
+        const mdLinks = stripped.match(/\[[^\]]+\]\([^)]+\)/g) ?? []
+        assert.deepEqual(
+          mdLinks,
+          [],
+          `${agent.file}: markdown links found (ADR-001 — no file references): ${mdLinks.join(', ')}`
+        )
+
+        // Relative paths pointing to fleet dirs: agents/, humans/, docs/, skills/, modules/
+        const fleetPaths = stripped.match(/\b(agents|humans|docs|skills|modules)\/\S+/g) ?? []
+        assert.deepEqual(
+          fleetPaths,
+          [],
+          `${agent.file}: fleet directory references found: ${fleetPaths.join(', ')}`
+        )
+
+        // Filenames with .md extension (fleet doc references)
+        const mdFiles = stripped.match(/\b[\w-]+\.md\b/g) ?? []
+        assert.deepEqual(
+          mdFiles,
+          [],
+          `${agent.file}: .md filename references found: ${mdFiles.join(', ')}`
+        )
+      })
+
+      test('body: no skill references (agents produce skills, never consume them)', () => {
+        const { body } = parseFrontmatter(agent.content, agent.file)
+        const stripped = body.replace(/```[\s\S]*?```/g, '')
+
+        // Patterns: "apply ndv-", "load ndv-", "use skill", "invoke skill"
+        const skillRefs = stripped.match(/\b(apply|load|invoke|use skill)\s+ndv-\w+/gi) ?? []
+        assert.deepEqual(
+          skillRefs,
+          [],
+          `${agent.file}: skill consumption references found: ${skillRefs.join(', ')}`
+        )
+      })
+
+      test('body: required sections present (Out of Scope, Primordial Rule, Output Format, What [Name] Never Does)', { skip: agent.name === 'ndv-honest' ? 'ndv-honest is a fleet-level residual agent — structural sections do not apply' : false }, () => {
+        const { body } = parseFrontmatter(agent.content, agent.file)
+
+        const required = [
+          { pattern: /^## Out of Scope/m, label: '## Out of Scope' },
+          { pattern: /^## Primordial Rule/m, label: '## Primordial Rule' },
+          { pattern: /^## Output Format/m, label: '## Output Format' },
+          { pattern: /^## What .+ Never Does/m, label: '## What [Name] Never Does' },
+        ]
+
+        for (const { pattern, label } of required) {
+          assert.match(
+            body,
+            pattern,
+            `${agent.file}: missing required section "${label}" (authoring-guide §4)`
+          )
+        }
+      })
+
+    })
+  }
+})
+
+// ─── authoring-guide: routing completeness ───────────────────────────────────
+//
+// Every new agent must appear in all three routing files.
+// Checked only for changed/new agent files.
+
+describe('authoring-guide: routing completeness', () => {
+  if (agentsToAudit.length === 0) {
+    test('no changed agent files to audit', () => {})
+    return
+  }
+
+  const claudeMdPath = join(ROOT, 'CLAUDE.md')
+  const flowMdPath = join(AGENTS_DIR, 'ndv-flow.md')
+  const agentsDoctrinePath = join(HUMANS_DIR, 'ndv-agents.md')
+
+  const claudeMd = existsSync(claudeMdPath) ? readFileSync(claudeMdPath, 'utf8') : ''
+  const flowMd = existsSync(flowMdPath) ? readFileSync(flowMdPath, 'utf8') : ''
+  const agentsDoctrine = existsSync(agentsDoctrinePath) ? readFileSync(agentsDoctrinePath, 'utf8') : ''
+
+  for (const agent of agentsToAudit) {
+    // Extract character name from "You are **Name**." in first body paragraph
+    const { body } = parseFrontmatter(agent.content, agent.file)
+    const boldMatch = body.split('\n\n')[0].match(/\*\*([^*]+)\*\*/)
+    const characterName = boldMatch ? boldMatch[1] : null
+
+    describe(agent.file, () => {
+
+      test('CLAUDE.md routing table references this agent', () => {
+        assert.ok(
+          claudeMd.includes(agent.name),
+          `${agent.file}: not found in CLAUDE.md routing table — add a row (authoring-guide §5)`
+        )
+      })
+
+      test('agents/ndv-flow.md Routing Table references this agent', () => {
+        assert.ok(
+          flowMd.includes(agent.name),
+          `${agent.file}: not found in ndv-flow.md Routing Table — add a row (authoring-guide §5)`
+        )
+      })
+
+      test('humans/ndv-agents.md fleet table references this agent (by slug or character name)', () => {
+        // ndv-agents.md uses character names in the table, not slugs — check both
+        const foundBySlug = agentsDoctrine.includes(agent.name)
+        const foundByName = characterName ? agentsDoctrine.includes(characterName) : false
+        assert.ok(
+          foundBySlug || foundByName,
+          `${agent.file}: not found in humans/ndv-agents.md fleet table (checked slug "${agent.name}" and character "${characterName}") — add agent and doctrine section (authoring-guide §5)`
+        )
+      })
+
+      test('bin/ndv.js NDV_BLOCK routing table references this agent', () => {
+        const ndvJsPath = join(ROOT, 'bin', 'ndv.js')
+        const ndvJs = existsSync(ndvJsPath) ? readFileSync(ndvJsPath, 'utf8') : ''
+        // Extract NDV_BLOCK constant — slice from marker to <!-- ndv:end --> to avoid
+        // backtick-in-template-literal regex issues (escaped backticks end the capture early)
+        const ndvBlockStart = ndvJs.indexOf('const NDV_BLOCK')
+        const ndvBlockEnd = ndvJs.indexOf('<!-- ndv:end -->', ndvBlockStart)
+        const ndvBlock = ndvBlockStart >= 0 ? ndvJs.slice(ndvBlockStart, ndvBlockEnd > 0 ? ndvBlockEnd : undefined) : ''
+        assert.ok(
+          ndvBlock.includes(agent.name),
+          `${agent.file}: not found in NDV_BLOCK constant in bin/ndv.js — add a routing row`
+        )
+      })
+
+      test('bin/ndv.js installCopilot() header routing table references this agent', () => {
+        const ndvJsPath = join(ROOT, 'bin', 'ndv.js')
+        const ndvJs = existsSync(ndvJsPath) ? readFileSync(ndvJsPath, 'utf8') : ''
+        // Find installCopilot() function start, then extract the header template literal after it
+        const fnStart = ndvJs.indexOf('function installCopilot()')
+        const fnBody = fnStart >= 0 ? ndvJs.slice(fnStart) : ''
+        const headerMatch = fnBody.match(/const header\s*=\s*`([\s\S]*?)`/)
+        const header = headerMatch ? headerMatch[1] : ''
+        assert.ok(
+          header.includes(agent.name),
+          `${agent.file}: not found in installCopilot() header string in bin/ndv.js — add a routing row`
+        )
+      })
+
+    })
+  }
+})
+
+// ─── agent frontmatter: mode field validation ────────────────────────────────
+
+describe('agent frontmatter: mode field valid values (when present)', () => {
+  const VALID_MODES = new Set(['agent', 'subagent', 'all'])
+  const agents = agentFiles()
+
+  for (const agent of agents) {
+    describe(agent.file, () => {
+
+      test('mode field (if present) must be one of: agent, subagent, all', () => {
+        const { get } = parseFrontmatter(agent.content, agent.file)
+        const mode = get('mode')
+        // Absence is allowed — only validate when the field is present
+        if (mode === null) return
+        assert.ok(
+          VALID_MODES.has(mode),
+          `${agent.file}: invalid mode="${mode}" — must be one of: ${[...VALID_MODES].join(', ')}`
+        )
+      })
+
+    })
+  }
 })

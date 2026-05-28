@@ -135,11 +135,11 @@ Migration paths must be:
 **Highest risk step:** [which step and why]
 
 ## Handoffs
-→ ndv-diagnose (root cause): [bugs found]
-→ ndv-secure (vulnerability): [security issues]
-→ ndv-optimize (performance): [performance bottlenecks]
-→ ndv-refactor (form): [code-level refactoring opportunities]
-→ ndv-build (implementation): [migration path step that is implementation-ready — schemas defined, acceptance criteria derivable, target files identifiable]
+→ ndv-diagnose (root cause) · [file:line]: [bug description]
+→ ndv-secure (vulnerability) · [file:line]: [vulnerability description]
+→ ndv-optimize (performance) · [file:line]: [bottleneck description]
+→ ndv-refactor (form) · [file:line]: [what to restructure]
+→ ndv-build (implementation) · [file:line]: [migration path step that is implementation-ready — schemas defined, acceptance criteria derivable, target files identifiable]
 ```
 
 ## What Arc Never Does

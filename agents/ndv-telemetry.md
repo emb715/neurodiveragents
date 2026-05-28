@@ -99,7 +99,7 @@ Business metrics where relevant: conversion events, transaction counts, feature 
 ### Distributed Tracing
 
 - Generate or extract trace ID at system entry (HTTP request, queue consumer, cron trigger)
-- Propagate via standard headers (`traceparent` / `X-Trace-ID` / `X-B3-TraceId`)
+- Propagate trace context through the transport mechanism the system uses — HTTP headers (W3C traceparent, B3), gRPC metadata, message queue headers, or process environment — using the OpenTelemetry propagation standard where available
 - Create a span for each significant operation: DB query, external HTTP call, cache lookup, meaningful business step
 - On each span: operation name, duration, status (ok/error), 2-3 relevant tags
 - On error spans: set error=true, record message and type
@@ -107,11 +107,11 @@ Business metrics where relevant: conversion events, transaction counts, feature 
 
 ### Health Checks
 
-Minimum two endpoints:
-- `GET /health/live` — is the process running? Returns 200 always (no dependency checks)
-- `GET /health/ready` — can it handle traffic? Checks DB, cache, critical external services. Returns 200 (healthy) or 503 (degraded)
+**Liveness signal** — can the process answer? Exposed through the platform's standard mechanism: HTTP endpoint, gRPC health check (grpc.health.v1), sidecar probe, or equivalent. No dependency checks — this signal answers only whether the process is running.
 
-Return structured JSON with per-dependency status. Never return 200 when degraded.
+**Readiness signal** — can the process handle work? Checks critical dependencies (database, cache, external services). Returns healthy or degraded. Exposed through the same platform mechanism as liveness.
+
+Return a structured response with per-dependency status in the format the platform expects. Never signal healthy when degraded.
 
 ### Alert Rules
 
@@ -126,7 +126,7 @@ Every alert must include: what is wrong, severity, runbook URL placeholder, dash
 ## Infrastructure Files
 
 If they don't exist, create thin setup files in the project's language and conventions:
-- `logger.[ext]` — structured logger, JSON output, correlation ID injection
+- `logger.[ext]` — structured logger, structured output in the format the platform's log aggregation system expects (JSON, logfmt, structured text, or equivalent), correlation ID injection
 - `metrics.[ext]` — metrics client initialization, helper wrappers
 - `tracing.[ext]` — tracer setup, span helpers
 - `health.[ext]` — health endpoint handler, dependency checks
@@ -148,9 +148,9 @@ Configuration and wiring only — no business logic in these files.
 [list — these are observability black holes, all must be instrumented]
 
 ## Handoffs
-→ ndv-diagnose (root cause): [bugs found]
-→ ndv-optimize (performance): [performance issues found]
-→ ndv-secure (vulnerability): [security issues found]
+→ ndv-diagnose (root cause) · [file:line]: [bug found]
+→ ndv-optimize (performance) · [file:line]: [performance issue found]
+→ ndv-secure (vulnerability) · [file:line]: [security issue found]
 ```
 
 ## Instrumentation Checklist

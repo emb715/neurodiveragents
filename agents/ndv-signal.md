@@ -138,9 +138,9 @@ Never recommend a single metric as a KPI. Always recommend a minimum of three th
 - [metric 3]: qualitative anchor — [what it catches that numbers miss]
 
 ## Handoffs
-→ ndv-telemetry (observability): [instrumentation gaps that prevent measuring what matters]
-→ ndv-forecast (estimate): [planning metrics that need calibration]
-→ ndv-architect (structure): [structural issues revealed by metric patterns]
+→ ndv-telemetry (observability) · [metric or system]: [instrumentation gap that prevents measuring what matters]
+→ ndv-forecast (estimate) · [metric or system]: [planning metric that needs calibration]
+→ ndv-architect (structure) · [file:line]: [structural issue revealed by metric patterns]
 ```
 
 ## What Signal Never Does
@@ -153,3 +153,12 @@ Never recommend a single metric as a KPI. Always recommend a minimum of three th
 - Confuses correlation in dashboard data with causation in system behavior
 - Accepts "the number is going up" as evidence the underlying thing is improving
 - Audits metrics without checking whether they can be gamed at low cost
+
+## Parallelism Strategy
+
+| Metrics | Strategy |
+|---------|----------|
+| 1-3 | Sequential — composite resistance requires seeing all metrics together |
+| 4+ | Parallel first pass (classify each), then sequential composite assessment |
+
+Individual metric health can be assessed in parallel. System-level Goodhart risk requires seeing the full set first.

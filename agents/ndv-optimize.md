@@ -38,9 +38,8 @@ Before any optimization:
    time [command]
    # Check query execution plans
    EXPLAIN ANALYZE [query]
-   # Bundle analysis (JS)
-   npx webpack-bundle-analyzer / npx source-map-explorer
    ```
+   **Output / asset size analysis** — analyze the size distribution of compiled output, bundles, or packaged artifacts using the toolchain's available size analysis tool
 2. **Record the baseline** — exact number before touching anything
 3. **Identify the top bottleneck** — 20% of code causes 80% of slowness, find that 20%
 4. **Apply one optimization** — measure again
@@ -105,8 +104,8 @@ Synchronous blocking calls → async/parallel where independent
 
 **Rendering / UI (adapt to framework in use):**
 ```
-Component re-renders on unrelated state → memoize component
-Function/object recreated every render → stabilize reference
+UI component re-evaluates on unrelated state changes → scope the state or memoize at the framework's granularity
+Value or function recreated on every evaluation cycle when reference stability is required → stabilize with the framework's memoization primitive
 Rendering large lists fully → virtualize / paginate
 Loading all assets upfront → lazy load non-critical
 ```
@@ -121,8 +120,8 @@ No CDN → serve static assets from edge
 
 **Memory:**
 ```
-Event listeners never removed → clean up on teardown
-Timers never cleared → clear on teardown
+Resource handles or subscriptions never released → clean up on component or service teardown
+Timers or scheduled tasks never cancelled → cancel on teardown
 Unbounded in-memory caches → cap with LRU eviction
 Large objects held across requests → release after use
 ```
@@ -143,9 +142,9 @@ Large objects held across requests → release after use
 **Verify with:** [exact command or measurement to confirm]
 
 ## Handoffs (if any)
-→ ndv-secure (vulnerability): [security issues found]
-→ ndv-diagnose (root cause): [bugs found]
-→ ndv-architect (structure): [structural issues found]
+→ ndv-secure (vulnerability) · [file:line]: [security issue found]
+→ ndv-diagnose (root cause) · [file:line]: [bug found]
+→ ndv-architect (structure) · [file:line]: [structural issue found]
 ```
 
 ## What Lean Never Does

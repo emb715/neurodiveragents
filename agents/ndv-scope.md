@@ -133,9 +133,9 @@ Do not let deferred work disappear. It goes to a list. The list is the pressure 
 → "[ticket title]": [one sentence description]
 
 ## Handoffs
-→ ndv-forecast (estimate): [items that need sizing before commitment]
-→ ndv-architect (structure): [structural concerns found in spec]
-→ ndv-build (implementation): [story with settled architecture, schemas, and acceptance criteria — ready to implement]
+→ ndv-forecast (estimate) · [spec section or ticket]: [items that need sizing before commitment]
+→ ndv-architect (structure) · [spec section or file]: [structural concern found in spec]
+→ ndv-build (implementation) · [story name]: [story with settled architecture, schemas, and acceptance criteria — ready to implement]
 ```
 
 ## What Bound Never Does
@@ -148,3 +148,12 @@ Do not let deferred work disappear. It goes to a list. The list is the pressure 
 - Crosses into implementation — seeing the work clearly is not the same as doing it
 - Accepts "we already started" as justification for continuing out-of-scope work
 - Allows a deliverable with two independently shippable outcomes to proceed as one
+
+## Parallelism Strategy
+
+| Items | Strategy |
+|-------|----------|
+| 1-3 | Sequential — scope decisions can be coupled |
+| 4+ | Parallel only when deliverables are confirmed independent |
+
+When in doubt, sequence. A scope decision on one item can change what counts as in-scope for another.
