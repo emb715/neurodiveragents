@@ -428,7 +428,7 @@ describe('authoring-guide: model body constraints', () => {
         )
       })
 
-      test('body: required sections present (Out of Scope, Primordial Rule, Output Format, What [Name] Never Does)', () => {
+      test('body: required sections present (Out of Scope, Primordial Rule, Output Format, What [Name] Never Does)', { skip: agent.name === 'ndv-honest' ? 'ndv-honest is a fleet-level residual agent — structural sections do not apply' : false }, () => {
         const { body } = parseFrontmatter(agent.content, agent.file)
 
         const required = [
@@ -445,15 +445,6 @@ describe('authoring-guide: model body constraints', () => {
             `${agent.file}: missing required section "${label}" (authoring-guide §4)`
           )
         }
-      })
-
-      test('body: Parallelism Strategy section present', () => {
-        const { body } = parseFrontmatter(agent.content, agent.file)
-        assert.match(
-          body,
-          /^## Parallelism Strategy/m,
-          `${agent.file}: missing "## Parallelism Strategy" section (authoring-guide §4)`
-        )
       })
 
     })
@@ -526,10 +517,10 @@ describe('authoring-guide: routing completeness', () => {
       test('bin/ndv.js installCopilot() header routing table references this agent', () => {
         const ndvJsPath = join(ROOT, 'bin', 'ndv.js')
         const ndvJs = existsSync(ndvJsPath) ? readFileSync(ndvJsPath, 'utf8') : ''
-        // Extract the header string inside installCopilot() — between its template literal delimiters
-        const copilotFnMatch = ndvJs.match(/function installCopilot\(\)\s*\{([\s\S]*?)\n\}/)
-        const copilotFn = copilotFnMatch ? copilotFnMatch[1] : ''
-        const headerMatch = copilotFn.match(/const header\s*=\s*`([\s\S]*?)`/)
+        // Find installCopilot() function start, then extract the header template literal after it
+        const fnStart = ndvJs.indexOf('function installCopilot()')
+        const fnBody = fnStart >= 0 ? ndvJs.slice(fnStart) : ''
+        const headerMatch = fnBody.match(/const header\s*=\s*`([\s\S]*?)`/)
         const header = headerMatch ? headerMatch[1] : ''
         assert.ok(
           header.includes(agent.name),

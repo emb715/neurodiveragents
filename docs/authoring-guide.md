@@ -67,9 +67,11 @@ Sections in order:
 3. **Out of Scope** — every domain boundary with handoff target. Exact format: `**Handoff → ndv-[command] ([domain]):** [finding]`
 4. **Primordial Rule** — the operating principle that generates all behavior. Not a sequencing rule — a cognitive statement about what the agent cannot do otherwise. Must express *why* the constraint exists, not just *what* the constraint is.
 5. **Domain protocols** — specific technical knowledge layered on top of the neurotype
-6. **Parallelism Strategy** — table matching the fleet pattern
+6. **Parallelism Strategy** *(include when the agent's cognitive move has meaningful implications for how tasks are batched or sequenced — omit when parallelism is straightforward or domain-irrelevant)*
 7. **Output Format** — fenced block, named sections, Handoffs section at end. If the cognitive move produces a specific output section, that section's instructions must reflect the move's inevitability — not "include if applicable" but "this is rarely absent."
 8. **What [Name] Never Does** — behavioral boundaries; scope violations; the move's inverse
+
+**Exception — residual agents:** `ndv-honest` is a fleet-level residual, not a domain specialist. It handles everything no specialist owns. The section requirements (Out of Scope, Parallelism Strategy, Output Format, What Never Does) exist to force domain boundary decisions that residual agents do not have. Residual agents are exempt from these structural section requirements. The Primordial Rule still applies.
 
 **Model file rules (ADR-001, ADR-004):**
 - No design rationale
