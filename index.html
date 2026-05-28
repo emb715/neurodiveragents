@@ -79,162 +79,44 @@
     <link rel="stylesheet" href="./assets/styles.css" />
     <style>
       @font-face {
-        font-family: Raleway;
+        font-family: "Raleway";
         font-style: normal;
         font-weight: 300;
         font-display: block;
-        src: url(./assets/fonts/raleway-latin-300-normal.woff2) format("woff2");
+        src: url("./assets/fonts/raleway-latin-300-normal.woff2")
+          format("woff2");
+        unicode-range:
+          U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+          U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+          U+2212, U+2215, U+FEFF, U+FFFD;
       }
       @font-face {
-        font-family: Raleway;
+        font-family: "Raleway";
         font-style: normal;
         font-weight: 900;
         font-display: block;
-        src: url(./assets/fonts/raleway-latin-900-normal.woff2) format("woff2");
-      }
-    </style>
-    <style>
-      @layer components {
-        /* ── Cognitive Scaffolding ────────────────────────────────── */
-        .scaffold-toggle-btn {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.5rem;
-          padding: 0.375rem 0.875rem;
-          border-radius: calc(var(--radius) - 2px);
-          border: 1px solid color-mix(in oklch, var(--accent) 35%, transparent);
-          background: none;
-          font-size: 0.75rem;
-          font-weight: 600;
-          color: var(--accent);
-          cursor: pointer;
-          transition:
-            background-color 0.15s,
-            border-color 0.15s;
-          font-family: var(--app-font-sans);
-          letter-spacing: 0.01em;
-        }
-        .scaffold-toggle-btn:hover {
-          background: color-mix(in oklch, var(--accent) 8%, transparent);
-          border-color: color-mix(in oklch, var(--accent) 55%, transparent);
-        }
-        .phase-rail {
-          display: flex;
-          align-items: flex-start;
-          gap: 0;
-          overflow-x: auto;
-          padding-bottom: 0.5rem;
-          scrollbar-width: thin;
-        }
-        .phase-card {
-          flex-shrink: 0;
-          width: 13rem;
-          background: var(--card);
-          border: 1px solid var(--border);
-          border-radius: var(--radius);
-          padding: 1rem;
-          display: flex;
-          flex-direction: column;
-          gap: 0.75rem;
-        }
-        .phase-arrow {
-          display: flex;
-          align-items: center;
-          padding: 0 0.5rem;
-          color: var(--muted-foreground);
-          opacity: 0.4;
-          font-size: 1.25rem;
-          flex-shrink: 0;
-          padding-top: 1.75rem;
-        }
-        .phase-label {
-          font-size: 0.6rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--muted-foreground);
-          padding-bottom: 0.5rem;
-          border-bottom: 1px solid
-            color-mix(in oklch, var(--border) 60%, transparent);
-        }
-        .phase-pills {
-          display: flex;
-          flex-direction: column;
-          gap: 0.375rem;
-        }
-        .phase-pill {
-          display: inline-flex;
-          align-items: center;
-          font-family: var(--app-font-mono);
-          font-size: 0.7rem;
-          font-weight: 600;
-          padding: 0.2rem 0.5rem;
-          border-radius: calc(var(--radius) - 4px);
-          border: 1px solid;
-          width: fit-content;
-          letter-spacing: -0.01em;
-        }
-        .phase-note {
-          font-size: 0.65rem;
-          font-style: italic;
-          color: color-mix(in oklch, var(--muted-foreground) 60%, transparent);
-          margin-top: auto;
-          padding-top: 0.5rem;
-          border-top: 1px solid
-            color-mix(in oklch, var(--border) 40%, transparent);
-        }
-        .scaffold-catalog-drawer {
-          display: grid;
-          grid-template-rows: 0fr;
-          transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-          margin-top: 0.5rem;
-        }
-        .scaffold-catalog-drawer.open {
-          grid-template-rows: 1fr;
-        }
-        .scaffold-catalog-inner {
-          overflow: hidden;
-        }
-
-        /* Before/after panels */
-        .scaffold-panel-before {
-          border-left: 3px solid var(--border);
-        }
-        .scaffold-panel-after {
-          border-left: 3px solid var(--border);
-          transition:
-            border-color 0.25s,
-            background-color 0.25s;
-        }
-        .scaffold-panel-after.active {
-          border-left-color: var(--accent);
-          background-color: color-mix(
-            in oklch,
-            var(--accent) 4%,
-            var(--background)
-          );
-        }
-
-        @media (max-width: 767px) {
-          .phase-arrow {
-            display: none;
-          }
-          .phase-rail {
-            flex-direction: column;
-            gap: 0.75rem;
-          }
-          .phase-card {
-            width: 100%;
-          }
-        }
-      }
-      body {
-        background-image: none !important;
+        src: url("./assets/fonts/raleway-latin-900-normal.woff2")
+          format("woff2");
+        unicode-range:
+          U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+          U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+          U+2212, U+2215, U+FEFF, U+FFFD;
       }
     </style>
   </head>
   <body>
-    <canvas id="comet-canvas" aria-hidden="true" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
+    <canvas
+      id="comet-canvas"
+      aria-hidden="true"
+      style="
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 0;
+      "
+    ></canvas>
     <div
       id="copy-status"
       role="status"
@@ -327,8 +209,9 @@
             aria-hidden="true"
           >
             <path d="M5 12h14" />
-            <path d="m12 5 7 7-7 7" /></svg
-        ></a>
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+        </a>
       </nav>
     </header>
 
@@ -427,9 +310,8 @@
           <p
             style="
               font-size: 0.75rem;
-              color: var(--muted-foreground, oklch(63% 0.007 90));
+              color: var(--muted-foreground, oklch(72% 0.007 90));
               margin-top: 0;
-              opacity: 0.7;
             "
           >
             One command installs everything. Detects your tools automatically.
@@ -1437,7 +1319,7 @@
           <h2 class="section-heading">Install</h2>
           <p
             style="
-              color: var(--muted-foreground, oklch(63% 0.007 90));
+              color: var(--muted-foreground, oklch(72% 0.007 90));
               margin-bottom: 2.5rem;
               max-width: 42rem;
             "
@@ -1524,7 +1406,7 @@
               font-weight: 700;
               text-transform: uppercase;
               letter-spacing: 0.08em;
-              color: var(--muted-foreground, oklch(63% 0.007 90));
+              color: var(--muted-foreground, oklch(72% 0.007 90));
               margin-bottom: 1rem;
             "
           >
@@ -2209,7 +2091,9 @@
 
       function trapFocus(e) {
         const mobile = document.getElementById("nav-mobile");
-        const focusable = Array.from(mobile.querySelectorAll("a"));
+        const hamburger = document.getElementById("nav-hamburger");
+        const navLinks = Array.from(mobile.querySelectorAll("a"));
+        const focusable = [hamburger, ...navLinks];
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
         if (e.key === "Tab") {
@@ -3293,138 +3177,157 @@
         }
       }
       // ── Comet canvas (grid-aligned) ─────────────────────────────────────────
-      (function () {
-        var canvas = document.getElementById('comet-canvas');
-        var ctx = canvas.getContext('2d');
+      if (
+        window.matchMedia("(prefers-reduced-motion: no-preference)").matches
+      ) {
+        (function () {
+          var canvas = document.getElementById("comet-canvas");
+          var ctx = canvas.getContext("2d");
 
-        // ── Config ──────────────────────────────────────────────────────────
-        var GRID        = 48;    // must match original CSS background-size
-        var COUNT       = 7;
-        var SPEED_MIN   = 0.3;
-        var SPEED_MAX   = 0.65;
-        var TAIL        = 72;
-        var DOT_RADIUS  = 2;
-        var OPACITY_MAX = 0.22;
-        var GRID_OPACITY = 0.03; // matches oklch(100% 0 0 / .03)
-        // ────────────────────────────────────────────────────────────────────
+          // ── Config ──────────────────────────────────────────────────────────
+          var GRID = 48; // must match original CSS background-size
+          var COUNT = 7;
+          var SPEED_MIN = 0.3;
+          var SPEED_MAX = 0.65;
+          var TAIL = 72;
+          var DOT_RADIUS = 2;
+          var OPACITY_MAX = 0.22;
+          var GRID_OPACITY = 0.03; // matches oklch(100% 0 0 / .03)
+          // ────────────────────────────────────────────────────────────────────
 
-        var W, H;
+          var W, H;
 
-        function resize() {
-          W = canvas.width  = window.innerWidth;
-          H = canvas.height = window.innerHeight;
-        }
-        resize();
-        window.addEventListener('resize', resize);
+          function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+          }
+          resize();
+          window.addEventListener("resize", resize);
 
-        function rand(a, b) { return a + Math.random() * (b - a); }
-        function randInt(a, b) { return Math.floor(rand(a, b + 1)); }
-
-        function snapToGrid(v) {
-          return Math.round(v / GRID) * GRID;
-        }
-
-        var DIRS = [
-          { vx:  1, vy:  0 },
-          { vx: -1, vy:  0 },
-          { vx:  0, vy:  1 },
-          { vx:  0, vy: -1 },
-        ];
-
-        function spawn() {
-          var dir = DIRS[randInt(0, 3)];
-          var speed = rand(SPEED_MIN, SPEED_MAX);
-          var x, y;
-
-          if (dir.vx !== 0) {
-            y = snapToGrid(rand(0, H));
-            x = dir.vx > 0 ? -TAIL : W + TAIL;
-          } else {
-            x = snapToGrid(rand(0, W));
-            y = dir.vy > 0 ? -TAIL : H + TAIL;
+          function rand(a, b) {
+            return a + Math.random() * (b - a);
+          }
+          function randInt(a, b) {
+            return Math.floor(rand(a, b + 1));
           }
 
-          return { x: x, y: y, vx: dir.vx * speed, vy: dir.vy * speed, life: 0, maxLife: rand(400, 900) };
-        }
-
-        var comets = [];
-        for (var i = 0; i < COUNT; i++) {
-          var c = spawn();
-          c.life = rand(0, c.maxLife);
-          c.x += c.vx * c.life;
-          c.y += c.vy * c.life;
-          comets.push(c);
-        }
-
-        function drawGrid() {
-          ctx.strokeStyle = 'rgba(255,255,255,' + GRID_OPACITY + ')';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-
-          // vertical lines
-          for (var x = 0; x <= W; x += GRID) {
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, H);
-          }
-          // horizontal lines
-          for (var y = 0; y <= H; y += GRID) {
-            ctx.moveTo(0, y);
-            ctx.lineTo(W, y);
+          function snapToGrid(v) {
+            return Math.round(v / GRID) * GRID;
           }
 
-          ctx.stroke();
-        }
+          var DIRS = [
+            { vx: 1, vy: 0 },
+            { vx: -1, vy: 0 },
+            { vx: 0, vy: 1 },
+            { vx: 0, vy: -1 },
+          ];
 
-        function draw() {
-          ctx.clearRect(0, 0, W, H);
+          function spawn() {
+            var dir = DIRS[randInt(0, 3)];
+            var speed = rand(SPEED_MIN, SPEED_MAX);
+            var x, y;
 
-          // grid first — always fixed, never scrolls
-          drawGrid();
-
-          // comets on top
-          for (var i = 0; i < comets.length; i++) {
-            var c = comets[i];
-            c.x += c.vx;
-            c.y += c.vy;
-            c.life++;
-
-            var fade = Math.min(c.life / 80, 1, (c.maxLife - c.life) / 80);
-            var len = Math.hypot(c.vx, c.vy);
-            var tx = c.x - (c.vx / len) * TAIL;
-            var ty = c.y - (c.vy / len) * TAIL;
-
-            var grad = ctx.createLinearGradient(tx, ty, c.x, c.y);
-            grad.addColorStop(0, 'rgba(255,255,255,0)');
-            grad.addColorStop(1, 'rgba(255,255,255,' + (OPACITY_MAX * fade * 0.45) + ')');
-
-            ctx.beginPath();
-            ctx.moveTo(tx, ty);
-            ctx.lineTo(c.x, c.y);
-            ctx.strokeStyle = grad;
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.arc(c.x, c.y, DOT_RADIUS, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(255,255,255,' + (OPACITY_MAX * fade) + ')';
-            ctx.fill();
-
-            var margin = TAIL + 20;
-            if (
-              c.life >= c.maxLife ||
-              c.x < -margin || c.x > W + margin ||
-              c.y < -margin || c.y > H + margin
-            ) {
-              comets[i] = spawn();
+            if (dir.vx !== 0) {
+              y = snapToGrid(rand(0, H));
+              x = dir.vx > 0 ? -TAIL : W + TAIL;
+            } else {
+              x = snapToGrid(rand(0, W));
+              y = dir.vy > 0 ? -TAIL : H + TAIL;
             }
+
+            return {
+              x: x,
+              y: y,
+              vx: dir.vx * speed,
+              vy: dir.vy * speed,
+              life: 0,
+              maxLife: rand(400, 900),
+            };
           }
 
-          requestAnimationFrame(draw);
-        }
+          var comets = [];
+          for (var i = 0; i < COUNT; i++) {
+            var c = spawn();
+            c.life = rand(0, c.maxLife);
+            c.x += c.vx * c.life;
+            c.y += c.vy * c.life;
+            comets.push(c);
+          }
 
-        draw();
-      })();
+          function drawGrid() {
+            ctx.strokeStyle = "rgba(255,255,255," + GRID_OPACITY + ")";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
 
+            // vertical lines
+            for (var x = 0; x <= W; x += GRID) {
+              ctx.moveTo(x, 0);
+              ctx.lineTo(x, H);
+            }
+            // horizontal lines
+            for (var y = 0; y <= H; y += GRID) {
+              ctx.moveTo(0, y);
+              ctx.lineTo(W, y);
+            }
+
+            ctx.stroke();
+          }
+
+          function draw() {
+            ctx.clearRect(0, 0, W, H);
+
+            // grid first — always fixed, never scrolls
+            drawGrid();
+
+            // comets on top
+            for (var i = 0; i < comets.length; i++) {
+              var c = comets[i];
+              c.x += c.vx;
+              c.y += c.vy;
+              c.life++;
+
+              var fade = Math.min(c.life / 80, 1, (c.maxLife - c.life) / 80);
+              var len = Math.hypot(c.vx, c.vy);
+              var tx = c.x - (c.vx / len) * TAIL;
+              var ty = c.y - (c.vy / len) * TAIL;
+
+              var grad = ctx.createLinearGradient(tx, ty, c.x, c.y);
+              grad.addColorStop(0, "rgba(255,255,255,0)");
+              grad.addColorStop(
+                1,
+                "rgba(255,255,255," + OPACITY_MAX * fade * 0.45 + ")",
+              );
+
+              ctx.beginPath();
+              ctx.moveTo(tx, ty);
+              ctx.lineTo(c.x, c.y);
+              ctx.strokeStyle = grad;
+              ctx.lineWidth = 1.5;
+              ctx.stroke();
+
+              ctx.beginPath();
+              ctx.arc(c.x, c.y, DOT_RADIUS, 0, Math.PI * 2);
+              ctx.fillStyle = "rgba(255,255,255," + OPACITY_MAX * fade + ")";
+              ctx.fill();
+
+              var margin = TAIL + 20;
+              if (
+                c.life >= c.maxLife ||
+                c.x < -margin ||
+                c.x > W + margin ||
+                c.y < -margin ||
+                c.y > H + margin
+              ) {
+                comets[i] = spawn();
+              }
+            }
+
+            requestAnimationFrame(draw);
+          }
+
+          draw();
+        })();
+      } // end prefers-reduced-motion guard
     </script>
   </body>
 </html>

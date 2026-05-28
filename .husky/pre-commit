@@ -1,3 +1,4 @@
+#!/bin/sh
 
 # ── CSS staleness check ─────────────────────────────────────────────────────
 # Rebuilds assets/styles.css from src/input.css and fails if the result
@@ -9,8 +10,10 @@ echo "▶ Checking CSS build is up to date..."
 TMPFILE=$(mktemp /tmp/styles_check.XXXXXX.css)
 npx @tailwindcss/cli -i ./src/input.css -o "$TMPFILE" --minify 2>/dev/null
 
-if ! diff -q "$TMPFILE" ./assets/styles.css > /dev/null 2>&1; then
-  rm -f "$TMPFILE"
+git show :assets/styles.css > /tmp/staged_styles.css 2>/dev/null
+
+if ! diff -q "$TMPFILE" /tmp/staged_styles.css > /dev/null 2>&1; then
+  rm -f "$TMPFILE" /tmp/staged_styles.css
   echo ""
   echo "✖  assets/styles.css is out of date."
   echo "   Run: npm run css:build"
@@ -19,5 +22,5 @@ if ! diff -q "$TMPFILE" ./assets/styles.css > /dev/null 2>&1; then
   exit 1
 fi
 
-rm -f "$TMPFILE"
+rm -f "$TMPFILE" /tmp/staged_styles.css
 echo "✔  CSS is up to date."

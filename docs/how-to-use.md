@@ -118,6 +118,7 @@ When a task hits two agents, one concern is always dominant:
 - **Stack trace present** → `ndv-diagnose` first, always. Even if it's in the auth module. Even if it looks like a security issue. Find the cause, then hand off.
 - **"Slow" + "why"** → `ndv-optimize` for the bottleneck, `ndv-diagnose` if you suspect a bug is causing it.
 - **PR with architectural scope** → `ndv-review` for code quality, then `ndv-architect` if structure is the finding.
+- **Accessibility finding with visual/CSS risk (`a11y+visual-risk`)** → `ndv-accessibility` identifies the issue, hands off to `ndv-design` to resolve the visual risk, then `ndv-build` implements. Pure accessibility fixes with no layout or style impact (`a11y-only`) go directly from `ndv-accessibility` to `ndv-build`.
 
 Still unsure? Run `/ndv-help <your situation>` and let it route you.
 

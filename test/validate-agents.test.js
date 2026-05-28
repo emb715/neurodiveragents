@@ -35,13 +35,6 @@ const CHANGED_AGENTS = process.env.CHANGED_AGENTS
 
 const VALID_TOOLS = new Set(['Read', 'Write', 'Edit', 'Grep', 'Glob', 'Bash', 'Task'])
 
-const REQUIRED_HUMAN_SECTIONS = [
-  /^## Who is .+\?/m,
-  /^## Neurotype/m,
-  /^## (When to use|Personality)/m,  // some files use Personality instead
-  /^## (Invocation|When to use)/m,   // Invocation or secondary When to use
-]
-
 const MIN_DESCRIPTION_LENGTH = 50
 const MIN_BODY_LINES = 5
 
@@ -515,6 +508,56 @@ describe('authoring-guide: routing completeness', () => {
         assert.ok(
           foundBySlug || foundByName,
           `${agent.file}: not found in humans/ndv-agents.md fleet table (checked slug "${agent.name}" and character "${characterName}") — add agent and doctrine section (authoring-guide §5)`
+        )
+      })
+
+      test('bin/ndv.js NDV_BLOCK routing table references this agent', () => {
+        const ndvJsPath = join(ROOT, 'bin', 'ndv.js')
+        const ndvJs = existsSync(ndvJsPath) ? readFileSync(ndvJsPath, 'utf8') : ''
+        // Extract NDV_BLOCK constant — between the template literal delimiters
+        const ndvBlockMatch = ndvJs.match(/const NDV_BLOCK\s*=\s*`([\s\S]*?)`/)
+        const ndvBlock = ndvBlockMatch ? ndvBlockMatch[1] : ''
+        assert.ok(
+          ndvBlock.includes(agent.name),
+          `${agent.file}: not found in NDV_BLOCK constant in bin/ndv.js — add a routing row`
+        )
+      })
+
+      test('bin/ndv.js installCopilot() header routing table references this agent', () => {
+        const ndvJsPath = join(ROOT, 'bin', 'ndv.js')
+        const ndvJs = existsSync(ndvJsPath) ? readFileSync(ndvJsPath, 'utf8') : ''
+        // Extract the header string inside installCopilot() — between its template literal delimiters
+        const copilotFnMatch = ndvJs.match(/function installCopilot\(\)\s*\{([\s\S]*?)\n\}/)
+        const copilotFn = copilotFnMatch ? copilotFnMatch[1] : ''
+        const headerMatch = copilotFn.match(/const header\s*=\s*`([\s\S]*?)`/)
+        const header = headerMatch ? headerMatch[1] : ''
+        assert.ok(
+          header.includes(agent.name),
+          `${agent.file}: not found in installCopilot() header string in bin/ndv.js — add a routing row`
+        )
+      })
+
+    })
+  }
+})
+
+// ─── agent frontmatter: mode field validation ────────────────────────────────
+
+describe('agent frontmatter: mode field valid values (when present)', () => {
+  const VALID_MODES = new Set(['agent', 'subagent', 'all'])
+  const agents = agentFiles()
+
+  for (const agent of agents) {
+    describe(agent.file, () => {
+
+      test('mode field (if present) must be one of: agent, subagent, all', () => {
+        const { get } = parseFrontmatter(agent.content, agent.file)
+        const mode = get('mode')
+        // Absence is allowed — only validate when the field is present
+        if (mode === null) return
+        assert.ok(
+          VALID_MODES.has(mode),
+          `${agent.file}: invalid mode="${mode}" — must be one of: ${[...VALID_MODES].join(', ')}`
         )
       })
 
