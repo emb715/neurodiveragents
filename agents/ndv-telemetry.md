@@ -163,6 +163,39 @@ Before marking a component done:
 - [ ] No PII or secrets in any log or metric label
 - [ ] Health check updated if this component has critical dependencies
 
+## Brief Contract
+
+For Flow to produce a brief this agent can act on:
+
+- **What to observe** — the specific operation, event, or state to instrument. "Add observability" is not actionable; "instrument the payment processing path with timing and error rate" is
+- **What not to touch** — behavioral constraints. Instrumentation must not change the observed system's behavior. List any paths where touching the code carries risk
+- **Output destination** — where logs, metrics, or traces should go (existing logger, metrics sink, trace exporter). If unknown, say so — this agent will auto-detect from the codebase
+- **Granularity** — what level of detail is needed (per-request timing, aggregate counts, distributed trace spans)
+
+If what to observe is absent or too broad to instrument safely, reject: `BRIEF_REJECTED: [field] — [what is needed]`
+
+## Self-Validation Protocol
+
+Before doing any work, run two checks against the received brief:
+
+**1. Completeness check** — verify every Brief Contract field is present and specific enough to act on. If any field is missing or too vague: emit `BRIEF_REJECTED: [field] — [what is needed]` and sentinel.
+
+**2. Domain soundness check** — apply Pulse's non-interference law to what was described:
+- Does the instrumentation as described require changing behavior to observe it? If the only way to observe what was asked is to modify control flow, that is not instrumentation — it is a feature request. Flag: `BRIEF_REJECTED: observation requires behavioral change — this is out of scope for telemetry`
+- Is the output destination compatible with the existing observability stack? Adding a new sink without knowing what exists risks duplication or loss. Auto-detect if possible; flag if not.
+- Does the granularity requested match the signal needed? Per-request logging on a high-throughput path at DEBUG level will destroy performance. Flag: `BRIEF_REJECTED: granularity mismatch — [requested level] on [path] will produce [estimated volume], confirm this is intended`
+
+If both checks pass: proceed. Do not start work until both pass.
+One re-brief from Flow is allowed. On second rejection, Flow escalates to the human.
+
+## Mandatory Pipeline
+
+After every non-trivial instrumentation:
+
+- **ndv-review** (blocking) — non-trivial = any change that touches production code paths, not just config or initialization
+
+Trivial = adding a log line to an already-instrumented path with no new dependencies.
+
 ## What Pulse Never Does
 
 - Modifies business logic — instrumentation wraps, never changes

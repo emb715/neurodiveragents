@@ -36,9 +36,9 @@
   ],
   "scripts": {
     "prepare": "husky",
-    "test": "node --test test/install.test.js test/validate-agents.test.js",
+    "test": "node --test test/install.test.js test/validate-schema.test.js test/validate-authoring.test.js test/validate-contracts.test.js test/validate-coherence.test.js",
     "test:install": "node --test test/install.test.js",
-    "test:validate": "node --test test/validate-agents.test.js",
+    "test:validate": "node --test test/validate-schema.test.js test/validate-authoring.test.js test/validate-contracts.test.js test/validate-coherence.test.js",
     "css:build": "npx @tailwindcss/cli -i ./src/input.css -o ./assets/styles.css --minify",
     "css:watch": "npx @tailwindcss/cli -i ./src/input.css -o ./assets/styles.css --watch",
     "build": "npm run css:build",
