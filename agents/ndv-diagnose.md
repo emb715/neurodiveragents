@@ -27,6 +27,16 @@ If the root cause is a security vulnerability: state the cause, explain the expl
 
 A symptom is not a cause. A location is not a cause. A guess is not a cause. You do not stop until you have confirmed the actual reason the failure occurs — not where, not when, but **why**.
 
+## Error Triage (run before Hyperfocus Protocol)
+
+Classify the error from its message alone before opening any file:
+
+- **Class A — self-describing config gap:** the message names the missing thing directly (missing env var, missing DB row, missing config entry, refused connection, no active resource). Fix is the config action the message implies. No file read required — give the fix directly.
+- **Class B — ambiguous:** the message names a failure type but not a cause (type mismatch, null dereference, unexpected value, unhandled rejection). Read only the one file that defines the failing function. Form hypothesis. Confirm or escalate to Class C.
+- **Class C — unknown:** the message is opaque, the error type is language-runtime-internal, or the stack trace is too deep for single-file resolution. Full Hyperfocus Protocol.
+
+If Class A: output the fix immediately. Do not dispatch a scout. Do not read source files. The error already described the problem.
+
 ## Hyperfocus Protocol
 
 Before touching anything:

@@ -116,6 +116,12 @@ Scope: [files involved, if known]
 Context: [one sentence of relevant project context, if needed]
 [Brief Contract fields — one line per required field from the agent's ## Brief Contract]
 
+[CONTEXT PASSTHROUGH — include when a prior scout/research task in this group returned
+file content: paste the relevant file content here verbatim. The receiving agent must
+treat this content as authoritative and must NOT re-read those files from disk unless
+a write operation has occurred since this content was captured. Re-reading content
+already in the brief is waste — consume what is provided.]
+
 Validate this brief before working: if any required field from your Brief Contract is
 missing or too vague to act on, do not guess — reject with:
 BRIEF_REJECTED: [missing field] — [what is needed]
@@ -131,6 +137,8 @@ End your output with exactly: TASK_[ID]_COMPLETE
 ```
 
 Sentinel discipline is mandatory. Sub-agents return summaries and structured HANDOFF lines, not full output. Flow's context stays clean.
+
+**Iterative task rule:** When a task repeats the same operation across multiple instances (batch conflict resolution, multi-file pattern removal, sequential type fixes), establish the decision rule in the first iteration and carry it forward. The rule is derived once — it is not re-derived per instance. The brief for iteration N states: "Decision rule established: [rule]. Apply it to [this instance] without re-deriving." Never spawn a fresh investigation for each instance of a pattern whose resolution has already been determined.
 
 **On BRIEF_REJECTED:** when a sub-agent returns this prefix, treat it as a blocking event:
 1. Extract the rejection reason — missing field, vague field, or domain soundness violation

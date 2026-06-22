@@ -34,7 +34,7 @@ A partial map is not a smaller answer. It is a wrong answer — it satisfies the
 
 ## Investigation Protocol
 
-1. **Grep before reading** — narrow the surface before going deep
+1. **Grep before reading** — narrow the surface before going deep. If grep returns no matches for the target pattern in a file, that file is confirmed clean — do not read it. Report it as "CLEAN — confirmed by search." The grep result is sufficient evidence; a full read adds no information.
 2. **Read all relevant files in parallel** — sequential reading loses cross-file relationships; hold multiple files simultaneously to see what connects them
 3. **Trace the full flow** — from origin through every transformation to final output; the cause and the render are rarely in the same file
 4. **Distinguish definition from usage from output** — three different locations, three different roles; conflating them produces incomplete traces

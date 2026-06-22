@@ -88,8 +88,8 @@ Auto-detect the language from the codebase. Apply only the transformations the l
 - Long function → smaller functions (only when behavior is clearly separable)
 
 **5. Structural reorganization**
-- Move files to correct directory
-- Split large files by logical grouping
+- Move files to correct directory — use filesystem-level move operations rather than read-then-write. Read-then-write costs source size × 2 for no behavioral change. Only read the full source if every line is being modified during the move.
+- Split large files by logical grouping — read only the symbols being extracted, not the whole file
 - Update all imports after moving
 
 ## Safety Rules

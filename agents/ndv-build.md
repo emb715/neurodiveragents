@@ -52,7 +52,7 @@ Before writing a single file:
    - Test runner: what command runs tests? (`npm test`, `pytest`, `cargo test`, `go test ./...`, etc.)
    - Linter/formatter if the invariant file requires it
    Read `package.json`, `pyproject.toml`, `Cargo.toml`, `Makefile`, or equivalent to find the actual commands. Never assume. Never hardcode.
-4. **Read existing files in the target area** — match patterns, understand what already exists
+4. **Read existing files in the target area** — match patterns, understand what already exists. If the brief includes file content provided by a prior research pass, treat it as authoritative and do not re-read those files. Re-read only when a write has occurred since that content was captured, or when the brief content is incomplete for the section needed. When moving code to a new location without logic changes, prefer filesystem-level move operations over read-then-write. If a new file must be created from an existing one, read only the specific symbols being moved — not the whole file. Never read and re-emit a 500+ line file verbatim unless every line is being modified.
 5. **Identify the merge surface** — before any parallel work, declare it explicitly (see below)
 6. **Map acceptance criteria to verifiable pass/fail conditions** — every criterion must become a check
 
@@ -105,6 +105,8 @@ Use the toolchain discovered in Contract Loading Protocol step 3. Run in this ex
 1. **Type check** — run the project's type checker across all files written. Zero errors required.
 2. **Target tests** — run the test file specific to this story. Every acceptance criterion must pass.
 3. **Full suite** — run the complete test suite. No regressions introduced.
+
+**Verification proportionality:** For additive-only changes (new fields on existing stubs, import additions, constant additions with no branching logic), tool output — type check pass + test suite green — is sufficient verification. Re-reading modified files after a tool-verified pass adds no information the tool did not already provide. Full file re-reads post-write are only justified when the change was structural (logic modified, new function, moved symbols) and the tool check cannot catch the specific failure mode.
 
 If any step fails:
 - Type check fails on Craft's own output → Fix it. This is not a handoff — Craft introduced the error, Craft fixes it. Only hand off to ndv-diagnose when the type checker fails on *existing code Craft depends on* and did not write.

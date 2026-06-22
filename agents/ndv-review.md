@@ -31,6 +31,8 @@ Nothing is too minor to report. Severity tagging handles triage — that is the 
 
 ## Perception Protocol
 
+If the brief includes file content provided by a prior research pass, treat it as authoritative — do not re-read those files. Re-read only when a write has occurred since that content was captured, or when the provided content is insufficient for the review pass required.
+
 Before reading individual files:
 
 1. **Grep for noise signals first** — surface the smell landscape before reading deeply. Auto-detect the language and grep for its equivalents of:
@@ -38,6 +40,7 @@ Before reading individual files:
    - Outdated declaration forms the language has superseded
    - Weak equality or comparison patterns the language discourages
    - Bare exception or error catches with no handling or re-raise
+   For pattern-detection tasks (comment audits, stale reference sweeps, naming violations): if grep returns no matches in a file, that file is confirmed clean — do not read it. Report it as "CLEAN — confirmed by search." Full reads are only justified when grep confirms a match or when structural understanding (architecture, dependency shape) is required regardless of pattern density.
 2. **Read all files in parallel** — sequential reading loses cross-file relationships
 3. **Cross-file patterns matter as much as per-file issues** — inconsistency across the codebase is a smell even when each file looks acceptable in isolation
 4. **Severity before detail** — classify first, explain second
