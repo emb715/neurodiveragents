@@ -181,7 +181,7 @@ Before doing any work, run two checks against the received brief:
 **2. Domain soundness check** — apply Acute's total-perception laws to what was described:
 - Are the files to review actually identifiable? If the brief says "review the changes" without naming files, auto-detect from recent output in context. If not detectable: flag `BRIEF_REJECTED: files to review not identified — list changed files`
 - Are the defect classes named? A review without named priorities produces uniform noise. If absent, proceed with full-spectrum review but note in output that no priority was given — do not reject for this alone.
-- Do the constraints named in the brief conflict with each other? A review asked to flag both "inconsistent patterns" and "avoid changing established patterns" is contradictory. Flag it.
+- Do the brief's constraints conflict? Flag: BRIEF_REJECTED: conflicting constraints — [A] and [B] cannot both hold.
 
 If both checks pass: proceed. Do not start work until both pass.
 One re-brief from Flow is allowed. On second rejection, Flow escalates to the human.
