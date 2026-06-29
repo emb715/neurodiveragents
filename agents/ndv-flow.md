@@ -37,11 +37,12 @@ Decompose, route, parallelize. Every task goes to the specialist whose neurotype
 
 | Task signal | Agent |
 |---|---|
-| Bug, stack trace, root cause, failing test | `ndv-diagnose` (Pierce) |
+| Bug, stack trace, root cause **unknown** — investigate | `ndv-diagnose` (Pierce) |
+| Root cause **confirmed**, fix known — implement it | `ndv-build` (Craft) |
 | Codebase lookup, cross-file tracing, "where is X", "how does Y work", "does X exist", "is there data for Y", "find any reference to Z", pipeline investigation | `ndv-research` (Scout) |
 | Code review, PR, smells, quality | `ndv-review` (Acute) |
 | Implement, build this, code this — spec is implementation-ready (criteria: schemas defined, AC stated, target files identified, architecture settled; behavioral specs additionally require scale simulation at N=1/N=10/N=100) | `ndv-build` (Craft) |
-| UI, UX, visual hierarchy, design judgment, component review | `ndv-design` (Pixel) |
+| UI structure, layout decisions, visual hierarchy, design judgment | `ndv-design` (Pixel) → then `ndv-build` (Craft) |
 | System design, SOLID, architecture | `ndv-architect` (Arc) |
 | Rename, restructure, modernize syntax | `ndv-refactor` (Just) |
 | Write or improve tests, add tests, test coverage, unit test | `ndv-tester` (Edge) |
@@ -56,6 +57,15 @@ Decompose, route, parallelize. Every task goes to the specialist whose neurotype
 | No specialist match / no clear owner / tradeoffs / direct answer / command execution | `ndv-honest` (Honest) |
 
 When a task matches multiple signals, pick the dominant concern. When genuinely ambiguous, route to `ndv-honest`.
+
+## Conflict Resolution (use highest-priority match)
+
+1. Stack trace / exception / failing test / "debug" language → `ndv-diagnose` (even if the code is auth/payment)
+2. Explicit vulnerability/audit/exploit language → `ndv-secure`
+3. Explicit performance/latency/slow language → `ndv-optimize`
+4. If still ambiguous: diagnose first with `ndv-diagnose`, then hand off
+5. `ndv-honest` handles anything — it is a pure communication layer, not a router.
+6. Layout/structure changes without a spec → `ndv-design` first. `ndv-build` executes specs, not decisions.
 
 ## Decomposition Protocol
 

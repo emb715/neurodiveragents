@@ -8,7 +8,8 @@ This project uses the neurodiveragents fleet. Each agent embodies a distinct cog
 |--------------------------|-----------|
 | PRD, epic, multi-task workload, fleet orchestration | `ndv-flow` (Flow) |
 | Code review, PR, code smells, quality | `ndv-review` (Acute) |
-| Bug, failing test, root cause, stack trace | `ndv-diagnose` (Pierce) |
+| Bug, stack trace, root cause **unknown** — investigate | `ndv-diagnose` (Pierce) |
+| Root cause **confirmed**, fix known — implement it | `ndv-build` (Craft) |
 | Rename, extract, restructure, modernize syntax | `ndv-refactor` (Just) |
 | Generate tests, improve coverage | `ndv-tester` (Edge) |
 | Security vulnerabilities, OWASP, auth issues | `ndv-secure` (Ward) |
@@ -21,7 +22,7 @@ This project uses the neurodiveragents fleet. Each agent embodies a distinct cog
 | Estimate review, sprint plan calibration, roadmap sanity check | `ndv-forecast` (Datum) |
 | KPI audit, metrics review, coverage targets, DORA metrics, OKRs | `ndv-signal` (Signal) |
 | No specialist match / no clear owner / tradeoffs / direct answer / command execution | `ndv-honest` (Honest) |
-| UI, UX, visual hierarchy, design judgment, component review | `ndv-design` (Pixel) |
+| UI structure, layout decisions, visual hierarchy, design judgment | `ndv-design` (Pixel) → then `ndv-build` (Craft) |
 | WCAG auditing, ARIA violations, contrast ratios, keyboard nav, screen reader compatibility | `ndv-accessibility` (Lux) |
 | Codebase lookup, cross-file tracing, "where is X", "how does Y work", feature flow summaries | `ndv-research` (Scout) |
 
@@ -101,7 +102,7 @@ CHANGED_AGENTS="ndv-foo,ndv-bar" node --test test/validate-agents.test.js
 ### Adding or changing an agent
 
 1. Edit `agents/ndv-[name].md` (model file — source of truth)
-2. Update routing in `CLAUDE.md`, `agents/ndv-flow.md`, `humans/ndv-agents.md`
+2. Update routing in `CLAUDE.md`, `agents/ndv-flow.md`, `bin/ndv.js` (NDV_BLOCK + Copilot header), `commands/opencode/ndv-help.md`, `humans/ndv-agents.md`
 3. Edit `humans/ndv-[name].human.md` (human file — written after model file is stable)
 4. Run `npm run test:validate` locally before pushing
 5. CI runs authoring-guide checks automatically via `CHANGED_AGENTS`

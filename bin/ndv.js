@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, readdirSync, copyFileSync } from 'fs'
-import { join, dirname } from 'path'
+import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, readdirSync, copyFileSync, symlinkSync, lstatSync, unlinkSync, readlinkSync } from 'fs'
+import { join, dirname, resolve } from 'path'
 import { homedir } from 'os'
 import { fileURLToPath } from 'url'
 import { intro, outro, cancel, isTTY, promptSelect, promptMultiSelect, promptConfirm, withSpinner, logInfo } from './prompt.js'
@@ -124,7 +124,8 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 |--------------------------|-----------|
 | PRD, epic, multi-task workload, fleet orchestration | \`ndv-flow\` |
 | Code review, PR, code smells, quality | \`ndv-review\` |
-| Bug, failing test, root cause, stack trace | \`ndv-diagnose\` |
+| Bug, stack trace, root cause **unknown** — investigate | \`ndv-diagnose\` |
+| Root cause **confirmed**, fix known — implement it | \`ndv-build\` |
 | Rename, extract, restructure, modernize syntax | \`ndv-refactor\` |
 | Generate tests, improve coverage | \`ndv-tester\` |
 | Security vulnerabilities, OWASP, auth issues | \`ndv-secure\` |
@@ -136,7 +137,7 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | Estimate review, sprint plan calibration, roadmap sanity check | \`ndv-forecast\` |
 | KPI audit, metrics review, coverage targets, DORA metrics, OKRs | \`ndv-signal\` |
 | Technical docs, API docs, session notes | \`ndv-explain\` |
-| UI, UX, visual hierarchy, design judgment, component review | \`ndv-design\` |
+| UI structure, layout decisions, visual hierarchy, design judgment | \`ndv-design\` → then \`ndv-build\` |
 | WCAG auditing, ARIA violations, contrast ratios, keyboard nav, screen reader compatibility | \`ndv-accessibility\` |
 | Codebase lookup, cross-file tracing, "where is X", "how does Y work", feature flow summaries | \`ndv-research\` |
 | No specialist match / no clear owner / tradeoffs / direct answer / command execution | \`ndv-honest\` |
@@ -165,6 +166,7 @@ Apply without being asked when the signal is clear:
 3. Explicit performance/latency/slow language → \`ndv-optimize\`
 4. If still ambiguous: diagnose first with \`ndv-diagnose\`, then hand off
 5. \`ndv-honest\` handles anything — it is a pure communication layer, not a router.
+6. Layout/structure changes without a spec → \`ndv-design\` first. \`ndv-build\` executes specs, not decisions.
 
 Example: "500 error + NullPointerException stack trace in login endpoint" → \`ndv-diagnose\`
 Example: "Should we switch to pnpm?" → \`ndv-honest\`
@@ -203,22 +205,40 @@ function writeRouting(routingFile) {
 function writeRoutingGlobalOpenCode(jsonPath) {
   let config = {}
   if (existsSync(jsonPath)) {
-    try { config = JSON.parse(readFileSync(jsonPath, 'utf8')) } catch {}
-    if (config.instructions && config.instructions.some(i => i.includes('ndv'))) {
-      console.log(`  ndv already in ${jsonPath} — skipping`)
-      return
+    try {
+      config = JSON.parse(readFileSync(jsonPath, 'utf8'))
+    } catch {
+      console.warn(`  ⚠ Could not parse ${jsonPath} — treating as empty`)
     }
   }
-  // OpenCode supports `instructions` array pointing to rule files
-  // We write the routing block to a standalone file and reference it
+
+  let mutated = false
+
+  // Permission merge — always runs, idempotent
+  if (!config.permission) config.permission = {}
+  if (!config.permission.external_directory) config.permission.external_directory = {}
+  if (!config.permission.external_directory['~/.config/opencode/agents/**']) {
+    config.permission.external_directory['~/.config/opencode/agents/**'] = 'allow'
+    mutated = true
+    console.log(`  Permission block written to ${jsonPath}`)
+  }
+
+  // Instructions merge — only on first install
+  if (config.instructions && config.instructions.some(i => i.includes('ndv'))) {
+    console.log(`  ndv already in ${jsonPath} — skipping`)
+    if (mutated) writeFileSync(jsonPath, JSON.stringify(config, null, 2) + '\n')
+    return
+  }
   const rulesDir = join(HOME, '.config', 'opencode', 'rules')
   const rulesFile = join(rulesDir, 'ndv.md')
   mkdirSync(rulesDir, { recursive: true })
   writeFileSync(rulesFile, NDV_BLOCK + '\n')
   config.instructions = [...(config.instructions ?? []), `${rulesFile}`]
-  writeFileSync(jsonPath, JSON.stringify(config, null, 2) + '\n')
+  mutated = true
   console.log(`  ndv routing written to ${rulesFile}`)
   console.log(`  Referenced in ${jsonPath}`)
+
+  if (mutated) writeFileSync(jsonPath, JSON.stringify(config, null, 2) + '\n')
 }
 
 function installAgents(toolName, target, isGlobal) {
@@ -282,6 +302,47 @@ function installAgents(toolName, target, isGlobal) {
     writeRouting(target.routingFile)
   }
   // cursor and claude global: agents dir is enough, no routing file needed
+
+  // For global opencode installs: mirror agents into ~/.claude/agents/ via symlinks
+  if (toolName === 'opencode' && isGlobal) {
+    const claudeAgentsDir = join(HOME, '.claude', 'agents')
+    mkdirSync(claudeAgentsDir, { recursive: true })
+    const installedAgents = readdirSync(target.dest).filter(f => f.endsWith('.md'))
+    for (const agent of installedAgents) {
+      const linkPath = join(claudeAgentsDir, agent)
+      const targetPath = join(target.dest, agent)
+      // Use lstatSync (not existsSync) — correctly detects dangling symlinks
+      let skip = false
+      try {
+        const stat = lstatSync(linkPath)
+        if (stat.isSymbolicLink()) {
+          // Symlink exists — check if it points to the right place
+          const current = readlinkSync(linkPath)
+          if (resolve(dirname(linkPath), current) === resolve(targetPath)) {
+            skip = true // already correct — leave it
+          } else {
+            unlinkSync(linkPath) // stale/wrong target — remove and recreate below
+          }
+        } else {
+          skip = true // regular file (non-ndv) — do not clobber
+        }
+      } catch {
+        // lstatSync threw — path does not exist, proceed to create
+      }
+      if (skip) continue
+      symlinkSync(targetPath, linkPath)
+    }
+    console.log(`  Symlinked agents to ${claudeAgentsDir}/`)
+  }
+
+  // Parity check: warn if installed count doesn't match source count
+  if (isGlobal) {
+    const sourceCount = agents.length
+    const installedCount = readdirSync(target.dest).filter(f => f.endsWith(target.ext)).length
+    if (installedCount !== sourceCount - skipped.length) {
+      console.warn(`  ⚠ Parity mismatch: ${sourceCount - skipped.length} agents expected, ${installedCount} found in ${target.dest}`)
+    }
+  }
 
   return { skipped, commandFallbacks }
 }
@@ -403,7 +464,8 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 |--------------------------|-----------|
 | PRD, epic, multi-task workload, fleet orchestration | ndv-flow |
 | Code review, PR, code smells, quality | ndv-review |
-| Bug, failing test, root cause, stack trace | ndv-diagnose |
+| Bug, stack trace, root cause **unknown** — investigate | ndv-diagnose |
+| Root cause **confirmed**, fix known — implement it | ndv-build |
 | Rename, extract, restructure, modernize syntax | ndv-refactor |
 | Generate tests, improve coverage | ndv-tester |
 | Security vulnerabilities, OWASP, auth issues | ndv-secure |
@@ -415,7 +477,7 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | Estimate review, sprint plan calibration, roadmap sanity check | ndv-forecast |
 | KPI audit, metrics review, coverage targets, DORA metrics, OKRs | ndv-signal |
 | Technical docs, API docs, session notes | ndv-explain |
-| UI, UX, visual hierarchy, design judgment, component review | ndv-design |
+| UI structure, layout decisions, visual hierarchy, design judgment | ndv-design → then ndv-build |
 | WCAG auditing, ARIA violations, contrast ratios, keyboard nav, screen reader compatibility | ndv-accessibility |
 | Codebase lookup, cross-file tracing, "where is X", "how does Y work", feature flow summaries | ndv-research |
 | No specialist match / direct answer / command execution | ndv-honest |
