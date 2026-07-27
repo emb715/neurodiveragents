@@ -218,7 +218,7 @@ For Flow to produce a brief this agent can act on:
 - **The surface to audit** — which components, pages, or flows. "Audit accessibility" without a surface is too broad
 - **WCAG level** — A, AA, or AAA. If unspecified, AA is assumed, but explicit is better
 - **User populations of concern** — keyboard-only, screen reader, low vision, cognitive. Different populations trigger different audit paths
-- **Interaction context** — is this a form, a navigation flow, a data table, a modal? Interaction type determines which ARIA patterns and keyboard behaviors apply
+- **Component type** — is this a form, a navigation flow, a data table, a modal? Component type determines which ARIA patterns and keyboard behaviors apply
 
 If the surface is not identified, reject: `BRIEF_REJECTED: audit surface — which components or pages`
 

@@ -9,7 +9,7 @@ How to create a new agent for the neurodiveragents fleet. Read this before writi
 | File | Why |
 |------|-----|
 | `docs/implicit-neurotype-finding.md` | The four-question move test. The authoring standard. Read before writing any personality paragraph. |
-| `docs/decisions.md` | ADR-001–ADR-008. Every structural decision in every model file is governed here. ADR-008 specifically governs Brief Contract, Self-Validation Protocol, and Mandatory Pipeline sections — read it before classifying a new agent. |
+| `docs/decisions.md` | ADR-001–ADR-009. Every structural decision in every model file is governed here. ADR-008 governs Brief Contract, Self-Validation Protocol, and Mandatory Pipeline sections. ADR-009 governs agent extension via input/output variation, not modes — read both before adding conditional behavior to an agent. |
 | `humans/ndv-agents.md` | The full fleet. The gap must exist before the agent can. |
 | `docs/MANIFESTO.md` | Neurotype is not persona. This distinction determines whether the agent holds when rules run out. |
 | `docs/blog-neurodivergent-llm.md` | The two-layer framework: neurotype + domain. Both required. |
@@ -193,6 +193,11 @@ Flow cannot author a domain-sound brief without reading the agent's Brief Contra
 A Tier 3 agent with a Brief Contract signals that the author believes brief quality determines domain correctness for this agent. If that is true, the agent is misclassified — it should be Tier 2. If it is not true, the Brief Contract is false signal that will cause Flow to reject valid briefs unnecessarily.
 
 *Fix: apply the classification test. If the answer is "thin brief = shallow output but not wrong output," the agent is Tier 3 and the Brief Contract should be removed.*
+
+**Adding a "mode" to an agent for conditional behavior.**
+An agent appears to need different behavior in different situations — test generation for existing code vs. pre-implementation, refactoring with vs. without test coverage, etc. The temptation is to add a mode flag the caller sets. This introduces a second axis of agent state that the fleet has no routing or brief-authoring support for.
+
+*Fix: ADR-009. The mode is usually a different input that triggers the same neurotype differently. Detect the input condition from the brief content — no mode field, no flag. If the neurotype is constant across inputs, it's input/output variation. If the neurotype changes, it's a new agent.*
 
 **Self-Validation domain soundness check is generic.**
 The soundness check reads "validate against your domain laws" but lists no specific laws. This produces a check that passes everything, because the agent has no named violations to look for. A generic soundness check is not a soundness check — it is reassurance theater.

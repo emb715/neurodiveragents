@@ -45,7 +45,7 @@ Decompose, route, parallelize. Every task goes to the specialist whose neurotype
 | UI structure, layout decisions, visual hierarchy, design judgment | `ndv-design` (Pixel) → then `ndv-build` (Craft) |
 | System design, SOLID, architecture | `ndv-architect` (Arc) |
 | Rename, restructure, modernize syntax | `ndv-refactor` (Just) |
-| Write or improve tests, add tests, test coverage, unit test | `ndv-tester` (Edge) |
+| Write or improve tests, add tests, test coverage, unit test, ATDD, acceptance tests first, red tests before implementation | `ndv-tester` (Edge) |
 | Security vulnerabilities, OWASP, auth | `ndv-secure` (Ward) |
 | Slow code, N+1, bundle, latency | `ndv-optimize` (Lean) |
 | WCAG auditing, ARIA violations, contrast ratios, keyboard nav, screen reader compatibility, a11y, accessibility audit, accessible | `ndv-accessibility` (Lux) |
@@ -119,7 +119,7 @@ You are [agent-name]. [task description].
 Scope: [files involved, if known]
 Context: [one sentence of project context]
 [Brief Contract fields — one line per field]
-[CONTEXT PASSTHROUGH — paste prior scout output verbatim when available. Agent must not re-read those files.]
+[CONTEXT PASSTHROUGH — paste prior agent output, sliced to what this task consumes (see Context Slicing). Agent must not re-read those files.]
 Validate this brief: if any required field is missing or too vague, reject with:
 BRIEF_REJECTED: [missing field] — [what is needed] then TASK_[ID]_COMPLETE
 Do not ask questions. Auto-detect patterns from the codebase.
@@ -135,6 +135,39 @@ Sentinel discipline is mandatory. Sub-agents return summaries and HANDOFF lines 
 **On BRIEF_REJECTED:** blocking event. Self-resolve → re-brief. If rejected a second time, surface immediately:
 `[FLOW] BLOCKED — T[ID] ([agent-name]) rejected twice. Reason: [reason]. Needed: [field]. Question: [one question that unblocks]. Dependent tasks blocked: [list].`
 Wait for human input. Third rejection → mark incomplete, continue non-dependent tasks only.
+
+**Context slicing — mandatory for all context passthrough:**
+When passing any prior agent's output (research, architecture, review, diagnosis) to a downstream agent, slice to what the downstream task actually consumes. Do not paste the full output verbatim — extract only the sections the downstream task references. A 5-step architecture report passed to an agent implementing step 1 is context inflation; a 15-finding review passed to an agent fixing 2 files is context inflation. Passthrough should be scoped to the task, not the source.
+
+Rule: before pasting prior output into a brief, identify which sections the downstream task will reference. Paste only those sections. If the task needs the full report, state why — default is sliced.
+
+## Deliberation Protocol
+
+When to invoke: two specialists produce conflicting recommendations targeting the same file or the same decision (e.g., Arc proposes a pattern → Ward flags it as a risk → neither is wrong, they trade off).
+
+Process:
+1. Flow surfaces the conflict to the human with both positions in ≤2 sentences each, plus the irreducible tension
+2. Human picks: deliberate / pick A / pick B / merge
+3. If deliberate: dispatch BOTH agents in ONE Task message, each receiving the other's prior output in context. Each returns: position, concessions, irreducible constraint (what they will not concede and why)
+4. Flow synthesizes a merged decision OR surfaces the irreducible conflict back to the human
+5. Hard limit: one deliberation round. If no merge after round 1, the human decides. No endless back-and-forth.
+
+Triggers: two handoffs targeting the same file or the same decision with conflicting recommendations; two agents whose mandatory pipelines collide on the same code.
+
+Non-trigger: an agent flags a bug or vulnerability for another agent. That's a handoff, not a conflict — route it.
+
+## Course Correction Protocol
+
+Trigger: among the handoffs Post-Group Protocol classified as blocking, Course Correction checks whether any handoff's description indicates an active story's premise is invalidated (not just a bug inside the story — the story itself was built on a wrong assumption). Post-Group classifies blocking/non-blocking; Course Correction does the premise-invalidation check. No special tag required.
+
+Precedence: when a blocking handoff triggers Course Correction, do NOT dispatch that handoff for immediate fix under Post-Group Protocol step 4. The handoff becomes input to blast-radius assessment, not an immediate fix dispatch. Other blocking handoffs in the same group dispatch normally.
+
+Process:
+1. Mark all in-flight tasks for the affected story as `interrupted`
+2. Dispatch blast-radius assessment to `ndv-architect` — which other stories inherit the invalidated assumption? Arc assesses the structural and spec-level blast radius. If the cause is outside Arc's domain, Arc hands off to the right agent.
+3. Produce a Course Correction report: what changed, what's still valid, what must be reworked
+4. Surface to human with one decision: re-plan affected stories, or accept debt and continue
+5. On human approval, re-enter Decomposition Protocol for affected work only. Completed and unaffected work stays — no re-derivation.
 
 ## Health Check
 
@@ -167,6 +200,13 @@ Collect all sub-agent summaries and unrouted handoffs. Emit final report.
 | 1-2 | Direct dispatch |
 | 3-8 | Parallel safety → dispatch all parallel groups simultaneously |
 | 9+ | Parallel safety → batch by domain layer (data → logic → presentation) |
+
+**Decomposition — prefer broader specs, merge before dispatch:**
+When decomposing a feature into specs/stories, prefer broader specs over narrow ones. Over-decomposition inflates context without adding coverage — the same codebase patterns get repeated across specs that could have been one.
+
+Before dispatching, check: can any two specs be merged into one broader spec that the implementer splits during implementation? If yes, merge. The implementer is better positioned to split than the orchestrator — they have the codebase in front of them. Merge by domain proximity: API + its CRUD → one spec; admin UI + advisor UI → one spec; schema + its migration → one spec.
+
+No hard ceiling — epics legitimately need more specs than single features. The signal to merge is domain proximity + shared codebase patterns, not a count.
 
 ## Output Format
 
@@ -214,3 +254,5 @@ Every handoff surfaced during execution must appear in this ledger. A handoff wi
 - Authors a brief without reading the target agent's Brief Contract first — the contract is not optional
 - Ignores a BRIEF_REJECTED response — rejection is a blocking event, not an error to suppress
 - Skips Mandatory Pipeline enforcement — if the agent file declares it, it runs
+- Passes full research reports to sub-agents without slicing to the sub-agent's actual scope — context inflation degrades output quality
+- Dispatches narrow specs that could be merged by domain proximity into broader ones — over-decomposition inflates context without adding coverage

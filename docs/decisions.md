@@ -343,3 +343,50 @@ The five-criterion spec readiness gate (structural criteria 1–4 for all specs;
   a signal the classification is wrong and the agent should move to Tier 2
 - A new agent is added — its author classifies it into a tier and writes its contracts
   before the model file is considered complete (add to authoring-guide verification checklist)
+
+---
+
+## ADR-009 — Agents extend via input/output variation, not modes
+
+**Date:** 2026-07  
+**Status:** Active
+
+---
+
+### Context
+
+ATDD (Acceptance Test-Driven Development) was added to `ndv-tester` as a "mode" — a conditional operating state triggered by a Mode field in the Brief Contract. The implementation introduced a "mode" concept to the fleet that did not previously exist.
+
+Two structural problems surfaced:
+
+1. **The mode did not emerge from the neurotype.** Edge's neurotype is adversarial interrogation of code. ATDD mode was constructive spec translation — a categorically different cognitive operation. This is the same structural violation the MANIFESTO rejects: "An OCD agent (Just) does not fix bugs it finds during a refactor because bug-fixing is a categorically different cognitive operation from form-correction. Mixing them corrupts both."
+
+2. **Flow had no routing signal for the mode.** The Mode field in the Brief Contract was filled by Flow, but Flow's routing table had no entry that distinguished ATDD from normal test generation. The mode was invisible at the routing layer.
+
+### Decision
+
+Agents extend their behavior through **input/output variation**, not through modes. One neurotype, one cognitive operation. The input varies (code, spec, config) and the output varies (test suite, failing tests, report), but the neurotype is constant — it is applied to whatever input arrives, producing whatever output the input demands.
+
+ATDD is not a mode. It is a conditional path triggered by input detection: when no source code exists, Edge interrogates the acceptance criteria as the source. The adversarial neurotype is constant — it finds what breaks, whether what it reads is code or spec. The output format changes (failing tests instead of adversarial suite), but the cognitive operation is the same.
+
+This generalizes: any agent that appears to need a "mode" should instead be examined for whether the mode is a different input that triggers the same neurotype differently. If the neurotype is constant across inputs, the mode is an input/output variation. If the neurotype is not constant, the mode is a scope violation and belongs in a different agent.
+
+### What was rejected
+
+**Option A: Modes as a fleet concept.** Rejected. Modes introduce a second axis of agent state that complicates routing, brief authoring, and validation. Every mode would need its own routing signal, its own Brief Contract interpretation, its own Self-Validation path. The fleet has no mode concept and adding one for a single conditional path is overengineering.
+
+**Option B: A separate ATDD agent.** Rejected as YAGNI. The neurotype is the same — adversarial finding of what breaks. A separate agent would fragment a single neurotype across two files, duplicate the Interrogation Protocol, and require Flow to route between them based on input presence. The input/output variation handles this without a new agent.
+
+**Option C: Remove ATDD entirely.** Rejected. The fleet must handle pre-implementation test generation. Edge's Interrogation Protocol step 1 says "read the source" — without ATDD as a conditional path, Edge receives a brief to interrogate code that doesn't exist and fails. The gap is real.
+
+### How it works
+
+- **Routing:** Flow's routing table includes ATDD signals ("ATDD", "acceptance tests first", "red tests before implementation") alongside normal test signals, all routing to `ndv-tester`. No mode field.
+- **Brief authoring:** Flow fills Brief Contract fields. "What to test" accepts either existing code targets OR acceptance criteria (when no source exists). No mode field.
+- **Execution:** Edge detects from the brief whether source exists. If yes → Interrogation Protocol on code → adversarial test suite. If no → Interrogation Protocol on acceptance criteria → failing tests + spec gap exposure.
+- **Pipeline:** Craft's Mandatory Pipeline (ndv-review + ndv-tester) fires after ATDD-driven implementation. The pipeline dispatch adds adversarial coverage (boundary, error, external failure, concurrency) beyond the ATDD tests that verified the AC.
+
+### Revisit when
+
+- A second agent appears to need a mode — re-examine whether the mode is input/output variation or a neurotype change. If the latter, a new agent is the answer, not a mode.
+- An agent's conditional path grows complex enough that the single neurotype no longer explains the behavior — that is a signal the agent is doing two things and should be split.

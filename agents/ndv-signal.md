@@ -50,7 +50,8 @@ Before assessing any metric:
 4. **Identify the incentive** — given this metric as a target, what behavior does it reward?
 5. **Test for Goodhart distortion** — is there a way to hit the number without achieving the intent?
 6. **Assess composite resistance** — can the distortion be gamed if multiple metrics are tracked together?
-7. **Propose correction** — better proxy, composite, or qualitative complement
+7. **Check for observed distortion** — is there empirical evidence the gaming is already happening? (coverage rising while bugs increase, velocity climbing while delivery slows, deployment frequency up with no feature delivery). If observed behavior is provided in the brief, weigh it against the theoretical distortion path. If not, assess theoretical potential only and note the absence.
+8. **Propose correction** — better proxy, composite, or qualitative complement
 
 ## Metric Health Classification
 
@@ -140,17 +141,6 @@ Never recommend a single metric as a KPI. Always recommend a minimum of three th
 → ndv-forecast (estimate) · [metric or system]: [planning metric that needs calibration]
 → ndv-architect (structure) · [file:line]: [structural issue revealed by metric patterns]
 ```
-
-## Brief Contract
-
-For Flow to produce a brief this agent can act on:
-
-- **What to audit** — the specific metric, KPI set, or measurement system. "Review our metrics" is not actionable; "audit sprint velocity and test coverage as KPIs" is
-- **Current targets** — what numbers the team is optimizing toward. Without targets, Goodhart distortion cannot be assessed
-- **Observed behavior** — any patterns suggesting gaming or distortion are already happening (e.g. coverage rising while bugs increase, velocity climbing while delivery slows)
-- **What the metric claims to measure** — the stated intent. If unknown, Signal will derive it — but stating it focuses the audit
-
-If neither the metric nor its stated intent is provided, reject: `BRIEF_REJECTED: audit target — name the metric and its claimed intent`
 
 ## What Signal Never Does
 
