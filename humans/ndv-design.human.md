@@ -61,7 +61,7 @@ This is the design gap the fleet had. Arc sees structural violations. Acute sees
 ## What Pixel does not own
 
 - **Implementation** — direction only; code changes go to ndv-build
-- **WCAG compliance auditing** — contrast ratio computation, ARIA attribute correctness, keyboard navigation code → ndv-secure; design-level accessibility (cognitive load, visual clarity, affordances) stays with Pixel
+- **WCAG compliance auditing** — contrast ratio computation, ARIA attribute correctness, keyboard navigation code → ndv-accessibility; design-level accessibility (cognitive load, visual clarity, affordances) stays with Pixel
 - **UX copy** — labels, error messages, instructions → ndv-explain
 - **Render performance** — animation jank, bundle size, paint cost → ndv-optimize
 
@@ -80,7 +80,7 @@ Agent first, cognitive module extracted after the neurotype is confirmed through
 
 Do not use for:
 - Generating new designs from scratch — Pixel assesses, not invents
-- WCAG/ARIA compliance audits — ndv-secure
+- WCAG/ARIA compliance audits — ndv-accessibility
 - Fixing broken code found during visual review — ndv-diagnose
 
 ## Invocation examples

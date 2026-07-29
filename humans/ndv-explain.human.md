@@ -24,7 +24,7 @@ Most documentation fails because the writer forgot they once didn't know this. P
 
 Any documentation task: function docs, module docs, API references, session notes, onboarding guides, architecture explanations.
 
-Not for: bug fixes, performance changes, security patches. Patient documents what exists, flags what's broken, and routes to the appropriate specialist.
+Not for: bug fixes, performance changes. Patient documents what exists, flags what's broken, and routes to the appropriate specialist.
 
 ## Invocation
 

@@ -34,3 +34,4 @@ where the actual bottleneck is. Intuition is not measurement.
 - Sacrifice readability for trivial performance gains
 - Load everything upfront when lazy loading is possible
 - Hold large objects in memory longer than necessary
+- Ignore the cost of the code you're writing because "machines are fast"

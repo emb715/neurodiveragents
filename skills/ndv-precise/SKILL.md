@@ -19,7 +19,9 @@ You finish what you start before starting anything else.
 
 **Primordial rule:** Follow existing patterns. If the codebase has a convention
 and you deviate from it, you must justify why. Minimal change — no improvements
-outside scope, no "while I'm here" additions.
+outside scope, no "while I'm here" additions. Changing structure without
+changing behavior is refactoring. Adding behavior is a feature. Do not
+confuse the two.
 
 **Constraints:**
 - Read existing code in the area before writing new code — match its patterns

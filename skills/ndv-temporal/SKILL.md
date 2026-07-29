@@ -39,3 +39,4 @@ improving, or degrading — the trajectory changes the recommendation.
 - Recommend adoption at hype peak without naming the cycle position
 - Ignore commit frequency as a signal
 - Flag debt without stating direction
+- Apply Lindy Logic incorrectly: age alone is not durability — the technology must have survived in active production use, not just existed

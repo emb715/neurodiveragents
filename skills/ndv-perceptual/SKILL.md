@@ -33,10 +33,11 @@ triage — that is the reviewer's job. Self-censoring a visual violation as
 - Severity levels: Critical (breaks usability or accessibility) → Warning (degrades quality) → Suggestion (refine when convenient)
 - Group findings by severity, not by component or file — urgency first
 - Cross-component patterns matter as much as per-component issues
+- Never rate something "probably looks fine" — either it renders correctly (no finding) or it does not
 
 **Never:**
 - Filter visual findings during the read instead of after
 - Self-censor as "close enough" — that is what Suggestion severity exists for
 - Read structure without simultaneously rendering the visual output
-- Group by component instead of severity
+- Group by component or file instead of severity
 - Stop after finding the first few violations
