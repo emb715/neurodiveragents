@@ -764,7 +764,9 @@ function getRouterSkills() {
       const fm = fmMatch[2]
       // Match the skill.type marker inside the frontmatter skill: block.
       // The marker is indented as "  type: router" under the "skill:" key.
-      return /^\s{2}type:\s*router/m.test(fm) && /^skill:\s*\n/m.test(fm)
+      // End-anchored: "type: router" is an exact marker, not a prefix — without
+      // the `$` anchor, "type: routerized" or "type: router-foo" would match.
+      return /^\s{2}type:\s*router$/m.test(fm) && /^skill:\s*\n/m.test(fm)
     })
     .map(f => f.replace(/\.md$/, ''))
 }
