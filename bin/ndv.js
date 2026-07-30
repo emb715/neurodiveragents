@@ -837,7 +837,16 @@ function buildSkillGroups(allSkills) {
       content = transformAgentToSkill(agentContent)
     } else {
       // Static cognitive skill: read from skills/<name>/SKILL.md.
-      content = readFileSync(join(SKILLS_DIR, name, 'SKILL.md'), 'utf8')
+      // Parity guard: the router branch is guarded by routers.has(name)
+      // membership; the cognitive branch had no guard — a caller passing an
+      // arbitrary name would hit an unguarded ENOENT. Skip with a warning,
+      // consistent with getCognitiveSkills' missing-file handling.
+      const skillFile = join(SKILLS_DIR, name, 'SKILL.md')
+      if (!existsSync(skillFile)) {
+        console.warn(`buildSkillGroups: skipping "${name}" — ${skillFile} not found`)
+        continue
+      }
+      content = readFileSync(skillFile, 'utf8')
     }
     const type = parseSkillType(content)
     const desc = parseSkillDescription(content).slice(0, 52)
@@ -880,8 +889,15 @@ function installSkillsFor(toolName, names, isGlobal, s, label = '') {
       writeFileSync(join(destSkillDir, 'SKILL.md'), skillContent)
     } else {
       // Static cognitive skill: copy verbatim from skills/<name>/SKILL.md.
+      // Parity guard: mirrors the existsSync guard in buildSkillGroups' cognitive
+      // branch — skip with a warning instead of crashing mid-install on ENOENT.
       const srcDir = join(SKILLS_DIR, name)
-      copyFileSync(join(srcDir, 'SKILL.md'), join(destSkillDir, 'SKILL.md'))
+      const srcSkill = join(srcDir, 'SKILL.md')
+      if (!existsSync(srcSkill)) {
+        console.warn(`installSkillsFor: skipping "${name}" — ${srcSkill} not found`)
+        continue
+      }
+      copyFileSync(srcSkill, join(destSkillDir, 'SKILL.md'))
     }
     if (s) {
       s.message(label ? `✓ ${name} ${label}` : `✓ ${name}`)
