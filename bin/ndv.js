@@ -838,6 +838,18 @@ function resolveSkillDir(dir) {
 
 // Build the grouped options array consumed by promptMultiSelect.
 // Shared by the install wizard skills step and the standalone install-skills command.
+//
+// fs coupling note: despite the pure-looking signature buildSkillGroups(allSkills),
+// this function reads the filesystem to derive display content — it calls
+// getRouterSkills() (which reads agents/) and readFileSync on either the agent
+// file (routers, via transformAgentToSkill) or skills/<name>/SKILL.md
+// (cognitive). The `allSkills` argument is the name list; the bodies are NOT
+// passed in. This is intentional (single source of truth = the agent/skill
+// files) but the signature does not advertise it. A rename to
+// buildSkillGroupsWithFsRead or reader injection was considered and rejected
+// as churn-heavy (>2 call sites incl. tests) for no behavioral gain. If you
+// add a caller that needs purity, inject the readers then — do not assume
+// this function is pure.
 function buildSkillGroups(allSkills) {
   const groupMap = new Map()  // groupLabel → items[]
   const routers = new Set(getRouterSkills())
