@@ -18,7 +18,7 @@ jobs:
           node-version: '20'
 
       - name: Validate agent files and human files
-        run: node --test test/validate-agents.test.js
+        run: node --test test/validate-schema.test.js test/validate-contracts.test.js test/validate-coherence.test.js
 
   validate-new-agents:
     name: Authoring-guide validation (changed agents only)
@@ -54,7 +54,7 @@ jobs:
         if: steps.changed.outputs.agent_names != ''
         env:
           CHANGED_AGENTS: ${{ steps.changed.outputs.agent_names }}
-        run: node --test test/validate-agents.test.js
+        run: node --test test/validate-authoring.test.js
 
       - name: No new agent files detected — skipping authoring checks
         if: steps.changed.outputs.agent_names == ''

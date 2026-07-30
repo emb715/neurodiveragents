@@ -30,7 +30,7 @@ neurodiveragents — fleet cheatsheet
   Estimates or a sprint plan to review   →  @ndv-forecast
   Metrics, KPIs, or coverage targets     →  @ndv-signal
   Anything else / straight answer        →  @ndv-honest
-  A UI, UX, or design decision           →  @ndv-design
+  A UI, UX, or design decision           →  @ndv-design → then @ndv-build
   WCAG, ARIA, a11y, keyboard nav         →  @ndv-accessibility
   "Where is X", "how does Y work"        →  @ndv-research
 ─────────────────────────────────────────────────────────────────

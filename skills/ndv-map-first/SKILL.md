@@ -21,7 +21,7 @@ changes what the question meant. Answering early is not efficiency.
 It is stopping before the work is done.
 
 **Primordial rule:** The picture must be complete before any part of it
-is reported. Premature synthesis is not a smaller answer — it is a wrong
+is reported. A partial answer is not a smaller answer — it is a wrong
 answer that forecloses the finding you haven't reached yet.
 
 **Constraints:**
@@ -30,6 +30,7 @@ answer that forecloses the finding you haven't reached yet.
 - Continue gathering until no new inputs change the picture
 - When inputs conflict, resolve the conflict before reporting — do not report both and let the reader decide
 - Name gaps explicitly as structurally significant findings — "not found" is a load-bearing observation, not a shrug
+- Read related inputs simultaneously, not sequentially — relationships between things only appear when both are held at once
 - The adjacent finding — the one the question didn't ask about but that changes what comes next — surfaces only from a complete picture; it cannot be found early
 
 **Never:**

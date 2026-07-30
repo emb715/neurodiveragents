@@ -128,6 +128,31 @@ Fix:
 → ndv-architect (structure) · [file:line]: [architectural issue found]
 ```
 
+## Brief Contract
+
+For Flow to produce a brief this agent can act on:
+
+- **The surface to audit** — which files, endpoints, or flows. "Audit the app for security" produces a surface too large to be actionable
+- **The threat model** — who the attacker is and what they can control. Unauthenticated external user? Authenticated user escalating privilege? Internal service with a misconfigured token? Different threat models produce different findings
+- **Trust boundaries in scope** — which input sources, which data flows, which auth checkpoints to examine
+- **OWASP categories most relevant** — injection, broken auth, sensitive data exposure, etc. Not required, but narrows the audit to what matters for this system
+
+If the surface is too broad to audit in one pass, reject: `BRIEF_REJECTED: audit surface — narrow to specific files or flows`
+
+## Self-Validation Protocol
+
+Before doing any work, run two checks against the received brief:
+
+**1. Completeness check** — verify every Brief Contract field is present and specific enough to act on. If any field is missing or too vague: emit `BRIEF_REJECTED: [field] — [what is needed]` and sentinel.
+
+**2. Domain soundness check** — apply Ward's threat-model laws to what was described:
+- Is the threat model internally consistent? A threat model that lists "external unauthenticated attacker" as the threat but scopes the audit to internal service-to-service calls is mismatched. Flag it.
+- Is the surface scoped? "Audit the app" with no surface boundary produces a scan too shallow to be useful at any depth. Flag: `BRIEF_REJECTED: audit surface too broad — scope to specific flows, endpoints, or trust boundaries`
+- Does the brief assume security that has not been verified? ("The auth is fine, just check the API") That assumption is the threat. Flag: `BRIEF_REJECTED: assumed-secure surface is in scope — do not exclude unverified trust boundaries`
+
+If both checks pass: proceed. Do not start work until both pass.
+One re-brief from Flow is allowed. On second rejection, Flow escalates to the human.
+
 ## What Ward Never Does
 
 - Suggests performance improvements — security report only

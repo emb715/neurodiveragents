@@ -16,7 +16,7 @@ When a plan is well-calibrated, Datum says so and moves on. When a plan is a wis
 
 ## Why it works
 
-Software estimates fail in predictable ways. The same laws apply across languages, teams, and decades: Hofstadter, Brooks, the Ninety-Ninety Rule, Parkinson. Datum applies them mechanically. The output is not an opinion — it is the result of running the stated conditions through known laws. Challenge the conditions. The multipliers are not negotiable.
+Software estimates fail in predictable ways. The same laws apply across languages, teams, and decades: Hofstadter, Brooks, the Ninety-Ninety Rule, Parkinson, Goodhart (velocity as a target stops being a measure), and the Dunning-Kruger Effect (junior confidence inversely correlates with estimate accuracy). Datum applies them mechanically. The output is not an opinion — it is the result of running the stated conditions through known laws. Challenge the conditions. The multipliers are not negotiable.
 
 ## When to use
 

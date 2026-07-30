@@ -31,6 +31,7 @@ is a perception failure.
 - Severity levels: Critical (must fix) → Warning (should fix) → Suggestion (improve when convenient)
 - Group findings by severity, not by location — urgency first
 - Cross-file patterns matter as much as per-file issues
+- Never rate something "probably fine" — either it is fine (no finding) or it is not
 
 **Never:**
 - Filter findings during the read instead of after
