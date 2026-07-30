@@ -241,7 +241,7 @@ function writeRoutingGlobalOpenCode(jsonPath) {
   if (mutated) writeFileSync(jsonPath, JSON.stringify(config, null, 2) + '\n')
 }
 
-function installAgents(toolName, target, isGlobal) {
+function installAgents(toolName, target, isGlobal, s = null) {
   const scope = isGlobal ? 'global' : 'project'
   console.log(`\n  Installing ${toolName} agents (${scope})...\n`)
 
@@ -284,6 +284,35 @@ function installAgents(toolName, target, isGlobal) {
     }
   }
 
+  // Claude Code: install slash commands
+  if (toolName === 'claude') {
+    const commandsDir = join(AGENTS_DIR, '..', 'commands', 'claude')
+    const destCommandsDir = isGlobal
+      ? join(HOME, '.claude', 'commands')
+      : '.claude/commands'
+    if (existsSync(commandsDir)) {
+      mkdirSync(destCommandsDir, { recursive: true })
+      const commands = readdirSync(commandsDir).filter(f => f.endsWith('.md'))
+      for (const cmd of commands) {
+        writeFileSync(join(destCommandsDir, cmd), readFileSync(join(commandsDir, cmd), 'utf8'))
+      }
+    }
+  }
+
+  // Auto-install router skills (fleet entry points — mandatory for skill-supporting tools)
+  const skillTarget = SKILL_TARGETS[toolName] ?? null
+  if (skillTarget?.autoInstallRouters) {
+    const routers = getRouterSkills()
+    if (routers.length > 0) {
+      const skillDestDir = installSkillsFor(toolName, routers, isGlobal, s, '(router skill — auto-installed)')
+      if (s) {
+        s.message(`Router skills auto-installed to ${skillDestDir}/`)
+      } else {
+        console.log(`  Router skills auto-installed to ${skillDestDir}/`)
+      }
+    }
+  }
+
   console.log(`Agents installed to ${target.dest}/`)
   if (skipped.length > 0) {
     for (const { agent } of skipped) {
@@ -321,7 +350,14 @@ function installAgents(toolName, target, isGlobal) {
           if (resolve(dirname(linkPath), current) === resolve(targetPath)) {
             skip = true // already correct — leave it
           } else {
-            unlinkSync(linkPath) // stale/wrong target — remove and recreate below
+            // Symlink points somewhere else. Only replace if it's a VALID (non-dangling) link.
+            // A dangling symlink (target doesn't exist) may be the user's intentional pointer
+            // to a not-yet-created file — preserve it, same policy as regular files below.
+            if (existsSync(linkPath)) {
+              unlinkSync(linkPath) // valid link, wrong target — remove and recreate below
+            } else {
+              skip = true // dangling — preserve, do not clobber
+            }
           }
         } else {
           skip = true // regular file (non-ndv) — do not clobber
@@ -378,7 +414,7 @@ async function install(toolName, isGlobal = false, interactive = false) {
 
     const finalTarget = isGlobal ? tool.global : tool
     await withSpinner(`Installing ${toolName} agents...`, async (s) => {
-      installAgents(toolName, finalTarget, isGlobal)
+      installAgents(toolName, finalTarget, isGlobal, s)
       s.message(`Agents installed to ${finalTarget.dest}/`)
     })
 
@@ -395,20 +431,21 @@ async function install(toolName, isGlobal = false, interactive = false) {
 
     // Skills step — only for tools that support the Agent Skills spec
     if (skillTarget) {
-      const allSkills = getAllSkills()
+      const allSkills = getCognitiveSkills()
       if (allSkills.length > 0) {
         const installSkillsNow = await promptConfirm('Also install cognitive modules (skills)?', true)
         if (installSkillsNow) {
-          const skillDestDir = resolveSkillDir(isGlobal ? skillTarget.global : skillTarget.project)
           const groups = buildSkillGroups(allSkills)
           const selected = await promptMultiSelect('Which cognitive modules?', groups)
 
           if (selected.length === 0) {
             cancel('No modules selected.')
+            return
           }
 
+          let skillDestDir
           await withSpinner(`Installing ${selected.length} module(s)...`, async (s) => {
-            copySkillFiles(selected, skillDestDir, s)
+            skillDestDir = installSkillsFor(toolName, selected, isGlobal, s)
           })
           logInfo(`${selected.length} module(s) installed to ${skillDestDir}/`)
         }
@@ -425,12 +462,10 @@ async function install(toolName, isGlobal = false, interactive = false) {
 
     // If --all is set and this tool supports skills, install all skills too
     if (isAll && skillTarget) {
-      const allSkills = getAllSkills()
+      const allSkills = getCognitiveSkills()
       if (allSkills.length > 0) {
-        const skillDestDir = resolveSkillDir(isGlobal ? skillTarget.global : skillTarget.project)
-        console.log(`\n  Installing ${allSkills.length} cognitive module(s)...\n`)
-        copySkillFiles(allSkills, skillDestDir, null)
-        console.log(`  ${allSkills.length} module(s) installed to ${skillDestDir}/`)
+        const skillDestDir = installSkillsFor(toolName, allSkills, isGlobal, null)
+        console.log(`  ${allSkills.length} cognitive module(s) installed to ${skillDestDir}/`)
       }
     }
 
@@ -512,10 +547,12 @@ const SKILL_TARGETS = {
   claude: {
     project: '.claude/skills',
     global: join(HOME, '.claude', 'skills'),
+    autoInstallRouters: true,
   },
   opencode: {
     project: '.opencode/skills',
     global: join(HOME, '.config', 'opencode', 'skills'),
+    autoInstallRouters: false,
   },
 }
 
@@ -530,6 +567,33 @@ function getAllSkills() {
     if (!existsSync(join(SKILLS_DIR, f, 'SKILL.md'))) return false
     if (isSkillFrozen(f)) return false
     return true
+  })
+}
+
+// Router skills (metadata.type: router) are fleet entry points — always installed,
+// never optional. They are excluded from the cognitive-module picker.
+function getRouterSkills() {
+  if (!existsSync(SKILLS_DIR)) return []
+  return readdirSync(SKILLS_DIR).filter(f => {
+    const skillFile = join(SKILLS_DIR, f, 'SKILL.md')
+    if (!existsSync(skillFile)) return false
+    const content = readFileSync(skillFile, 'utf8')
+    if (/^\s*status:\s*frozen/m.test(content)) return false
+    return parseSkillType(content) === 'router'
+  })
+}
+
+// Cognitive skills are the optional enhancement modules — everything that is NOT
+// a router skill. These are the ones shown in the interactive picker and gated
+// behind --all in non-interactive mode.
+function getCognitiveSkills() {
+  if (!existsSync(SKILLS_DIR)) return []
+  return readdirSync(SKILLS_DIR).filter(f => {
+    const skillFile = join(SKILLS_DIR, f, 'SKILL.md')
+    if (!existsSync(skillFile)) return false
+    const content = readFileSync(skillFile, 'utf8')
+    if (/^\s*status:\s*frozen/m.test(content)) return false
+    return parseSkillType(content) !== 'router'
   })
 }
 
@@ -567,7 +631,7 @@ function skillTypeTag(type) {
 // Project-scope paths (e.g. '.opencode/skills') are relative to cwd.
 // Global paths (already absolute) are returned unchanged.
 function resolveSkillDir(dir) {
-  return join(process.cwd(), dir)
+  return resolve(dir)
 }
 
 // Build the grouped options array consumed by promptMultiSelect.
@@ -592,22 +656,29 @@ function buildSkillGroups(allSkills) {
   return Array.from(groupMap.entries()).map(([label, items]) => ({ label, items }))
 }
 
-// Copy a list of skill directories into destDir.
-// s: optional spinner instance — if provided, updates message per skill.
-// Used by both the interactive install wizard step and the standalone install-skills command.
-function copySkillFiles(selected, destDir, s) {
+// Shared skill-install logic for all four call sites.
+// Resolves the destination dir, creates it, and copies each skill's SKILL.md.
+// toolName: the tool key (claude, opencode)
+// names: array of skill directory names to install
+// isGlobal: project vs global scope
+// s: optional spinner — if provided, updates message per skill (interactive use)
+// Returns the resolved destination dir path.
+function installSkillsFor(toolName, names, isGlobal, s, label = '') {
+  const target = SKILL_TARGETS[toolName]
+  const destDir = resolveSkillDir(isGlobal ? target.global : target.project)
   mkdirSync(destDir, { recursive: true })
-  for (const name of selected) {
+  for (const name of names) {
     const srcDir = join(SKILLS_DIR, name)
     const destSkillDir = join(destDir, name)
     mkdirSync(destSkillDir, { recursive: true })
     copyFileSync(join(srcDir, 'SKILL.md'), join(destSkillDir, 'SKILL.md'))
     if (s) {
-      s.message(`✓ ${name}`)
+      s.message(label ? `✓ ${name} ${label}` : `✓ ${name}`)
     } else {
-      console.log(`  ✓  ${name}`)
+      console.log(label ? `  ✓ ${name} ${label}` : `  ✓ ${name}`)
     }
   }
+  return destDir
 }
 
 async function installSkills(toolName, isGlobal = false, interactive = false) {
@@ -625,7 +696,6 @@ async function installSkills(toolName, isGlobal = false, interactive = false) {
     process.exit(1)
   }
 
-  let destDir = resolveSkillDir(isGlobal ? target.global : target.project)
   let selected = allSkills
 
   if (interactive) {
@@ -638,7 +708,6 @@ async function installSkills(toolName, isGlobal = false, interactive = false) {
         { value: 'global', label: 'Global', hint: `${target.global}/` },
       ])
       isGlobal = scope === 'global'
-      destDir = resolveSkillDir(isGlobal ? target.global : target.project)
     }
 
     const groups = buildSkillGroups(allSkills)
@@ -646,23 +715,31 @@ async function installSkills(toolName, isGlobal = false, interactive = false) {
 
     if (selected.length === 0) {
       cancel('No modules selected.')
+      return
     }
 
+    let destDir
     await withSpinner(`Installing ${selected.length} module(s)...`, async (s) => {
-      copySkillFiles(selected, destDir, s)
+      destDir = installSkillsFor(toolName, selected, isGlobal, s)
     })
 
-    outro(`Done. ${selected.length} module(s) installed to ${destDir}/\nTo use: Load the \`${selected[0]}\` skill in any step file.`)
+    const hint = selected.length === 1
+      ? `Load the \`${selected[0]}\` skill in any step file.`
+      : `Load the installed skills in any step file.`
+    outro(`Done. ${selected.length} module(s) installed to ${destDir}/\nTo use: ${hint}`)
   } else {
     // Non-interactive — install all skills
     const scope = isGlobal ? 'global' : 'project'
     console.log(`\n  Installing NDV cognitive modules for ${toolName} (${scope})...\n`)
 
-    copySkillFiles(selected, destDir, null)
+    const destDir = installSkillsFor(toolName, selected, isGlobal, null)
 
     console.log(`\n  ${selected.length} module(s) installed to ${destDir}/`)
     console.log(`\n  To use in a skill step file:`)
-    console.log(`    Load the \`${selected[0] ?? 'ndv-skeptical'}\` skill before proceeding.\n`)
+    const hint = selected.length === 1
+      ? `Load the \`${selected[0]}\` skill before proceeding.`
+      : `Load the installed skills before proceeding.`
+    console.log(`    ${hint}\n`)
     console.log(`Done.`)
   }
 }
