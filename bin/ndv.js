@@ -78,6 +78,20 @@ function transformForOpenCode(content) {
   return `---\n${fm}---\n${body}`
 }
 
+// Extract the YAML frontmatter block from an agent/skill file.
+// Single source for the fmMatch pattern used across the transform/detection
+// paths (transformAgentToSkill, getRouterSkills). Returns { fm, body } where
+// `fm` is the raw frontmatter text (between the `---` fences, fences excluded)
+// and `body` is the remainder, or `null` if no frontmatter delimiters are
+// present. The regex is unchanged from its prior inline form — this is a
+// mechanical extraction for DRY, not a parser upgrade.
+// Exported so tests can use the real extractor instead of local replicas.
+function extractFrontmatter(content) {
+  const fmMatch = content.match(/^(---\n)([\s\S]*?)(^---\n)/m)
+  if (!fmMatch) return null
+  return { fm: fmMatch[2], body: content.slice(fmMatch[0].length) }
+}
+
 // Derive a router skill file from an agent file at install time.
 // Pure function: content string → content string. Sibling to transformForOpenCode().
 //
@@ -96,10 +110,10 @@ function transformForOpenCode(content) {
 // router agents just add the marker — no transform changes needed.
 function transformAgentToSkill(content) {
   // Extract the YAML frontmatter block.
-  const fmMatch = content.match(/^(---\n)([\s\S]*?)(^---\n)/m)
-  if (!fmMatch) return content
-  const fmRaw = fmMatch[2]
-  const body = content.slice(fmMatch[0].length)
+  const fm = extractFrontmatter(content)
+  if (!fm) return content
+  const fmRaw = fm.fm
+  const body = fm.body
 
   // Parse agent name and the skill: block from the agent frontmatter.
   const nameMatch = fmRaw.match(/^name:\s*(.+)$/m)
@@ -759,14 +773,14 @@ function getRouterSkills() {
       // fmMatch pattern; getRouterSkills must too, or "  type: router" /
       // "skill:" appearing in BODY prose or code blocks would falsely match.
       // No frontmatter → not a router.
-      const fmMatch = content.match(/^(---\n)([\s\S]*?)(^---\n)/m)
-      if (!fmMatch) return false
-      const fm = fmMatch[2]
+      const fm = extractFrontmatter(content)
+      if (!fm) return false
+      const fmRaw = fm.fm
       // Match the skill.type marker inside the frontmatter skill: block.
       // The marker is indented as "  type: router" under the "skill:" key.
       // End-anchored: "type: router" is an exact marker, not a prefix — without
       // the `$` anchor, "type: routerized" or "type: router-foo" would match.
-      return /^\s{2}type:\s*router$/m.test(fm) && /^skill:\s*\n/m.test(fm)
+      return /^\s{2}type:\s*router$/m.test(fmRaw) && /^skill:\s*\n/m.test(fmRaw)
     })
     .map(f => f.replace(/\.md$/, ''))
 }
@@ -1041,7 +1055,9 @@ function help() {
 // test/transform-skill.test.js). The transform is a pure function; buildSkillGroups
 // reads the filesystem (agents/ + skills/) but is deterministic for a given repo
 // state and is exercised by the interactive-path coverage tests.
-export { transformAgentToSkill, buildSkillGroups }
+// extractFrontmatter is exported so tests can use the real extractor instead
+// of local replicas (sets up the DRY collapse of the test-side copies).
+export { transformAgentToSkill, buildSkillGroups, extractFrontmatter }
 
 const TOOL_OPTIONS = [
   { value: 'claude',   label: 'Claude Code',    hint: '.claude/agents/',                    signals: ['.claude', 'CLAUDE.md'] },
