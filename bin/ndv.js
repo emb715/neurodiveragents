@@ -78,6 +78,222 @@ function transformForOpenCode(content) {
   return `---\n${fm}---\n${body}`
 }
 
+// Extract the YAML frontmatter block from an agent/skill file.
+// Single source for the fmMatch pattern used across the transform/detection
+// paths (transformAgentToSkill, getRouterSkills). Returns { fm, body } where
+// `fm` is the raw frontmatter text (between the `---` fences, fences excluded)
+// and `body` is the remainder, or `null` if no frontmatter delimiters are
+// present. The regex is unchanged from its prior inline form — this is a
+// mechanical extraction for DRY, not a parser upgrade.
+function extractFrontmatter(content) {
+  const fmMatch = content.match(/^(---\n)([\s\S]*?)(^---\n)/m)
+  if (!fmMatch) return null
+  return { fm: fmMatch[2], body: content.slice(fmMatch[0].length) }
+}
+
+// YAML block-scalar body pattern, shared by the two regexes in
+// transformAgentToSkill() (the idempotency guard and the descriptionMatch).
+// A block-scalar body line is EITHER 2+-space-indented (content; `[^\n]*`
+// allows trailing-only-whitespace lines like `  \n`) OR fully blank (a lone
+// `\n`). The body continues until a column-0 non-blank line. Defined once here
+// so the guard and the descriptionMatch cannot drift apart (H5 fixed the
+// descriptionMatch's blank-line truncation; H8 ported the fix to the guard —
+// a single source removes the port-the-fix step entirely). The per-site
+// quantifier (`*` for the guard, `+` for the descriptionMatch) is applied at
+// the call site, NOT here — only the alternation is shared. Escapes are
+// doubled because this is a string fragment consumed by `new RegExp`.
+const BLOCK_SCALAR_BODY = '(?:[ ]{2,}[^\\n]*\\n|\\n)'
+
+// Derive a router skill file from an agent file at install time.
+// Pure function: content string → content string. Sibling to transformForOpenCode().
+//
+// Three deterministic deltas against the agent source, producing the skill
+// golden output:
+//   Delta A — replace agent frontmatter with skill frontmatter
+//     (name + description:block-scalar from the top-level `description:` key +
+//     metadata block; strip model/effort/mode/tools)
+//   Delta B — insert "Running as a skill (not a subagent)" section immediately
+//     after the intro paragraph block (before "## Out of Scope")
+//   Delta C — Dispatch Protocol term substitutions (Task → Agent, install path)
+//   Plus: Deliberation Protocol "ONE Task message" → "ONE message", and trailing
+//   newline stripped (the skill golden output ends without a final newline).
+//
+// Name-driven: the ROUTER_SKILLS constant names which agent files are routers,
+// and getRouterSkills returns that constant (not by reading agents/). The
+// transform reads the top-level `description:` block scalar as the single
+// source for the skill description.
+function transformAgentToSkill(content) {
+  // Extract the YAML frontmatter block.
+  const fm = extractFrontmatter(content)
+  if (!fm) return content
+  const fmRaw = fm.fm
+  const body = fm.body
+
+  // Parse agent name from the agent frontmatter.
+  const nameMatch = fmRaw.match(/^name:\s*(.+)$/m)
+  const agentName = nameMatch ? nameMatch[1].trim() : ''
+
+  // Idempotency guard: if this content is ALREADY a derived skill (the
+  // transform's own output carries `metadata: source-agent: <name>`), return
+  // it unchanged. This preserves the prior idempotency contract — re-applying
+  // the transform to its own output is a no-op. Without this guard, the
+  // top-level `description:` block scalar in the derived skill would re-trigger
+  // the transform (the derived skill keeps that block scalar), and Delta C's
+  // section-scope regex would throw on the already-substituted Dispatch Protocol
+  // body (no unsubstituted targets remain).
+  //
+  // Why `source-agent:` is the discriminating signal: it carries the source
+  // agent's name (e.g. `source-agent: ndv-flow`) and is unambiguously
+  // transform-emitted — a hand-authored agent has no reason to name itself as
+  // the source of a derivation. The prior signal (`origin: agent-derived`)
+  // used the generic word "origin", which a human could legitimately author
+  // inside a `metadata:` block for documentation. Matching on `source-agent:`
+  // prevents the guard from false-firing on a future agent that legitimately
+  // uses a `metadata:` block for documentation.
+  if (new RegExp(`^metadata:\\s*\\n${BLOCK_SCALAR_BODY}*  source-agent:\\s*\\S+`, 'm').test(fmRaw)) {
+    return content
+  }
+
+  // Extract the top-level description block scalar verbatim (2-space
+  // indentation preserved — same indent as the skill output's description
+  // block scalar, so no dedent is needed). Matches:
+  //   description: >
+  //     <2-space-indented lines>
+  // The capture is the raw indented body (the lines under the block-scalar
+  // indicator). If the agent has NO top-level description block scalar, return
+  // the content unchanged — consistent with the prior "no skill block →
+  // return content" behavior (router detection is name-driven via the
+  // ROUTER_SKILLS constant in getRouterSkills; the transform only needs the
+  // description).
+  //
+  // YAML block scalars (`>` and `|`) permit blank lines and whitespace-only
+  // lines as paragraph separators — the content after a blank line is still
+  // part of the scalar. A block scalar continues until a line with LESS
+  // indentation than the scalar's base indent (2 spaces here). The capture
+  // therefore matches lines that are EITHER:
+  //   - indented 2+ spaces (content lines; `[^\n]*` allows trailing-only-whitespace lines like `  \n`)
+  //   - fully blank (a lone `\n`)
+  // and STOPS at a column-0 non-blank line (the next top-level key `tools:`
+  // or the closing `---` fence). See test/transform-skill.test.js H3.
+  const descriptionMatch = fmRaw.match(new RegExp(`^description:\\s*[>|]\\s*\\n(${BLOCK_SCALAR_BODY}+)`, 'm'))
+  if (!descriptionMatch) return content
+  const descriptionBlock = descriptionMatch[1]
+
+  // Delta A — assemble skill frontmatter.
+  // The agent's top-level description block scalar is indented 2 spaces
+  // (direct child of the top-level `description:` key). The skill output's
+  // description block scalar is indented 2 spaces too — the body carries over
+  // at the SAME indentation. No dedent needed.
+  const skillFrontmatter =
+    `---\n` +
+    `name: ${agentName}\n` +
+    `description: >\n` +
+    `${descriptionBlock}` +
+    `metadata:\n` +
+    `  type: router\n` +
+    `  origin: agent-derived\n` +
+    `  source-agent: ${agentName}\n` +
+    `---\n`
+
+  let out = skillFrontmatter + body
+
+  // Delta B — insert "Running as a skill (not a subagent)" section immediately
+  // after the intro paragraph block (the four paragraphs ending with
+  // "...Every word that does not move the work is a thread wasted."), and
+  // before "## Out of Scope (never do these)".
+  const insertSection =
+    `\n## Running as a skill (not a subagent)\n` +
+    `\n` +
+    `This skill runs in the main loop, so:\n` +
+    `\n` +
+    `- **Dispatch with the \`Agent\` tool**, passing \`subagent_type: "<agent-name>"\`. Everywhere this document says "Task", use \`Agent\`.\n` +
+    `- Set \`run_in_background: false\` on dispatches whose results you need before deciding the next group — which is most of them under Post-Group Protocol.\n` +
+    `- You hold every tool, not just Read/Glob/Task. The restriction is now self-imposed: **do not use Edit, Write, or Bash to do the work**. Read and Glob to understand and to read target agent files before authoring briefs. Everything else routes. Any implementation impulse is a routing event.\n` +
+    `- Stay in this role for the remainder of the session unless the user says otherwise.\n`
+
+  // The intro block ends with the paragraph ending in "thread wasted.\n" and is
+  // immediately followed by "\n## Out of Scope (never do these)". Insert the
+  // section between them.
+  // Delta B is anchor-sensitive: assert the substitution landed so a future
+  // rewording of the intro/out-of-scope anchors fails here (at the cause)
+  // instead of surfacing as a far-removed golden-fixture byte diff. The check
+  // is conditional — synthetic minimal agents legitimately omit the intro
+  // paragraph (see the "no anchor" tests); only when the anchor IS present must
+  // the insertion succeed.
+  const hasDeltaBAnchor = /Every word that does not move the work is a thread wasted\.\n\n## Out of Scope \(never do these\)/.test(out)
+  const beforeDeltaB = out
+  out = out.replace(
+    /(Every word that does not move the work is a thread wasted\.\n)\n(## Out of Scope \(never do these\))/,
+    `$1${insertSection}\n$2`
+  )
+  if (hasDeltaBAnchor && out === beforeDeltaB) {
+    throw new Error(
+      'transformAgentToSkill Delta B failed: anchor matched in pre-state but replacement was a no-op. ' +
+      'Expected intro paragraph ending in "Every word that does not move the work is a thread wasted.\\n" ' +
+      'immediately followed by "\\n## Out of Scope (never do these)".'
+    )
+  }
+
+  // Delta C — Dispatch Protocol term substitutions (Dispatch Protocol section only).
+  // Scope to the section between "## Dispatch Protocol" and the next "## " header.
+  // The replacement function receives the full match (including the trailing
+  // "\n## " boundary) — apply substitutions to the section body, leave the
+  // trailing next-section header intact.
+  // Anchor-sensitive: assert the section-scope regex matched when a Dispatch
+  // Protocol section is present, and that the "multiple Task calls" literal
+  // did not survive the substitution inside that section.
+  const hasDispatchSection = /## Dispatch Protocol[\s\S]*?\n## (?=)/.test(out)
+  const beforeDeltaC = out
+  out = out.replace(/(## Dispatch Protocol[\s\S]*?)(\n## (?=))/, (full, section) => {
+    let s = section
+    s = s.replace(/multiple Task calls/g, 'multiple `Agent` calls')
+    s = s.replace(/spawn one Task, wait for sentinel/g, 'spawn one `Agent`, wait for sentinel')
+    s = s.replace(
+      /Read the target agent's full file before authoring anything/,
+      "Read the target agent's full file (`~/.claude/agents/<name>.md`) before authoring anything"
+    )
+    return s + full.slice(section.length)
+  })
+  if (hasDispatchSection && out === beforeDeltaC) {
+    throw new Error(
+      'transformAgentToSkill Delta C failed: "## Dispatch Protocol" section present but ' +
+      'section-scope regex did not match. Expected the section followed by a subsequent "## " header.'
+    )
+  }
+  // The Dispatch Protocol section body must no longer contain the unsubstituted
+  // "multiple Task calls" literal — if it does, the section-scope regex matched
+  // a different span than intended.
+  const dispatchSectionMatch = out.match(/## Dispatch Protocol[\s\S]*?(\n## (?=))/)
+  const dispatchSection = dispatchSectionMatch ? dispatchSectionMatch[1] : ''
+  if (dispatchSection.includes('multiple Task calls')) {
+    throw new Error(
+      'transformAgentToSkill Delta C failed: "multiple Task calls" literal remains in ' +
+      'the Dispatch Protocol section after substitution — section scope mismatch.'
+    )
+  }
+
+  // Deliberation Protocol substitution (matches golden output).
+  // Post-condition: if the input contained "ONE Task message", the output must
+  // not. Synthetic minimal agents legitimately omit the anchor; only assert the
+  // absence of the unsubstituted form (per the brief) — converts emergent
+  // golden-test drift into a localized failure without breaking minimal inputs.
+  out = out.replace(
+    /dispatch BOTH agents in ONE Task message/g,
+    'dispatch BOTH agents in ONE message'
+  )
+  if (out.includes('dispatch BOTH agents in ONE Task message')) {
+    throw new Error(
+      'transformAgentToSkill Deliberation Protocol substitution failed: ' +
+      '"dispatch BOTH agents in ONE Task message" remains in output after substitution.'
+    )
+  }
+
+  // Strip trailing newline — the skill golden output ends without a final newline.
+  out = out.replace(/\n$/, '')
+
+  return out
+}
+
 const HOME = homedir()
 
 const TOOLS = {
@@ -241,7 +457,7 @@ function writeRoutingGlobalOpenCode(jsonPath) {
   if (mutated) writeFileSync(jsonPath, JSON.stringify(config, null, 2) + '\n')
 }
 
-function installAgents(toolName, target, isGlobal) {
+function installAgents(toolName, target, isGlobal, s = null) {
   const scope = isGlobal ? 'global' : 'project'
   console.log(`\n  Installing ${toolName} agents (${scope})...\n`)
 
@@ -284,6 +500,35 @@ function installAgents(toolName, target, isGlobal) {
     }
   }
 
+  // Claude Code: install slash commands
+  if (toolName === 'claude') {
+    const commandsDir = join(AGENTS_DIR, '..', 'commands', 'claude')
+    const destCommandsDir = isGlobal
+      ? join(HOME, '.claude', 'commands')
+      : '.claude/commands'
+    if (existsSync(commandsDir)) {
+      mkdirSync(destCommandsDir, { recursive: true })
+      const commands = readdirSync(commandsDir).filter(f => f.endsWith('.md'))
+      for (const cmd of commands) {
+        writeFileSync(join(destCommandsDir, cmd), readFileSync(join(commandsDir, cmd), 'utf8'))
+      }
+    }
+  }
+
+  // Auto-install router skills (fleet entry points — mandatory for skill-supporting tools)
+  const skillTarget = SKILL_TARGETS[toolName] ?? null
+  if (skillTarget?.autoInstallRouters) {
+    const routers = getRouterSkills()
+    if (routers.length > 0) {
+      const skillDestDir = installSkillsFor(toolName, routers, isGlobal, s, '(router skill — auto-installed)')
+      if (s) {
+        s.message(`Router skills auto-installed to ${skillDestDir}/`)
+      } else {
+        console.log(`  Router skills auto-installed to ${skillDestDir}/`)
+      }
+    }
+  }
+
   console.log(`Agents installed to ${target.dest}/`)
   if (skipped.length > 0) {
     for (const { agent } of skipped) {
@@ -321,7 +566,14 @@ function installAgents(toolName, target, isGlobal) {
           if (resolve(dirname(linkPath), current) === resolve(targetPath)) {
             skip = true // already correct — leave it
           } else {
-            unlinkSync(linkPath) // stale/wrong target — remove and recreate below
+            // Symlink points somewhere else. Only replace if it's a VALID (non-dangling) link.
+            // A dangling symlink (target doesn't exist) may be the user's intentional pointer
+            // to a not-yet-created file — preserve it, same policy as regular files below.
+            if (existsSync(linkPath)) {
+              unlinkSync(linkPath) // valid link, wrong target — remove and recreate below
+            } else {
+              skip = true // dangling — preserve, do not clobber
+            }
           }
         } else {
           skip = true // regular file (non-ndv) — do not clobber
@@ -378,7 +630,7 @@ async function install(toolName, isGlobal = false, interactive = false) {
 
     const finalTarget = isGlobal ? tool.global : tool
     await withSpinner(`Installing ${toolName} agents...`, async (s) => {
-      installAgents(toolName, finalTarget, isGlobal)
+      installAgents(toolName, finalTarget, isGlobal, s)
       s.message(`Agents installed to ${finalTarget.dest}/`)
     })
 
@@ -395,20 +647,21 @@ async function install(toolName, isGlobal = false, interactive = false) {
 
     // Skills step — only for tools that support the Agent Skills spec
     if (skillTarget) {
-      const allSkills = getAllSkills()
+      const allSkills = getCognitiveSkills()
       if (allSkills.length > 0) {
         const installSkillsNow = await promptConfirm('Also install cognitive modules (skills)?', true)
         if (installSkillsNow) {
-          const skillDestDir = resolveSkillDir(isGlobal ? skillTarget.global : skillTarget.project)
           const groups = buildSkillGroups(allSkills)
           const selected = await promptMultiSelect('Which cognitive modules?', groups)
 
           if (selected.length === 0) {
             cancel('No modules selected.')
+            return
           }
 
+          let skillDestDir
           await withSpinner(`Installing ${selected.length} module(s)...`, async (s) => {
-            copySkillFiles(selected, skillDestDir, s)
+            skillDestDir = installSkillsFor(toolName, selected, isGlobal, s)
           })
           logInfo(`${selected.length} module(s) installed to ${skillDestDir}/`)
         }
@@ -425,12 +678,10 @@ async function install(toolName, isGlobal = false, interactive = false) {
 
     // If --all is set and this tool supports skills, install all skills too
     if (isAll && skillTarget) {
-      const allSkills = getAllSkills()
+      const allSkills = getCognitiveSkills()
       if (allSkills.length > 0) {
-        const skillDestDir = resolveSkillDir(isGlobal ? skillTarget.global : skillTarget.project)
-        console.log(`\n  Installing ${allSkills.length} cognitive module(s)...\n`)
-        copySkillFiles(allSkills, skillDestDir, null)
-        console.log(`  ${allSkills.length} module(s) installed to ${skillDestDir}/`)
+        const skillDestDir = installSkillsFor(toolName, allSkills, isGlobal, null)
+        console.log(`  ${allSkills.length} cognitive module(s) installed to ${skillDestDir}/`)
       }
     }
 
@@ -512,10 +763,12 @@ const SKILL_TARGETS = {
   claude: {
     project: '.claude/skills',
     global: join(HOME, '.claude', 'skills'),
+    autoInstallRouters: true,
   },
   opencode: {
     project: '.opencode/skills',
     global: join(HOME, '.config', 'opencode', 'skills'),
+    autoInstallRouters: false,
   },
 }
 
@@ -524,12 +777,38 @@ function isSkillFrozen(skillDir) {
   return /^\s*status:\s*frozen/m.test(content)
 }
 
+// All installable skills = cognitive skills (static, from skills/) UNION
+// router skills (ndv-flow is the only router skill, hardcoded by name).
+// Order: cognitive first, then routers — matches the standalone install-skills
+// command's historical install order.
 function getAllSkills() {
+  return [...getCognitiveSkills(), ...getRouterSkills()]
+}
+
+// Router skills. ndv-flow is the only router skill — hardcoded by name.
+// The agent file is the single source of truth for the agent itself; the skill
+// body is produced by transformAgentToSkill(). Name-driven, not marker-driven:
+// if a future router agent is added, extend this list.
+const ROUTER_SKILLS = ['ndv-flow']
+function getRouterSkills() {
+  return ROUTER_SKILLS
+}
+
+// Cognitive skills are the optional enhancement modules — everything that is NOT
+// a router skill. These are the ones shown in the interactive picker and gated
+// behind --all in non-interactive mode.
+function getCognitiveSkills() {
   if (!existsSync(SKILLS_DIR)) return []
   return readdirSync(SKILLS_DIR).filter(f => {
-    if (!existsSync(join(SKILLS_DIR, f, 'SKILL.md'))) return false
-    if (isSkillFrozen(f)) return false
-    return true
+    const skillFile = join(SKILLS_DIR, f, 'SKILL.md')
+    if (!existsSync(skillFile)) return false
+    const content = readFileSync(skillFile, 'utf8')
+    if (/^\s*status:\s*frozen/m.test(content)) return false
+    // Defense-in-depth: router skills are derived from agents/ (not skills/),
+    // so metadata.type: router should never appear here. This filter prevents
+    // a misplaced router SKILL.md from being treated as cognitive. The
+    // invariant is enforced by test/validate-agents.test.js.
+    return parseSkillType(content) !== 'router'
   })
 }
 
@@ -567,16 +846,47 @@ function skillTypeTag(type) {
 // Project-scope paths (e.g. '.opencode/skills') are relative to cwd.
 // Global paths (already absolute) are returned unchanged.
 function resolveSkillDir(dir) {
-  return join(process.cwd(), dir)
+  return resolve(dir)
 }
 
 // Build the grouped options array consumed by promptMultiSelect.
 // Shared by the install wizard skills step and the standalone install-skills command.
+//
+// fs coupling note: despite the pure-looking signature buildSkillGroups(allSkills),
+// this function reads the filesystem to derive display content — it calls
+// getRouterSkills() (which returns the ROUTER_SKILLS constant) and readFileSync on either the agent
+// file (routers, via transformAgentToSkill) or skills/<name>/SKILL.md
+// (cognitive). The `allSkills` argument is the name list; the bodies are NOT
+// passed in. This is intentional (single source of truth = the agent/skill
+// files) but the signature does not advertise it. A rename to
+// buildSkillGroupsWithFsRead or reader injection was considered and rejected
+// as churn-heavy (>2 call sites incl. tests) for no behavioral gain. If you
+// add a caller that needs purity, inject the readers then — do not assume
+// this function is pure.
 function buildSkillGroups(allSkills) {
   const groupMap = new Map()  // groupLabel → items[]
+  const routers = new Set(getRouterSkills())
   for (const name of allSkills) {
-    const skillPath = join(SKILLS_DIR, name, 'SKILL.md')
-    const content = readFileSync(skillPath, 'utf8')
+    let content
+    if (routers.has(name)) {
+      // Derived router skill: read the agent file and apply the transform to
+      // produce the skill content, then parse type/description from it. Mirrors
+      // the branch in installSkillsFor() — routers have no static SKILL.md.
+      const agentContent = readFileSync(join(AGENTS_DIR, `${name}.md`), 'utf8')
+      content = transformAgentToSkill(agentContent)
+    } else {
+      // Static cognitive skill: read from skills/<name>/SKILL.md.
+      // Parity guard: the router branch is guarded by routers.has(name)
+      // membership; the cognitive branch had no guard — a caller passing an
+      // arbitrary name would hit an unguarded ENOENT. Skip with a warning,
+      // consistent with getCognitiveSkills' missing-file handling.
+      const skillFile = join(SKILLS_DIR, name, 'SKILL.md')
+      if (!existsSync(skillFile)) {
+        console.warn(`buildSkillGroups: skipping "${name}" — ${skillFile} not found`)
+        continue
+      }
+      content = readFileSync(skillFile, 'utf8')
+    }
     const type = parseSkillType(content)
     const desc = parseSkillDescription(content).slice(0, 52)
     const tag = skillTypeTag(type)
@@ -592,22 +902,49 @@ function buildSkillGroups(allSkills) {
   return Array.from(groupMap.entries()).map(([label, items]) => ({ label, items }))
 }
 
-// Copy a list of skill directories into destDir.
-// s: optional spinner instance — if provided, updates message per skill.
-// Used by both the interactive install wizard step and the standalone install-skills command.
-function copySkillFiles(selected, destDir, s) {
+// Shared skill-install logic for all four call sites.
+// Resolves the destination dir, creates it, and installs each skill.
+// Router skills (derived from agent files named in the ROUTER_SKILLS constant) are
+// produced via transformAgentToSkill() from the agent file; cognitive skills
+// are copied verbatim from skills/<name>/SKILL.md.
+// toolName: the tool key (claude, opencode)
+// names: array of skill names (cognitive dir names or router agent base names)
+// isGlobal: project vs global scope
+// s: optional spinner — if provided, updates message per skill (interactive use)
+// Returns the resolved destination dir path.
+function installSkillsFor(toolName, names, isGlobal, s, label = '') {
+  const target = SKILL_TARGETS[toolName]
+  const destDir = resolveSkillDir(isGlobal ? target.global : target.project)
   mkdirSync(destDir, { recursive: true })
-  for (const name of selected) {
-    const srcDir = join(SKILLS_DIR, name)
+  const routers = new Set(getRouterSkills())
+  for (const name of names) {
     const destSkillDir = join(destDir, name)
     mkdirSync(destSkillDir, { recursive: true })
-    copyFileSync(join(srcDir, 'SKILL.md'), join(destSkillDir, 'SKILL.md'))
-    if (s) {
-      s.message(`✓ ${name}`)
+    if (routers.has(name)) {
+      // Derived router skill: read agent file, apply transform, write SKILL.md.
+      const agentPath = join(AGENTS_DIR, `${name}.md`)
+      const agentContent = readFileSync(agentPath, 'utf8')
+      const skillContent = transformAgentToSkill(agentContent)
+      writeFileSync(join(destSkillDir, 'SKILL.md'), skillContent)
     } else {
-      console.log(`  ✓  ${name}`)
+      // Static cognitive skill: copy verbatim from skills/<name>/SKILL.md.
+      // Parity guard: mirrors the existsSync guard in buildSkillGroups' cognitive
+      // branch — skip with a warning instead of crashing mid-install on ENOENT.
+      const srcDir = join(SKILLS_DIR, name)
+      const srcSkill = join(srcDir, 'SKILL.md')
+      if (!existsSync(srcSkill)) {
+        console.warn(`installSkillsFor: skipping "${name}" — ${srcSkill} not found`)
+        continue
+      }
+      copyFileSync(srcSkill, join(destSkillDir, 'SKILL.md'))
+    }
+    if (s) {
+      s.message(label ? `✓ ${name} ${label}` : `✓ ${name}`)
+    } else {
+      console.log(label ? `  ✓ ${name} ${label}` : `  ✓ ${name}`)
     }
   }
+  return destDir
 }
 
 async function installSkills(toolName, isGlobal = false, interactive = false) {
@@ -625,7 +962,6 @@ async function installSkills(toolName, isGlobal = false, interactive = false) {
     process.exit(1)
   }
 
-  let destDir = resolveSkillDir(isGlobal ? target.global : target.project)
   let selected = allSkills
 
   if (interactive) {
@@ -638,7 +974,6 @@ async function installSkills(toolName, isGlobal = false, interactive = false) {
         { value: 'global', label: 'Global', hint: `${target.global}/` },
       ])
       isGlobal = scope === 'global'
-      destDir = resolveSkillDir(isGlobal ? target.global : target.project)
     }
 
     const groups = buildSkillGroups(allSkills)
@@ -646,23 +981,31 @@ async function installSkills(toolName, isGlobal = false, interactive = false) {
 
     if (selected.length === 0) {
       cancel('No modules selected.')
+      return
     }
 
+    let destDir
     await withSpinner(`Installing ${selected.length} module(s)...`, async (s) => {
-      copySkillFiles(selected, destDir, s)
+      destDir = installSkillsFor(toolName, selected, isGlobal, s)
     })
 
-    outro(`Done. ${selected.length} module(s) installed to ${destDir}/\nTo use: Load the \`${selected[0]}\` skill in any step file.`)
+    const hint = selected.length === 1
+      ? `Load the \`${selected[0]}\` skill in any step file.`
+      : `Load the installed skills in any step file.`
+    outro(`Done. ${selected.length} module(s) installed to ${destDir}/\nTo use: ${hint}`)
   } else {
     // Non-interactive — install all skills
     const scope = isGlobal ? 'global' : 'project'
     console.log(`\n  Installing NDV cognitive modules for ${toolName} (${scope})...\n`)
 
-    copySkillFiles(selected, destDir, null)
+    const destDir = installSkillsFor(toolName, selected, isGlobal, null)
 
     console.log(`\n  ${selected.length} module(s) installed to ${destDir}/`)
     console.log(`\n  To use in a skill step file:`)
-    console.log(`    Load the \`${selected[0] ?? 'ndv-skeptical'}\` skill before proceeding.\n`)
+    const hint = selected.length === 1
+      ? `Load the \`${selected[0]}\` skill before proceeding.`
+      : `Load the installed skills before proceeding.`
+    console.log(`    ${hint}\n`)
     console.log(`Done.`)
   }
 }
@@ -733,6 +1076,12 @@ function help() {
   `)
 }
 
+// Exported for direct unit testing (test/install-router-skills.test.js,
+// test/transform-skill.test.js). The transform is a pure function; buildSkillGroups
+// reads the filesystem (agents/ + skills/) but is deterministic for a given repo
+// state and is exercised by the interactive-path coverage tests.
+export { transformAgentToSkill, buildSkillGroups }
+
 const TOOL_OPTIONS = [
   { value: 'claude',   label: 'Claude Code',    hint: '.claude/agents/',                    signals: ['.claude', 'CLAUDE.md'] },
   { value: 'opencode', label: 'OpenCode',        hint: '.opencode/agents/',                  signals: ['.opencode', 'opencode.json'] },
@@ -763,7 +1112,12 @@ const isGlobal = rest.includes('--global') || rest.includes('-g')
 const isAll = rest.includes('--all')
 const arg = rest.find(a => !a.startsWith('-'))
 
-switch (cmd) {
+// CLI entry guard: only run the command dispatcher when this file is invoked
+// directly as the entry point (not when imported for unit testing).
+const isMainEntry = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+
+if (isMainEntry) {
+  switch (cmd) {
   case 'install': {
     if (arg === 'copilot') {
       if (isGlobal) {
@@ -834,4 +1188,5 @@ switch (cmd) {
     console.error(`Unknown command: ${cmd}`)
     help()
     process.exit(1)
+  }
 }

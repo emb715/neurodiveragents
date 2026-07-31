@@ -4,7 +4,7 @@
  */
 
 import assert from 'node:assert/strict'
-import { readdirSync, readFileSync } from 'node:fs'
+import { readdirSync, readFileSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -29,7 +29,17 @@ export function parseFrontmatter(content, filePath) {
   const body = match[2]
 
   const get = (key) => {
-    const m = raw.match(new RegExp(`^${key}:\\s*(.+)$`, 'm'))
+    // Escape regex metacharacters in `key` before interpolation — all current
+    // callers pass literal alphanumeric keys (which escape to themselves), but a
+    // future caller passing a key with metacharacters would silently misbehave.
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    // Handle the block scalar form (`key: >\n  indented text`) first — the
+    // single-line regex below only captures the indicator (`>`) for that form,
+    // not the body. Block scalar body lines are indented (2+ spaces); collect
+    // them until a non-indented line, then collapse to a single-line string.
+    const block = raw.match(new RegExp(`^${escapedKey}:\\s*[>|]\\s*\\n((?:  [^\\n]+\\n?)+)`, 'm'))
+    if (block) return block[1].replace(/[ \t]+/g, ' ').trim()
+    const m = raw.match(new RegExp(`^${escapedKey}:\\s*(.+)$`, 'm'))
     return m ? m[1].trim() : null
   }
 
@@ -65,4 +75,35 @@ export function humanFiles() {
 
 export function readAgent(name) {
   return readFileSync(join(AGENTS_DIR, name + '.md'), 'utf8')
+}
+
+/**
+ * Replica of getAllSkills() from bin/ndv.js, used by the interactive-path
+ * coverage tests (transform-skill.test.js, install-router-skills.test.js).
+ *
+ * Composition mirrors the production function:
+ *   [...cognitiveSkillsFromDir(), ...routers]
+ *
+ * - Cognitive: skills/ dirs with a non-frozen SKILL.md whose metadata.type
+ *   !== 'router'. The parseSkillType regex `/^\s{2}type:\s*(.+)$/m` mirrors
+ *   bin/ndv.js.
+ * - Router: hardcoded ['ndv-flow'] — mirrors getRouterSkills in bin/ndv.js
+ *   (name-driven via the ROUTER_SKILLS constant).
+ *
+ * The long-term fix is to export getAllSkills and getCognitiveSkills from
+ * bin/ndv.js so tests call the real composition — flagged as a handoff to
+ * ndv-build. Until then, this shared replica is the single copy.
+ */
+export function getAllSkillsReplica() {
+  const skillsDir = join(ROOT, 'skills')
+  const cognitive = readdirSync(skillsDir).filter(f => {
+    const skillFile = join(skillsDir, f, 'SKILL.md')
+    if (!existsSync(skillFile)) return false
+    const content = readFileSync(skillFile, 'utf8')
+    if (/^\s*status:\s*frozen/m.test(content)) return false
+    const typeMatch = content.match(/^\s{2}type:\s*(.+)$/m)
+    return typeMatch ? typeMatch[1].trim() !== 'router' : true
+  })
+  const routers = ['ndv-flow']
+  return [...cognitive, ...routers]
 }

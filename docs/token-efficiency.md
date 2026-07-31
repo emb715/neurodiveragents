@@ -1,14 +1,73 @@
 # Token Efficiency Patterns
 
-Why the fleet's agents are wired the way they are around reading, verification, and iteration. This is the human-readable record behind a set of operational rules embedded in the agent files — the "why" that the model files deliberately omit.
+Why the fleet's architecture and agent wiring are built the way they are. This document covers two layers:
+
+- **System-level** — how the orchestrator + specialist delegation model saves tokens by architectural design, not just context hygiene.
+- **Agent-level** — operational rules inside each agent that prevent wasted reads, redundant investigation, and verbatim re-emission.
+
+The agent model files deliberately omit the "why"; this is the human-readable record behind both layers.
 
 ---
 
-## Where these came from
+## System-level — delegation as a token architecture
+
+### Thesis
+
+An orchestrator (`ndv-flow`) that decomposes, routes, and conducts — but never implements — is a token-saving architecture, not merely a context-quality one. The fleet's inter-agent protocol is engineered so that the orchestrator's context grows by summaries, not by file contents, reasoning traces, or debug tangents. Each subagent's context is scoped to its task and resets between tasks. Total-system tokens can exceed a single monolithic agent on trivial work, but for any non-trivial session the monolithic alternative accumulates every read, every tangent, and every dead end *permanently across every subsequent turn*. The fleet pays bounded subagent cost; the monolith pays unbounded growing-tail cost.
+
+### The five mechanisms
+
+Each mechanism is a structural constraint on the bridge between orchestrator and subagents. None is incidental.
+
+1. **Sentinel discipline** — subagents return 3-5 bullets, max 200 words, plus structured handoff lines. The orchestrator never ingests full subagent output into its own context. The return payload is capped by spec, not by goodwill.
+   - *Enforced in:* `ndv-flow` Dispatch Protocol, Brief template, Post-Execution.
+
+2. **Context slicing** — forward passthrough to a downstream subagent is sliced to what that task actually consumes, not the full prior output. A 15-finding review passed to an agent fixing 2 files is context inflation; the protocol forbids it. The bridge forward is minimized by rule, not by judgment.
+   - *Enforced in:* `ndv-flow` Dispatch Protocol, "Context slicing — mandatory for all context passthrough."
+
+3. **Brief Contract** — each subagent receives a structured minimal brief built from the target agent's contract section, not conversation history. No full-context replay per dispatch. The subagent starts scoped, not reconstructed.
+   - *Enforced in:* `ndv-flow` Dispatch Protocol, "Brief authoring — mandatory before every prompt."
+
+4. **Iterative task rule** — a decision rule derived in iteration 1 is carried forward verbatim. The brief for iteration N states the rule; it does not re-derive it. No fresh investigation for resolved patterns.
+   - *Enforced in:* `ndv-flow` Dispatch Protocol, "Iterative task rule."
+
+5. **Batching** — multiple non-blocking handoffs to the same agent merge into one dispatch per group. No one-per-line inflation. The orchestrator's routing surface stays proportional to *agents*, not to *findings*.
+   - *Enforced in:* `ndv-flow` Post-Group Protocol, step 5.
+
+A sixth structural fact compounds these: **Flow's toolset is Read/Glob/Task only.** It cannot accumulate implementation context because it cannot implement. Its context grows by summaries and routing reasoning, not by file contents or debug logs. The toolset boundary is a token boundary.
+
+### Why prompt caching narrows but does not close the gap
+
+Prompt caching makes repeated prefixes cheap on subsequent calls. In a monolithic single-agent session, the cached prefix is nearly free on repeat — but caching does nothing for the *growing uncached tail*. Every new turn, tool call, and intermediate result accumulates and is billed fresh on each subsequent call. A 40-turn monolithic session has a large tail growing every turn. The fleet's main thread grows only by 200-word summaries plus routing reasoning; subagent tails are small and reset between tasks. Caching narrows the gap on the *static* portion but cannot close it on the *growing* portion. The architecture wins on exactly the dimension caching doesn't cover.
+
+### When it wins, when it doesn't
+
+**Wins:** tasks with high exploration-to-output ratio — research, diagnosis, review. The bulk of reads and tangents is discarded; only the synthesis returns to the orchestrator. Multi-domain workloads (security + performance + review in parallel). Artifact digestion (PRD → task graph → fleet execution).
+
+**Doesn't win:** tightly-coupled sequential work where each step needs the prior step's full detail. If the bridge context to the next subagent must contain the prior subagent's complete output to be useful, slicing cannot reduce it, and the forward bridge cost approaches what a single agent would have held anyway. For linear implementation with shared state across steps, a single agent is often cheaper end-to-end.
+
+The honest boundary: the architecture is a token-saving architecture *for work that decomposes with clean handoff surfaces*. It is not a universal optimization. For work that doesn't decompose, the fleet still works — it just stops being the cheaper option.
+
+### Mechanism locations (traceable, not asserted)
+
+| Mechanism | Enforced in |
+|---|---|
+| Sentinel discipline | `ndv-flow.md` — Dispatch Protocol, Brief template, Post-Execution |
+| Context slicing | `ndv-flow.md` — Dispatch Protocol, "Context slicing" subsection |
+| Brief Contract | `ndv-flow.md` — Dispatch Protocol, "Brief authoring" |
+| Iterative task rule | `ndv-flow.md` — Dispatch Protocol, "Iterative task rule" |
+| Batching | `ndv-flow.md` — Post-Group Protocol, step 5 |
+| Toolset boundary | `ndv-flow.md` — frontmatter `tools: [Read, Glob, Task]` |
+
+---
+
+## Agent-level — execution discipline
+
+### Where these came from
 
 A high-cost orchestration session was analyzed after the fact. The session spanned multiple goals across the full agent pipeline — research, implementation, verification, refactoring, conflict resolution, and debugging.
 
-Five cost patterns emerged. Each one had a structural cause — not bad prompting, not wrong agent selection, but missing rules that the fleet had no way to enforce.
+Six cost patterns emerged. Each one had a structural cause — not bad prompting, not wrong agent selection, but missing rules that the fleet had no way to enforce.
 
 ---
 

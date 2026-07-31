@@ -24,11 +24,10 @@ import {
   existsSync,
   chmodSync,
 } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve, dirname } from 'node:path'
 import { tmpdir } from 'node:os'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
-import { dirname } from 'node:path'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
@@ -139,6 +138,60 @@ test('symlink: pre-existing dangling symlink — must be skipped, not overwritte
     const afterTarget = readlinkSync(linkPath)
     assert.equal(afterTarget, danglingTarget,
       `Dangling symlink was overwritten — install clobbered ${SAMPLE_AGENT}`)
+  } finally {
+    rmSync(fakeHome, { recursive: true, force: true })
+  }
+})
+
+test('symlink: pre-existing valid symlink pointing to a real but wrong target — must be replaced with correct target', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-sym-wrongtarget-'))
+  try {
+    // Arrange: create ~/.claude/agents/ with a valid (non-dangling) symlink for
+    // SAMPLE_AGENT that points to a REAL file — but NOT to the expected opencode
+    // agents path. The installer must unlink it and recreate it pointing at the
+    // correct target.
+    const claudeAgentsDir = join(fakeHome, '.claude', 'agents')
+    mkdirSync(claudeAgentsDir, { recursive: true })
+
+    // Create a real file the symlink will point to (so the link is valid, not dangling)
+    const wrongTargetFile = join(claudeAgentsDir, 'some-other-real.md')
+    writeFileSync(wrongTargetFile, '# I am a real file, but the wrong target')
+
+    // Create the symlink for SAMPLE_AGENT → wrongTargetFile (valid, but wrong)
+    const linkPath = join(claudeAgentsDir, SAMPLE_AGENT)
+    symlinkSync(wrongTargetFile, linkPath)
+
+    // Preconditions: it's a symlink, AND it's valid (target exists — not dangling)
+    const statBefore = lstatSync(linkPath)
+    assert.ok(statBefore.isSymbolicLink(), 'precondition: must be a symlink')
+    assert.ok(existsSync(linkPath), 'precondition: symlink target must exist (valid, non-dangling)')
+    assert.notEqual(
+      resolve(dirname(linkPath), readlinkSync(linkPath)),
+      join(fakeHome, '.config', 'opencode', 'agents', SAMPLE_AGENT),
+      'precondition: symlink must NOT already point to the opencode agents path'
+    )
+
+    // Act
+    const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    assert.equal(r.status, 0, `install failed: ${r.stderr}`)
+
+    // Assert: the symlink was replaced — it now points to the opencode agents dir
+    const statAfter = lstatSync(linkPath)
+    assert.ok(statAfter.isSymbolicLink(), `${SAMPLE_AGENT} is no longer a symlink after install`)
+
+    const expectedTarget = join(fakeHome, '.config', 'opencode', 'agents', SAMPLE_AGENT)
+    const actualResolved = resolve(dirname(linkPath), readlinkSync(linkPath))
+    assert.equal(actualResolved, resolve(expectedTarget),
+      `Symlink was not repointed to the opencode agents path — still points to ${readlinkSync(linkPath)}`)
+
+    // Assert: the original wrong-target real file is untouched (no data loss)
+    assert.ok(existsSync(wrongTargetFile),
+      'the real file the symlink pointed to was destroyed — data loss')
+    assert.equal(
+      readFileSync(wrongTargetFile, 'utf8'),
+      '# I am a real file, but the wrong target',
+      'wrong-target file content was modified — data loss'
+    )
   } finally {
     rmSync(fakeHome, { recursive: true, force: true })
   }

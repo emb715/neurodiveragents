@@ -110,3 +110,72 @@ CHANGED_AGENTS="ndv-foo,ndv-bar" node --test test/validate-agents.test.js
 ### Pre-commit hook
 
 Husky runs `npm test` on every commit. Fix failures before committing — do not skip the hook.
+
+<!-- ndv:start -->
+# neurodiveragents
+
+This project uses the neurodiveragents fleet. When a task matches an agent domain, use the Task tool with the matching subagent_type. Pass full context in the prompt — subagents have no prior conversation history.
+
+## Routing Table
+
+| When the task involves... | Use agent |
+|--------------------------|-----------|
+| PRD, epic, multi-task workload, fleet orchestration | `ndv-flow` |
+| Code review, PR, code smells, quality | `ndv-review` |
+| Bug, stack trace, root cause **unknown** — investigate | `ndv-diagnose` |
+| Root cause **confirmed**, fix known — implement it | `ndv-build` |
+| Rename, extract, restructure, modernize syntax | `ndv-refactor` |
+| Generate tests, improve coverage | `ndv-tester` |
+| Security vulnerabilities, OWASP, auth issues | `ndv-secure` |
+| Slow code, N+1 queries, bundle size, latency | `ndv-optimize` |
+| Add logging, metrics, traces, health checks | `ndv-telemetry` |
+| System design, SOLID violations, architecture review | `ndv-architect` |
+| Implement a spec with schemas, acceptance criteria, file targets, and architecture decided | `ndv-build` |
+| Scope creep, "while we're at it", PRD boundary review, overloaded tickets | `ndv-scope` |
+| Estimate review, sprint plan calibration, roadmap sanity check | `ndv-forecast` |
+| KPI audit, metrics review, coverage targets, DORA metrics, OKRs | `ndv-signal` |
+| Technical docs, API docs, session notes | `ndv-explain` |
+| UI structure, layout decisions, visual hierarchy, design judgment | `ndv-design` → then `ndv-build` |
+| WCAG auditing, ARIA violations, contrast ratios, keyboard nav, screen reader compatibility | `ndv-accessibility` |
+| Codebase lookup, cross-file tracing, "where is X", "how does Y work", feature flow summaries | `ndv-research` |
+| No specialist match / no clear owner / tradeoffs / direct answer / command execution | `ndv-honest` |
+
+
+## Proactive Application
+
+Apply without being asked when the signal is clear:
+
+- Stack trace shared → apply `ndv-diagnose`
+- PR or files to review → apply `ndv-review`
+- "it's slow" or slow query → apply `ndv-optimize`
+- "clean this up" or rename → apply `ndv-refactor`
+- Code with no tests → suggest `ndv-tester`
+- Story has schemas + criteria + file targets + architecture settled → apply `ndv-build`
+- Add logging or observability → apply `ndv-telemetry`
+- UI code, components, or design decisions → apply `ndv-design`
+- UI code with interactive elements, form inputs, or color usage → apply `ndv-accessibility`
+- Accessibility remediation work: classify as `a11y-only` vs `a11y+visual-risk`; route implementation to `ndv-build`, and for visual-risking changes hand off to `ndv-design` before implementation
+- "where is", "how does", "trace this", "what files", "show me" about existing code → apply `ndv-research`
+
+## Conflict Resolution (use highest-priority match)
+
+1. Stack trace / exception / failing test / "debug" language → `ndv-diagnose` (even if the code is auth/payment)
+2. Explicit vulnerability/audit/exploit language → `ndv-secure`
+3. Explicit performance/latency/slow language → `ndv-optimize`
+4. If still ambiguous: diagnose first with `ndv-diagnose`, then hand off
+5. `ndv-honest` handles anything — it is a pure communication layer, not a router.
+6. Layout/structure changes without a spec → `ndv-design` first. `ndv-build` executes specs, not decisions.
+
+Example: "500 error + NullPointerException stack trace in login endpoint" → `ndv-diagnose`
+Example: "Should we switch to pnpm?" → `ndv-honest`
+
+## How to Apply
+
+1. Use the Task tool with `subagent_type: ndv-<specialist>`
+2. Pass full context in the prompt (task description, relevant files, error messages, goals) — subagents have no prior conversation history
+3. For parallel work: spawn multiple Task calls in a single message
+
+## Parallelism Default
+
+All agents default to parallel execution for 4-8 independent files/items.
+<!-- ndv:end -->
