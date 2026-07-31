@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.6.0](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.5.1...neurodiveragents-v1.6.0) (2026-07-31)
+
+
+### Features
+
+* add ndv-flow slash command and router skill auto-install flag ([127c82b](https://github.com/emb715/neurodiveragents/commit/127c82bde888295b7f9faab530bce30b9d463da2))
+* extend fleet with ATDD, NFR assessment, and orchestration protocols ([ec5c9bc](https://github.com/emb715/neurodiveragents/commit/ec5c9bc2170e0ff72a65cc58cfa29ec3338a82fe))
+
+
+### Bug Fixes
+
+* pin tailwind content scanning to index.html only ([a8c895e](https://github.com/emb715/neurodiveragents/commit/a8c895ef598e912a7c4053915ac2654c1ce065d0))
+* point CI validation jobs at split test files ([b00ca4e](https://github.com/emb715/neurodiveragents/commit/b00ca4ee35e2f697785320439b0943976a937d94))
+
+
+### Refactoring
+
+* add token-efficiency optimization rules to fleet agents ([1a41f17](https://github.com/emb715/neurodiveragents/commit/1a41f17abdafcfeec836d63fe740cd6f10675912))
+* assert anchor-sensitive substitutions in transformAgentToSkill ([7735f43](https://github.com/emb715/neurodiveragents/commit/7735f431ca4e884a9bdaf49897baf2e0659db3ed))
+* derive ndv-flow skill from agent file at install time ([45d0d6a](https://github.com/emb715/neurodiveragents/commit/45d0d6ac224a4cd893c016c1beec1c7b81adc630))
+* document buildSkillGroups filesystem coupling ([4b9479e](https://github.com/emb715/neurodiveragents/commit/4b9479e196dbfd6d28b0d249ea78ddb030b3e624))
+* end-anchor the router-type detection regex ([c1569c8](https://github.com/emb715/neurodiveragents/commit/c1569c83d4bd7e38a368e468c1394c83d66fe94f))
+* extract shared frontmatter extractor (DRY) ([c85b6b3](https://github.com/emb715/neurodiveragents/commit/c85b6b3ee5f6ec8a7fcf472b089a7308c5d42a11))
+* guard cognitive-skill reads with existsSync for branch parity ([afd14ab](https://github.com/emb715/neurodiveragents/commit/afd14ab4d177d24eabd048d9bd0b8f1592f9b6d2))
+* strip stale skill:router marker refs, drop dead extractFrontmatter export, collapse replicateGetAllSkills helpers ([9da84c7](https://github.com/emb715/neurodiveragents/commit/9da84c7bf1664d348f3d7b06fb9cdf1a4e9b58c1))
+
+
+### Documentation
+
+* sharpen routing table entries and propagate across all consumers ([50a8c2c](https://github.com/emb715/neurodiveragents/commit/50a8c2cc2387c4bc49fd3eac98ca5b9f92c60a7a))
+
 ## [1.5.1](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.5.0...neurodiveragents-v1.5.1) (2026-05-28)
 
 
