@@ -406,7 +406,7 @@ test('router auto-install: installed SKILL.md equals transformAgentToSkill(agent
 // ─── transformAgentToSkill unit test: three deltas produce golden output ──────
 //
 // The transform is the single source of truth for the router skill body. This
-// test pins the contract: the agent file (with skill: marker) + transform ==
+// test pins the contract: the agent file (named in ROUTER_SKILLS) + transform ==
 // the historical static skill golden output. If the agent file or transform
 // drifts, this test catches it before install.
 //

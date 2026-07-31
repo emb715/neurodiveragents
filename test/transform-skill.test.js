@@ -149,7 +149,7 @@ test('transformAgentToSkill: frontmatter present but no description block scalar
   assert.equal(out, input, 'content with frontmatter but no description block scalar should be returned unchanged')
 })
 
-test('transformAgentToSkill: frontmatter with description block scalar still transforms (transform does not gate on skill marker)', () => {
+test('transformAgentToSkill: frontmatter with description block scalar still transforms (transform does not gate on router declaration)', () => {
   // Arrange: a top-level description block scalar present. The transform runs
   // whenever the description block scalar exists. (Router detection is the job
   // of getRouterSkills, not the transform.) This agent has no router declaration
@@ -168,10 +168,10 @@ test('transformAgentToSkill: frontmatter with description block scalar still tra
   const out = transformAgentToSkill(input)
 
   // Assert: the transform runs (description block scalar exists) regardless of
-  // any skill marker. The transform does NOT gate on the skill scalar value.
-  assert.notEqual(out, input, 'transform should run when description block scalar exists, regardless of skill marker')
+  // any router declaration. The transform does NOT gate on the skill scalar value.
+  assert.notEqual(out, input, 'transform should run when description block scalar exists, regardless of router declaration')
   assert.match(out, /^---\nname: ndv-other\n/m, 'transform should produce skill frontmatter with the agent name')
-  assert.match(out, /  type: router\n/, 'transform hardcodes metadata.type: router regardless of input skill marker')
+  assert.match(out, /  type: router\n/, 'transform hardcodes metadata.type: router regardless of input skill scalar')
 })
 
 // ─── Inline `description:` form (not block scalar `>`) ────────────────────────

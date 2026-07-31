@@ -85,7 +85,6 @@ function transformForOpenCode(content) {
 // and `body` is the remainder, or `null` if no frontmatter delimiters are
 // present. The regex is unchanged from its prior inline form — this is a
 // mechanical extraction for DRY, not a parser upgrade.
-// Exported so tests can use the real extractor instead of local replicas.
 function extractFrontmatter(content) {
   const fmMatch = content.match(/^(---\n)([\s\S]*?)(^---\n)/m)
   if (!fmMatch) return null

@@ -203,11 +203,12 @@ describe('ADR-008: Brief Contract — must contain BRIEF_REJECTED format', () =>
 
 // ─── Architectural invariant: router skills never live in skills/ ─────────────
 //
-// Router skills are DERIVED at install time from agent files that declare the
-// `skill.type: router` marker (bin/ndv.js getRouterSkills → transformAgentToSkill).
-// They must NEVER exist as static files under skills/*/SKILL.md — that would
-// create two sources of truth (the agent file AND the static skill), and the
-// derived skill would silently diverge from the static copy on agent edits.
+// Router skills are DERIVED at install time from agent files (bin/ndv.js
+// getRouterSkills hardcodes ['ndv-flow'] → transformAgentToSkill produces the
+// skill body). They must NEVER exist as static files under skills/*/SKILL.md —
+// that would create two sources of truth (the agent file AND the static skill),
+// and the derived skill would silently diverge from the static copy on agent
+// edits.
 //
 // This was previously an incidental invariant held by comments alone
 // (getCognitiveSkills' defense-in-depth filter would silently exclude a
