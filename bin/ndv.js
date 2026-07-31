@@ -112,19 +112,17 @@ const BLOCK_SCALAR_BODY = '(?:[ ]{2,}[^\\n]*\\n|\\n)'
 // golden output:
 //   Delta A — replace agent frontmatter with skill frontmatter
 //     (name + description:block-scalar from the top-level `description:` key +
-//     metadata block; strip model/effort/mode/tools and the `skill: router`
-//     scalar marker)
+//     metadata block; strip model/effort/mode/tools)
 //   Delta B — insert "Running as a skill (not a subagent)" section immediately
 //     after the intro paragraph block (before "## Out of Scope")
 //   Delta C — Dispatch Protocol term substitutions (Task → Agent, install path)
 //   Plus: Deliberation Protocol "ONE Task message" → "ONE message", and trailing
 //   newline stripped (the skill golden output ends without a final newline).
 //
-// Marker-driven: the scalar `skill: router` marker in the agent frontmatter is
-// detected by getRouterSkills (not by this transform). The transform reads the
-// top-level `description:` block scalar as the single source for the skill
-// description. Future router agents just add the marker — no transform changes
-// needed.
+// Name-driven: the ROUTER_SKILLS constant names which agent files are routers,
+// and getRouterSkills returns that constant (not by reading agents/). The
+// transform reads the top-level `description:` block scalar as the single
+// source for the skill description.
 function transformAgentToSkill(content) {
   // Extract the YAML frontmatter block.
   const fm = extractFrontmatter(content)
@@ -165,8 +163,9 @@ function transformAgentToSkill(content) {
   // The capture is the raw indented body (the lines under the block-scalar
   // indicator). If the agent has NO top-level description block scalar, return
   // the content unchanged — consistent with the prior "no skill block →
-  // return content" behavior (the scalar `skill: router` marker is detected
-  // separately by getRouterSkills; the transform only needs the description).
+  // return content" behavior (router detection is name-driven via the
+  // ROUTER_SKILLS constant in getRouterSkills; the transform only needs the
+  // description).
   //
   // YAML block scalars (`>` and `|`) permit blank lines and whitespace-only
   // lines as paragraph separators — the content after a blank line is still
@@ -780,59 +779,20 @@ function isSkillFrozen(skillDir) {
 }
 
 // All installable skills = cognitive skills (static, from skills/) UNION
-// router skills (derived at install time from agents with the skill.type:
-// router marker). Order: cognitive first, then routers — matches the
-// standalone install-skills command's historical install order.
+// router skills (ndv-flow is the only router skill, hardcoded by name).
+// Order: cognitive first, then routers — matches the standalone install-skills
+// command's historical install order.
 function getAllSkills() {
   return [...getCognitiveSkills(), ...getRouterSkills()]
 }
 
-// Router skills are derived at install time from agent files that declare a
-// `skill.type: router` marker in their frontmatter. The agent file is the
-// single source of truth — the skill body is produced by transformAgentToSkill().
-// Marker-driven, not name-driven: future router agents just add the marker.
-// Returns agent base names (e.g. 'ndv-flow') — the install path is the skill dir.
-//
-// Process-lifetime memoization: agents/ does not change during a single CLI
-// invocation, so the router-skill set is deterministic for the whole process.
-// The cache below collapses 2-3 redundant scans per install run (installAgents
-// → installSkillsFor → buildSkillGroups) to one scan. No invalidation logic is
-// added by design — if a future test mutates agents/ between calls within one
-// process, it must clear `routerSkillsCache = null` manually; the installer CLI
-// itself never hits that case.
-// Callers receive the cached array BY REFERENCE — do not mutate it
-// (push/sort/splice) or you poison the cache for all subsequent callers.
-// All current callers are read-only (new Set(), spread, for...of).
-let routerSkillsCache = null
+// Router skills. ndv-flow is the only router skill — hardcoded by name.
+// The agent file is the single source of truth for the agent itself; the skill
+// body is produced by transformAgentToSkill(). Name-driven, not marker-driven:
+// if a future router agent is added, extend this list.
+const ROUTER_SKILLS = ['ndv-flow']
 function getRouterSkills() {
-  if (routerSkillsCache !== null) return routerSkillsCache
-  if (!existsSync(AGENTS_DIR)) {
-    routerSkillsCache = []
-    return routerSkillsCache
-  }
-  routerSkillsCache = readdirSync(AGENTS_DIR)
-    .filter(f => f.endsWith('.md'))
-    .filter(f => {
-      const content = readFileSync(join(AGENTS_DIR, f), 'utf8')
-      // Scope detection to the YAML frontmatter block only. The sibling
-      // transforms (transformForOpenCode, transformAgentToSkill) use the same
-      // fmMatch pattern; getRouterSkills must too, or "skill: router" appearing
-      // in BODY prose or code blocks would falsely match. No frontmatter →
-      // not a router.
-      const fm = extractFrontmatter(content)
-      if (!fm) return false
-      const fmRaw = fm.fm
-      // Match the top-level scalar `skill: router` marker in the frontmatter.
-      // The marker is a single line — the `skill:` key with the scalar value
-      // `router`. End-anchored: "router" is an exact marker, not a prefix —
-      // without the `$` anchor, "skill: routerized" or "skill: router-foo"
-      // would match. Trailing whitespace before line end is tolerated
-      // (`\s*$`) — YAML treats it as insignificant; a stray space must not
-      // false-reject a router agent.
-      return /^skill:\s*router\s*$/m.test(fmRaw)
-    })
-    .map(f => f.replace(/\.md$/, ''))
-  return routerSkillsCache
+  return ROUTER_SKILLS
 }
 
 // Cognitive skills are the optional enhancement modules — everything that is NOT
@@ -895,7 +855,7 @@ function resolveSkillDir(dir) {
 //
 // fs coupling note: despite the pure-looking signature buildSkillGroups(allSkills),
 // this function reads the filesystem to derive display content — it calls
-// getRouterSkills() (which reads agents/) and readFileSync on either the agent
+// getRouterSkills() (which returns the ROUTER_SKILLS constant) and readFileSync on either the agent
 // file (routers, via transformAgentToSkill) or skills/<name>/SKILL.md
 // (cognitive). The `allSkills` argument is the name list; the bodies are NOT
 // passed in. This is intentional (single source of truth = the agent/skill
@@ -945,7 +905,7 @@ function buildSkillGroups(allSkills) {
 
 // Shared skill-install logic for all four call sites.
 // Resolves the destination dir, creates it, and installs each skill.
-// Router skills (derived from agents with the skill.type: router marker) are
+// Router skills (derived from agent files named in the ROUTER_SKILLS constant) are
 // produced via transformAgentToSkill() from the agent file; cognitive skills
 // are copied verbatim from skills/<name>/SKILL.md.
 // toolName: the tool key (claude, opencode)
@@ -1121,9 +1081,7 @@ function help() {
 // test/transform-skill.test.js). The transform is a pure function; buildSkillGroups
 // reads the filesystem (agents/ + skills/) but is deterministic for a given repo
 // state and is exercised by the interactive-path coverage tests.
-// extractFrontmatter is exported so tests can use the real extractor instead
-// of local replicas (sets up the DRY collapse of the test-side copies).
-export { transformAgentToSkill, buildSkillGroups, extractFrontmatter }
+export { transformAgentToSkill, buildSkillGroups }
 
 const TOOL_OPTIONS = [
   { value: 'claude',   label: 'Claude Code',    hint: '.claude/agents/',                    signals: ['.claude', 'CLAUDE.md'] },

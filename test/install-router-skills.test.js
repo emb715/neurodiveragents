@@ -40,39 +40,22 @@ import { join, dirname } from 'node:path'
 import { tmpdir } from 'node:os'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
+import { getAllSkillsReplica } from './helpers.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
 const BIN = join(ROOT, 'bin', 'ndv.js')
 const AGENT_FILE = join(ROOT, 'agents', 'ndv-flow.md')
-const AGENTS_DIR = join(ROOT, 'agents')
 const SKILLS_DIR = join(ROOT, 'skills')
 
 // transformAgentToSkill is a pure function exported from bin/ndv.js. Imported
 // directly (no subprocess) so the unit test runs in-process and is cheap.
 // buildSkillGroups is exported for interactive-path coverage (reads the
 // filesystem — agents/ and skills/ — but is deterministic for a given repo).
-// extractFrontmatter is the REAL extractor from bin/ndv.js — used here instead
-// of a local regex replica so the marker-detection contract models the
-// production extraction path, not a copy that can drift from it.
-const { transformAgentToSkill, buildSkillGroups, extractFrontmatter } = await import(BIN)
+const { transformAgentToSkill, buildSkillGroups } = await import(BIN)
 
-// isRouterAgent: the marker-detection contract used by getRouterSkills, driven
-// through the REAL extractFrontmatter (exported from bin/ndv.js). Mirrors the
-// exact regex from getRouterSkills:
-//   /^skill:\s*router\s*$/m  (top-level scalar, end-anchored, trailing-whitespace-tolerant)
-// Returns true iff the content's frontmatter contains the scalar marker.
-// Replaces the prior local detectRouterFromFrontmatter replica — three copies
-// of the frontmatter regex collapsed to one (the exported extractor is the
-// single source of truth).
-function isRouterAgent(content) {
-  const fm = extractFrontmatter(content)
-  if (!fm) return false
-  const fmRaw = fm.fm
-  return /^skill:\s*router\s*$/m.test(fmRaw)
-}
-
-// Router skill is the fleet entry point — the only metadata.type: router skill.
+// Router skill is the fleet entry point — the only router skill, hardcoded by
+// name in bin/ndv.js getRouterSkills (returns ['ndv-flow']).
 const ROUTER_SKILL = 'ndv-flow'
 // A known cognitive-module skill used to assert optionality.
 const COGNITIVE_SKILL = 'ndv-skeptical'
@@ -570,51 +553,23 @@ test('router installed SKILL.md contains the "Running as a skill" section (Delta
 // is now exported, so these tests call it directly — covering the previously
 // zero-coverage interactive picker path.
 
-// Replicate getAllSkills() composition against the real filesystem. getAllSkills
-// is NOT exported from bin/ndv.js — the ideal fix is to export it and
-// getCognitiveSkills so tests call the real composition (flagged as a handoff
-// to ndv-build). Until then, this replica is kept IDENTICAL to the one in
-// test/transform-skill.test.js and uses the REAL extractFrontmatter (via
-// isRouterAgent) for router detection plus the same parseSkillType regex
-// (`/^\s{2}type:\s*(.+)$/m`) for the cognitive-type filter, so the two replicas
-// cannot drift from each other or from the production extraction path.
-//
-// Cognitive: skills/ dirs with a non-frozen SKILL.md whose metadata.type !== 'router'.
-// Router: agents/ files with the frontmatter marker (via isRouterAgent).
-function replicateGetAllSkills() {
-  const cognitive = readdirSync(SKILLS_DIR).filter(f => {
-    const skillFile = join(SKILLS_DIR, f, 'SKILL.md')
-    if (!existsSync(skillFile)) return false
-    const content = readFileSync(skillFile, 'utf8')
-    if (/^\s*status:\s*frozen/m.test(content)) return false
-    const typeMatch = content.match(/^\s{2}type:\s*(.+)$/m)
-    return typeMatch ? typeMatch[1].trim() !== 'router' : true
-  })
-  const routers = readdirSync(AGENTS_DIR)
-    .filter(f => f.endsWith('.md'))
-    .filter(f => isRouterAgent(readFileSync(join(AGENTS_DIR, f), 'utf8')))
-    .map(f => f.replace(/\.md$/, ''))
-  return [...cognitive, ...routers]
-}
-
 test('buildSkillGroups FIXED: does NOT throw on the interactive install-skills input (router derived, not static)', () => {
   // Precondition: the router has no static skill file (the old crash premise),
-  // and the router IS detected from its agent frontmatter.
+  // and the router agent file exists (getRouterSkills hardcodes ndv-flow by name).
   const routerStaticFile = join(ROOT, 'skills', 'ndv-flow', 'SKILL.md')
   assert.ok(
     !existsSync(routerStaticFile),
     'precondition: the router has no static SKILL.md (it is derived, not static)'
   )
-  const agentContent = readFileSync(AGENT_FILE, 'utf8')
   assert.ok(
-    isRouterAgent(agentContent),
-    'precondition: agents/ndv-flow.md has the frontmatter router marker → getRouterSkills returns it → it is in getAllSkills()'
+    existsSync(AGENT_FILE),
+    'precondition: agents/ndv-flow.md exists → getRouterSkills returns it → it is in getAllSkills()'
   )
 
   // Act + Assert: buildSkillGroups(getAllSkills()) does NOT throw. Routers are
   // derived from the agent file via transformAgentToSkill; cognitive skills read
   // the static file.
-  const allSkills = replicateGetAllSkills()
+  const allSkills = getAllSkillsReplica()
   assert.ok(allSkills.includes('ndv-flow'), 'precondition: the router ndv-flow is in getAllSkills()')
 
   let groups
@@ -628,7 +583,7 @@ test('buildSkillGroups FIXED: does NOT throw on the interactive install-skills i
 test('buildSkillGroups FIXED: interactive-path output has Fleet skills (router, [router] tag) and Cognitive modules groups', () => {
   // Act: the exact composition the interactive installSkills() path passes to
   // buildSkillGroups at line ~857.
-  const groups = buildSkillGroups(replicateGetAllSkills())
+  const groups = buildSkillGroups(getAllSkillsReplica())
   const labels = groups.map(g => g.label)
 
   // Assert: both groups present.
@@ -674,7 +629,7 @@ test('interactive orchestration chain: getAllSkills → buildSkillGroups → ins
   const dir = mkdtempSync(join(tmpdir(), 'ndv-orch-chain-'))
   try {
     // Step 1 — getAllSkills() equivalent (replica; getAllSkills not exported).
-    const allSkills = replicateGetAllSkills()
+    const allSkills = getAllSkillsReplica()
     assert.ok(allSkills.includes('ndv-flow'), 'precondition: router is in the skill set')
     assert.ok(allSkills.includes('ndv-skeptical'), 'precondition: a cognitive skill is in the skill set')
 
@@ -737,7 +692,7 @@ test('interactive orchestration chain: buildSkillGroups output shape is valid fo
   // The orchestration wiring contract: buildSkillGroups returns the exact shape
   // promptMultiSelect consumes. If a field is missing or mis-named, the picker
   // throws at render time — a wiring bug the function-level chain catches here.
-  const allSkills = replicateGetAllSkills()
+  const allSkills = getAllSkillsReplica()
   const groups = buildSkillGroups(allSkills)
 
   for (const group of groups) {
@@ -759,7 +714,7 @@ test('interactive orchestration chain: selecting ONLY a router installs the rout
   try {
     // Arrange: prove the picker COULD produce a router-only selection — the
     // Fleet skills group is non-empty and selectable on its own.
-    const allSkills = replicateGetAllSkills()
+    const allSkills = getAllSkillsReplica()
     const groups = buildSkillGroups(allSkills)
     const fleet = groups.find(g => g.label === 'Fleet skills')
     assert.ok(fleet && fleet.items.length > 0, 'precondition: Fleet skills group is non-empty (a router-only selection is possible)')

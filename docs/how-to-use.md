@@ -152,6 +152,8 @@ The practical implication: **a fresh Flow session can sustain longer than switch
 
 This is provable in any Flow session: watch the plan emit, watch the summaries arrive, watch the handoff ledger populate. The full work happens in sub-agents. Flow's context stays narrow.
 
+The architectural argument for *why* this saves tokens — not just keeps context clean — is in [`docs/token-efficiency.md`](token-efficiency.md) under "System-level — delegation as a token architecture."
+
 ### When Flow is overkill
 
 - Single task → use the specialist directly

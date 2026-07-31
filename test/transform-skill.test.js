@@ -4,7 +4,6 @@
  *
  * Scope:
  *   - transformAgentToSkill purity, determinism, boundary, and degradation behavior
- *   - getRouterSkills marker-detection in isolation (regex false-positive check)
  *   - buildSkillGroups ENOENT crash exposure (router name in input → no static file)
  *
  * Contract under test (from the brief):
@@ -16,9 +15,8 @@
  *   Degradation contract (verified here against current behavior):
  *     - No `---` frontmatter delimiters → returns content unchanged
  *     - Frontmatter present but no top-level `description:` block scalar →
- *       returns content unchanged (the scalar `skill: router` marker is
- *       detected separately by getRouterSkills; the transform only needs the
- *       description block scalar to proceed)
+ *       returns content unchanged (the transform only needs the description
+ *       block scalar to proceed)
  *     - `description:` present but inline (not block scalar `>`) → returns
  *       content unchanged (graceful degradation — the block-scalar regex
  *       does not match the inline form)
@@ -44,6 +42,7 @@ import {
 import { join, dirname } from 'node:path'
 import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
+import { getAllSkillsReplica } from './helpers.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(__dirname, '..')
@@ -55,28 +54,7 @@ const SKILLS_DIR = join(ROOT, 'skills')
 // transformAgentToSkill is a pure function exported from bin/ndv.js.
 // buildSkillGroups is exported for interactive-path coverage (reads the
 // filesystem — agents/ and skills/ — but is deterministic for a given repo).
-// extractFrontmatter is the REAL frontmatter extractor from bin/ndv.js — used
-// here instead of a local regex replica so the marker-detection tests model
-// the real extraction path, not a copy that can drift from production.
-const { transformAgentToSkill, buildSkillGroups, extractFrontmatter } = await import(BIN)
-
-// isRouterAgent: the marker-detection contract used by getRouterSkills, but
-// driven through the REAL extractFrontmatter (exported from bin/ndv.js) rather
-// than a local regex replica. Returns true iff the content's FRONTMATTER (as
-// extracted by the production code) contains the top-level scalar
-// `skill: router` marker. This collapses three copies of the frontmatter-
-// extraction regex (bin/ndv.js + two test replicas) to one: the exported
-// extractor is the single source of truth.
-//
-// The regex mirrors getRouterSkills exactly:
-//   /^skill:\s*router\s*$/m  — top-level scalar, end-anchored (prefix-safe),
-//                               trailing-whitespace-tolerant (\s*$)
-function isRouterAgent(content) {
-  const fm = extractFrontmatter(content)
-  if (!fm) return false
-  const fmRaw = fm.fm
-  return /^skill:\s*router\s*$/m.test(fmRaw)
-}
+const { transformAgentToSkill, buildSkillGroups } = await import(BIN)
 
 // ─── Purity: no filesystem, no Date/random, no global mutation ───────────────
 
@@ -141,7 +119,7 @@ test('transformAgentToSkill: empty string input returns empty string unchanged',
 test('transformAgentToSkill: no frontmatter delimiters returns content unchanged', () => {
   // Arrange: content with no `---` block — the frontmatter-delimiter regex
   // (fmMatch, the `^---\n([\s\S]*?)\n---\n` match) fails.
-  const input = 'name: x\nskill: router\ndescription: >\n  foo\n\nBody text.'
+  const input = 'name: x\ndescription: >\n  foo\n\nBody text.'
 
   // Act
   const out = transformAgentToSkill(input)
@@ -152,15 +130,13 @@ test('transformAgentToSkill: no frontmatter delimiters returns content unchanged
 
 test('transformAgentToSkill: frontmatter present but no description block scalar returns content unchanged', () => {
   // Arrange: valid frontmatter but no top-level `description:` block scalar —
-  // the descriptionMatch regex (`^description:\s*[>|]\s*\n...`) fails. The scalar
-  // `skill: router` marker is detected separately by getRouterSkills; the
+  // the descriptionMatch regex (`^description:\s*[>|]\s*\n...`) fails. The
   // transform only needs the description block scalar to proceed.
   const input =
     '---\n' +
     'name: ndv-no-desc\n' +
     'model: x\n' +
     'mode: all\n' +
-    'skill: router\n' +
     'description: top-level agent description\n' +
     '---\n\n' +
     'You are NoDesc. Every word that does not move the work is a thread wasted.\n\n' +
@@ -175,10 +151,10 @@ test('transformAgentToSkill: frontmatter present but no description block scalar
 
 test('transformAgentToSkill: frontmatter with description block scalar still transforms (transform does not gate on skill marker)', () => {
   // Arrange: a top-level description block scalar present. The transform runs
-  // whenever the description block scalar exists — it does NOT validate the
-  // `skill:` scalar value. (Router detection is the job of getRouterSkills,
-  // not the transform.) This agent has NO skill marker at all, yet the
-  // transform still runs because the description block scalar is present.
+  // whenever the description block scalar exists. (Router detection is the job
+  // of getRouterSkills, not the transform.) This agent has no router declaration
+  // at all, yet the transform still runs because the description block scalar
+  // is present.
   const input =
     '---\n' +
     'name: ndv-other\n' +
@@ -192,7 +168,7 @@ test('transformAgentToSkill: frontmatter with description block scalar still tra
   const out = transformAgentToSkill(input)
 
   // Assert: the transform runs (description block scalar exists) regardless of
-  // the skill marker. The transform does NOT gate on the skill scalar value.
+  // any skill marker. The transform does NOT gate on the skill scalar value.
   assert.notEqual(out, input, 'transform should run when description block scalar exists, regardless of skill marker')
   assert.match(out, /^---\nname: ndv-other\n/m, 'transform should produce skill frontmatter with the agent name')
   assert.match(out, /  type: router\n/, 'transform hardcodes metadata.type: router regardless of input skill marker')
@@ -213,7 +189,6 @@ test('transformAgentToSkill: inline description form (no block scalar) returns c
   const input =
     '---\n' +
     'name: ndv-inline\n' +
-    'skill: router\n' +
     'description: inline short text here\n' +
     '---\n\n' +
     'You are Inline. Every word that does not move the work is a thread wasted.\n\n' +
@@ -374,7 +349,6 @@ test('transformAgentToSkill: Delta B does NOT insert the section when the intro 
   const input =
     '---\n' +
     'name: ndv-noanchor\n' +
-    'skill: router\n' +
     'description: >\n' +
     '  Some description text here that is long enough for the block.\n' +
     '---\n\n' +
@@ -445,7 +419,6 @@ test('transformAgentToSkill: Delta C is scoped to the Dispatch Protocol section 
   const input =
     '---\n' +
     'name: ndv-scope-test\n' +
-    'skill: router\n' +
     'description: >\n' +
     '  Some description text here that is long enough for the block.\n' +
     '---\n\n' +
@@ -515,102 +488,6 @@ test('transformAgentToSkill: trailing newline strip is idempotent (calling twice
   assert.equal(out2, out1, 're-applying the transform to its own output should be a no-op (metadata: source-agent: guard)')
 })
 
-// ─── Synthetic second router agent (marker-driven generalization) ─────────────
-//
-// getRouterSkills() reads the real AGENTS_DIR, so we cannot add a synthetic
-// second router agent without polluting the repo. Instead we test the marker
-// DETECTION regex in isolation — the exact regex getRouterSkills uses —
-// against synthetic agent content. This proves the detection is marker-driven
-// (not name-driven) and generalizes to any agent with the scalar marker.
-
-test('router marker detection regex: matches a synthetic agent with the skill: router scalar marker', () => {
-  // Arrange: a synthetic second router agent — different name, same marker.
-  const synthetic =
-    '---\n' +
-    'name: ndv-orchestrator-2\n' +
-    'model: x\n' +
-    'mode: all\n' +
-    'description: >\n' +
-    '  A second hypothetical router agent.\n' +
-    'tools:\n' +
-    '  - Read\n' +
-    '  - Glob\n' +
-    'skill: router\n' +
-    '---\n\n' +
-    'You are Orchestrator2.\n'
-
-  // Act + Assert: the frontmatter-scoped detection matches the synthetic router.
-  assert.ok(
-    isRouterAgent(synthetic),
-    'the synthetic agent with the skill: router scalar marker in frontmatter IS detected as a router'
-  )
-})
-
-test('router marker detection regex: does NOT match a cognitive-module agent (no skill: router marker)', () => {
-  // Arrange
-  const cognitive =
-    '---\n' +
-    'name: ndv-skeptical\n' +
-    'description: Skeptical processing module.\n' +
-    '---\n\n' +
-    'Body.\n'
-
-  // Act + Assert: a cognitive agent has no skill: router scalar marker.
-  assert.ok(
-    !isRouterAgent(cognitive),
-    'cognitive agent (no skill: router scalar marker) is NOT detected as a router'
-  )
-})
-
-// ─── ADVERSARIAL: getRouterSkills false-positive on PROSE "skill: router" ─────
-//
-// getRouterSkills scopes its marker regex to the YAML frontmatter block only
-// (same fmMatch pattern as the sibling transforms). "skill: router" appearing
-// in the BODY (prose or a code block) must NOT match — only frontmatter
-// occurrences count. These tests assert the FIXED behavior: an agent that
-// mentions the marker in prose is NOT detected as a router.
-
-test('router marker detection: "skill: router" in PROSE (code block) is NOT matched (frontmatter-scoped fix)', () => {
-  // A non-router agent whose BODY contains a code block describing the marker.
-  // The frontmatter has NO skill: router scalar — this agent is NOT a router.
-  const agentWithMarkerInProse =
-    '---\n' +
-    'name: ndv-explainer\n' +
-    'description: Explains the router marker.\n' +
-    '---\n\n' +
-    'You are Explainer. To make an agent a router, add this to the frontmatter:\n\n' +
-    '```\n' +
-    'skill: router\n' +
-    '```\n\n' +
-    'That is how the marker works.\n'
-
-  // Act + Assert: the frontmatter-scoped detection does NOT match — the marker
-  // is in a body code block, not the frontmatter.
-  assert.ok(
-    !isRouterAgent(agentWithMarkerInProse),
-    'FIXED: "skill: router" in a body code block is NOT detected as a router (detection scoped to frontmatter)'
-  )
-})
-
-test('router marker detection: agent body with "skill: router" in non-code prose is NOT matched (frontmatter-scoped fix)', () => {
-  // A non-router agent where prose mentions the marker at column 0. The marker
-  // is in the body, not the frontmatter.
-  const agentWithProseMarker =
-    '---\n' +
-    'name: ndv-docs\n' +
-    'description: Documents the fleet.\n' +
-    '---\n\n' +
-    'Router agents are marked with the following frontmatter line:\n\n' +
-    'skill: router\n\n' +
-    'Cognitive modules do not have that marker.\n'
-
-  // Act + Assert: the frontmatter-scoped detection does NOT match.
-  assert.ok(
-    !isRouterAgent(agentWithProseMarker),
-    'FIXED: "skill: router" in body prose is NOT detected as a router (detection scoped to frontmatter)'
-  )
-})
-
 // ─── FIXED: buildSkillGroups handles router names via transformAgentToSkill ──
 //
 // buildSkillGroups now branches on router membership (same `new Set(getRouterSkills())`
@@ -619,38 +496,10 @@ test('router marker detection: agent body with "skill: router" in non-code prose
 // The ENOENT crash on router names is fixed. These tests assert the fixed
 // behavior — buildSkillGroups is now exported, so we call it directly.
 
-// Replicate getAllSkills() composition against the real filesystem. getAllSkills
-// is NOT exported from bin/ndv.js, so this is a test-side replica. The ideal fix
-// is to export getAllSkills and getCognitiveSkills from bin/ndv.js so tests call
-// the real composition — flagged as a handoff to ndv-build. Until then, this
-// replica is kept IDENTICAL to the one in test/install-router-skills.test.js and
-// uses the REAL extractFrontmatter (via isRouterAgent) for router detection plus
-// the same parseSkillType regex for the cognitive-type filter, so the two
-// replicas cannot drift from each other or from the extraction path.
-//
-// Cognitive: skills/ dirs with a non-frozen SKILL.md whose metadata.type !== 'router'.
-// Router: agents/ files with the frontmatter marker (via isRouterAgent).
-// parseSkillType regex mirrors bin/ndv.js: `/^\s{2}type:\s*(.+)$/m`.
-function replicateGetAllSkills() {
-  const cognitive = readdirSync(SKILLS_DIR).filter(f => {
-    const skillFile = join(SKILLS_DIR, f, 'SKILL.md')
-    if (!existsSync(skillFile)) return false
-    const content = readFileSync(skillFile, 'utf8')
-    if (/^\s*status:\s*frozen/m.test(content)) return false
-    const typeMatch = content.match(/^\s{2}type:\s*(.+)$/m)
-    return typeMatch ? typeMatch[1].trim() !== 'router' : true
-  })
-  const routers = readdirSync(AGENTS_DIR)
-    .filter(f => f.endsWith('.md'))
-    .filter(f => isRouterAgent(readFileSync(join(AGENTS_DIR, f), 'utf8')))
-    .map(f => f.replace(/\.md$/, ''))
-  return [...cognitive, ...routers]
-}
-
 test('buildSkillGroups FIXED: does NOT throw for getAllSkills() input (router derived, cognitive static)', () => {
   // Arrange: the router has no static skill file (precondition that the old
   // crash was reachable), and the input list includes the router name.
-  const allSkills = replicateGetAllSkills()
+  const allSkills = getAllSkillsReplica()
   assert.ok(allSkills.includes('ndv-flow'), 'precondition: the router ndv-flow is in getAllSkills()')
   assert.ok(
     !existsSync(join(SKILLS_DIR, 'ndv-flow', 'SKILL.md')),
@@ -669,7 +518,7 @@ test('buildSkillGroups FIXED: does NOT throw for getAllSkills() input (router de
 
 test('buildSkillGroups FIXED: router entry has [router] tag and Fleet skills group; cognitive has Cognitive modules', () => {
   // Arrange
-  const allSkills = replicateGetAllSkills()
+  const allSkills = getAllSkillsReplica()
 
   // Act
   const groups = buildSkillGroups(allSkills)
@@ -753,7 +602,6 @@ test('transformAgentToSkill: Dispatch Protocol section with NO substitution targ
   const input =
     '---\n' +
     'name: ndv-noop-dispatch\n' +
-    'skill: router\n' +
     'description: >\n' +
     '  Some description text here that is long enough for the block.\n' +
     '---\n\n' +
@@ -779,7 +627,6 @@ test('transformAgentToSkill: Dispatch Protocol section WITH a substitution targe
   const input =
     '---\n' +
     'name: ndv-has-target\n' +
-    'skill: router\n' +
     'description: >\n' +
     '  Some description text here that is long enough for the block.\n' +
     '---\n\n' +
@@ -798,116 +645,25 @@ test('transformAgentToSkill: Dispatch Protocol section WITH a substitution targe
   assert.match(out, /spawn one `Agent`, wait for sentinel/, 'the present substitution target was replaced')
 })
 
-// ─── Router marker regex: trailing-whitespace tolerance + prefix rejection ────
+// ─── Determinism: two buildSkillGroups calls produce identical output ───────
 //
-// getRouterSkills' marker regex `/^skill:\s*router\s*$/m` tolerates trailing
-// whitespace before line end (`\s*$`) — YAML treats it as insignificant, so a
-// stray space must not false-reject a valid router agent. It is also
-// end-anchored so "skill: routerized" (a prefix) does NOT match.
-//
-// getRouterSkills is NOT exported, so these tests exercise the regex through
-// isRouterAgent, which uses the REAL extractFrontmatter (the production
-// extraction path) + the exact regex from getRouterSkills. If the regex drifts
-// (e.g. `\s*$` reverted to `$`), these tests fail at the cause, not as a
-// far-removed install failure.
-
-test('router marker regex: "skill: router   " (trailing spaces) IS detected as a router (trailing-whitespace tolerance)', () => {
-  // Arrange: frontmatter with trailing spaces after "router".
-  const withTrailingSpaces =
-    '---\n' +
-    'name: ndv-trailing\n' +
-    'description: >\n' +
-    '  Some description text here.\n' +
-    'skill: router   \n' +
-    '---\n\n' +
-    'Body.\n'
-
-  // Act + Assert: trailing spaces are tolerated by `\s*$` — detected as router.
-  assert.ok(
-    isRouterAgent(withTrailingSpaces),
-    '"skill: router   " (trailing spaces) should be detected as a router — the marker regex tolerates trailing whitespace via \\s*$'
-  )
-})
-
-test('router marker regex: "skill: router\\t" (trailing tab) IS detected as a router (trailing-whitespace tolerance)', () => {
-  // Arrange: frontmatter with a trailing tab after "router".
-  const withTrailingTab =
-    '---\n' +
-    'name: ndv-trailing-tab\n' +
-    'description: >\n' +
-    '  Some description text here.\n' +
-    'skill: router\t\n' +
-    '---\n\n' +
-    'Body.\n'
-
-  // Act + Assert: a trailing tab is whitespace — `\s*$` matches it.
-  assert.ok(
-    isRouterAgent(withTrailingTab),
-    '"skill: router\\t" (trailing tab) should be detected as a router — \\s*$ matches tabs'
-  )
-})
-
-test('router marker regex: "skill: routerized" is NOT detected (prefix rejection — end anchor holds)', () => {
-  // Arrange: frontmatter where "router" is a prefix of "routerized".
-  const prefixed =
-    '---\n' +
-    'name: ndv-prefixed\n' +
-    'description: >\n' +
-    '  Some description text here.\n' +
-    'skill: routerized\n' +
-    '---\n\n' +
-    'Body.\n'
-
-  // Act + Assert: the `\s*$` end anchor requires "router" to be followed by
-  // only whitespace until line end — "routerized" has non-whitespace after, so
-  // no match. This is the prefix-safety guarantee.
-  assert.ok(
-    !isRouterAgent(prefixed),
-    '"skill: routerized" must NOT be detected as a router — the end anchor (\\s*$) rejects prefixes'
-  )
-})
-
-test('router marker regex: "skill: router" (exact, no trailing) IS detected (baseline)', () => {
-  // Arrange: the canonical exact marker.
-  const exact =
-    '---\n' +
-    'name: ndv-exact\n' +
-    'description: >\n' +
-    '  Some description text here.\n' +
-    'skill: router\n' +
-    '---\n\n' +
-    'Body.\n'
-
-  // Act + Assert: the exact marker matches (baseline for the trailing-whitespace
-  // tests — confirms the tolerance is additive, not a replacement for the exact match).
-  assert.ok(
-    isRouterAgent(exact),
-    '"skill: router" (exact, no trailing whitespace) should be detected as a router'
-  )
-})
-
-// ─── Memoization determinism: two buildSkillGroups calls produce identical output ─
-//
-// getRouterSkills() is memoized (module-level routerSkillsCache) so repeated
-// calls within one process return the cached array by reference. getRouterSkills
-// is NOT exported, so the cache-hit (reference equality) cannot be asserted
+// getRouterSkills() returns a module-level constant array (ROUTER_SKILLS), so
+// repeated calls within one process return the same array by reference.
+// getRouterSkills is NOT exported, so the reference-equality cannot be asserted
 // directly from a test — that would require exporting getRouterSkills, which is
 // a bin/ndv.js edit outside this tool's scope (flagged as a handoff to ndv-build).
 //
-// The OBSERVABLE user-visible consequence of correct caching is determinism:
-// two buildSkillGroups(getAllSkills-equivalent) calls produce byte-identical
-// output. If a future refactor drops the cache, install runs get slower but
-// behavior stays correct — this test catches the behavioral regression (a
-// dropped cache that also changed results), not the pure perf regression.
+// The OBSERVABLE user-visible consequence is determinism: two
+// buildSkillGroups(getAllSkills-equivalent) calls produce byte-identical output.
 // The reference-equality gap is documented as a known limitation.
 
-test('buildSkillGroups is deterministic across two calls (observable contract of correct memoization)', () => {
+test('buildSkillGroups is deterministic across two calls (observable contract of stable ROUTER_SKILLS)', () => {
   // Arrange: the getAllSkills-equivalent composition.
-  const allSkills = replicateGetAllSkills()
+  const allSkills = getAllSkillsReplica()
   assert.ok(allSkills.length > 0, 'precondition: there are skills to group')
 
   // Act: call buildSkillGroups twice. buildSkillGroups calls getRouterSkills
-  // internally (which hits the module-level cache on the second call).
+  // internally (which returns the same module-level ROUTER_SKILLS constant).
   const groups1 = buildSkillGroups(allSkills)
   const groups2 = buildSkillGroups(allSkills)
 
@@ -925,24 +681,24 @@ test('buildSkillGroups is deterministic across two calls (observable contract of
   assert.deepEqual(counts1, counts2, 'group item counts changed across two calls')
 })
 
-test('buildSkillGroups: router entry is stable across calls (cache does not corrupt the router set)', () => {
+test('buildSkillGroups: router entry is stable across calls (ROUTER_SKILLS constant is not mutated)', () => {
   // Arrange
-  const allSkills = replicateGetAllSkills()
+  const allSkills = getAllSkillsReplica()
 
-  // Act: two calls — the second hits the routerSkillsCache.
+  // Act: two calls — both read the same module-level ROUTER_SKILLS constant.
   const g1 = buildSkillGroups(allSkills)
   const g2 = buildSkillGroups(allSkills)
 
   // Assert: the router entry (ndv-flow) is present and identical in both calls.
-  // A cache-corruption bug (e.g. a caller mutating the cached array) would make
-  // the second call's router set differ.
+  // A mutation bug (e.g. a caller mutating the constant array) would make the
+  // second call's router set differ.
   const fleet1 = g1.find(g => g.label === 'Fleet skills')
   const fleet2 = g2.find(g => g.label === 'Fleet skills')
   assert.ok(fleet1 && fleet2, 'precondition: Fleet skills group present in both calls')
   const router1 = fleet1.items.find(i => i.value === 'ndv-flow')
   const router2 = fleet2.items.find(i => i.value === 'ndv-flow')
-  assert.ok(router1 && router2, 'the router entry is present in both calls (cache did not drop it)')
-  assert.deepEqual(router1, router2, 'the router entry differs across calls — cache may be corrupted')
+  assert.ok(router1 && router2, 'the router entry is present in both calls (ROUTER_SKILLS did not drop it)')
+  assert.deepEqual(router1, router2, 'the router entry differs across calls — ROUTER_SKILLS may be mutated')
 })
 
 // ─── ADVERSARIAL: descriptionMatch regex indentation/blank-line behavior ──────
@@ -1017,7 +773,6 @@ function makeAgent(descriptionBody) {
   return (
     '---\n' +
     'name: ndv-indent-test\n' +
-    'skill: router\n' +
     'description: >\n' +
     descriptionBody +
     '---\n\n' +
@@ -1188,7 +943,6 @@ function makeAgentLiteral(descriptionBody) {
   return (
     '---\n' +
     'name: ndv-literal-test\n' +
-    'skill: router\n' +
     'description: |\n' +
     descriptionBody +
     '---\n\n' +
@@ -1264,7 +1018,6 @@ test('descriptionMatch: CRLF line endings — pin current behavior (carriage-ret
   const input =
     '---\r\n' +
     'name: ndv-crlf-test\r\n' +
-    'skill: router\r\n' +
     'description: >\r\n' +
     body +
     '---\r\n\r\n' +
