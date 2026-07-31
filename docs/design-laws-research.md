@@ -99,6 +99,22 @@
 
 ---
 
+### CLUSTER F: PROPOSED EXTENSIONS
+*D-27..D-34 — sourced from the full 9-book corpus extraction (2026-06). Status: proposed, not yet fully ratified. Pending cross-reference with existing laws and fleet agent update.*
+
+| # | Law | Core Statement | Source | Tags | Type | Strength | NDV Agent | NDV Module |
+|---|-----|----------------|--------|------|------|----------|-----------|------------|
+| D-27 | **Discoverability Law** | If a user cannot determine what actions are possible without instruction, the design is already failing. Discoverability requires that possible actions and current system state be inferable from the surface alone. | B1 Norman, B2 Krug | `interaction` `ux` `perception` | prescriptive | law | ndv-design (Pixel) | ndv-perceptual |
+| D-28 | **Conceptual Model Law** | Users operate through an internal model of how the system works. If the design does not support a coherent, accurate model, hesitation, misuse, and false confidence are guaranteed. The model the system projects must match the model the user needs. | B1 Norman, B6 Lidwell, B9 Johnson | `cognition` `ux` `decision` | prescriptive | law | ndv-design (Pixel) | ndv-perceptual |
+| D-29 | **Progressive Disclosure Law** | Reveal complexity only when it becomes relevant. Showing everything at once transfers system complexity directly into user burden. Infrequently needed controls, options, and information belong behind an explicit request — not on the surface by default. | B6 Lidwell | `composition` `cognition` `ux` | prescriptive | law | ndv-design (Pixel) | ndv-perceptual |
+| D-30 | **Signal-to-Noise Law** | Relevant information must dominate irrelevant information. When visual or textual noise competes with signal, comprehension falls and action slows. Every element that is not signal is noise — and noise is not neutral, it actively degrades what it surrounds. | B6 Lidwell, B7 Williams | `composition` `visual` `ux` | prescriptive | law | ndv-design (Pixel) | ndv-perceptual |
+| D-31 | **Goal Gradient Law** | Motivation increases as users perceive themselves getting closer to a goal. Visible progress is not decoration; it is behavioral fuel. A system that hides progress hides the user's reason to continue. | B5 Weinschenk | `decision` `ux` `emotion` | descriptive | law | ndv-design (Pixel) | ndv-perceptual |
+| D-32 | **External Memory Law** | Good systems move memory burden from the user's head into the environment through cues, history, visible state, and reminders. Recall is hard and unreliable; recognition is easy and fast. Design that demands recall when recognition is possible is wasting user capacity. | B1 Norman, B6 Lidwell, B9 Johnson | `cognition` `ux` `consistency` | prescriptive | law | ndv-design (Pixel) | ndv-perceptual |
+| D-33 | **Wayfinding Law** | Users need continuous orientation cues to know where they are, where they can go, and how to get back. Navigation that forces users to reconstruct their position from memory or inference has already failed. | B6 Lidwell, B2 Krug | `interaction` `ux` `visual` | prescriptive | law | ndv-design (Pixel) | ndv-perceptual |
+| D-34 | **Natural Mapping Law** | Controls are easier to learn and harder to misuse when their arrangement, movement, or symbolism matches the effect they produce. A mapping that exploits spatial, cultural, or physical analogy requires no learning. A mapping that violates it requires permanent effort. | B1 Norman | `interaction` `ux` `perception` | prescriptive | law | ndv-design (Pixel) | ndv-perceptual |
+
+---
+
 ## Summary Statistics
 
 | Cluster | Count | Primary focus |
@@ -108,10 +124,12 @@
 | Composition | 5 (D-13 to D-17) | PARC, hierarchy, aesthetics, reduction |
 | Interaction | 5 (D-18 to D-22) | Fitts' law, feedback, time thresholds, error, convention |
 | Decision | 4 (D-23 to D-26) | Principled choices, outcomes, emotion, consistency |
-| **Total** | **26** | |
+| **Proposed** | **8 (D-27 to D-34)** | Discoverability, conceptual models, progressive disclosure, signal/noise, goal gradient, external memory, wayfinding, natural mapping |
+| **Total** | **34 (26 ratified + 8 proposed)** | |
 
-**All 26 laws are owned by:** ndv-design (Pixel)
-**All 26 laws derive from:** ndv-perceptual (future cognitive skill module)
+**All 26 ratified laws are owned by:** ndv-design (Pixel)
+**All 26 ratified laws derive from:** ndv-perceptual (future cognitive skill module)
+**D-27..D-34 status:** proposed — sourced from full corpus extraction (2026-06), pending fleet agent update
 
 ---
 
@@ -141,6 +159,16 @@ The software engineering laws (`docs/laws-research.md`) govern code structure, t
 
 **"The feedbackless void" cluster:** D-19 (no feedback) + D-20 (threshold exceeded) + D-2 (gulf of evaluation not bridged) → the user cannot determine if their action had any effect.
 
+### 6. Proposed extension clusters (D-27..D-34)
+
+**"The invisible system" cluster:** D-27 (discoverability) + D-28 (conceptual model) + D-34 (natural mapping) → the user cannot form a working model of what the system does or how to operate it. The surface does not expose the logic underneath.
+
+**"The complexity flood" cluster:** D-29 (progressive disclosure) + D-30 (signal-to-noise) + D-17 (reduction) → the user is shown more than is needed, noise competes with signal, and no layer manages reveal order.
+
+**"The invisible finish line" cluster:** D-31 (goal gradient) + D-19 (feedback) + D-32 (external memory) → the user does not know how far they have come, cannot remember what they have done, and cannot see how close they are to done.
+
+**"The lost user" cluster:** D-33 (wayfinding) + D-27 (discoverability) + D-9 (recognition) → the user cannot determine where they are, what they can do next, or how to return to a known state.
+
 ---
 
 ## Relationship to Software Engineering Laws
@@ -155,5 +183,6 @@ The software engineering laws (`docs/laws-research.md`) govern code structure, t
 
 ---
 
-*Last updated: 2026-05*
+*Last updated: 2026-07*
 *Source research: All 9 books read in full via sobrief.com (May 2026 session)*
+*D-27..D-34 proposed: Full corpus PDF extraction + candidate discovery pass (June 2026). Source PDFs in `/Users/ezequielbenitez/Documents/design-books/`. Extraction artefacts in `docs/laws/sources/`. Proposed-law justification in `docs/laws/proposed-laws.md` and `docs/laws/proposed-laws-ready.md`.*

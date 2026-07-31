@@ -29,7 +29,17 @@ export function parseFrontmatter(content, filePath) {
   const body = match[2]
 
   const get = (key) => {
-    const m = raw.match(new RegExp(`^${key}:\\s*(.+)$`, 'm'))
+    // Escape regex metacharacters in `key` before interpolation — all current
+    // callers pass literal alphanumeric keys (which escape to themselves), but a
+    // future caller passing a key with metacharacters would silently misbehave.
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    // Handle the block scalar form (`key: >\n  indented text`) first — the
+    // single-line regex below only captures the indicator (`>`) for that form,
+    // not the body. Block scalar body lines are indented (2+ spaces); collect
+    // them until a non-indented line, then collapse to a single-line string.
+    const block = raw.match(new RegExp(`^${escapedKey}:\\s*[>|]\\s*\\n((?:  [^\\n]+\\n?)+)`, 'm'))
+    if (block) return block[1].replace(/[ \t]+/g, ' ').trim()
+    const m = raw.match(new RegExp(`^${escapedKey}:\\s*(.+)$`, 'm'))
     return m ? m[1].trim() : null
   }
 

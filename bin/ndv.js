@@ -92,22 +92,39 @@ function extractFrontmatter(content) {
   return { fm: fmMatch[2], body: content.slice(fmMatch[0].length) }
 }
 
+// YAML block-scalar body pattern, shared by the two regexes in
+// transformAgentToSkill() (the idempotency guard and the descriptionMatch).
+// A block-scalar body line is EITHER 2+-space-indented (content; `[^\n]*`
+// allows trailing-only-whitespace lines like `  \n`) OR fully blank (a lone
+// `\n`). The body continues until a column-0 non-blank line. Defined once here
+// so the guard and the descriptionMatch cannot drift apart (H5 fixed the
+// descriptionMatch's blank-line truncation; H8 ported the fix to the guard —
+// a single source removes the port-the-fix step entirely). The per-site
+// quantifier (`*` for the guard, `+` for the descriptionMatch) is applied at
+// the call site, NOT here — only the alternation is shared. Escapes are
+// doubled because this is a string fragment consumed by `new RegExp`.
+const BLOCK_SCALAR_BODY = '(?:[ ]{2,}[^\\n]*\\n|\\n)'
+
 // Derive a router skill file from an agent file at install time.
 // Pure function: content string → content string. Sibling to transformForOpenCode().
 //
 // Three deterministic deltas against the agent source, producing the skill
 // golden output:
 //   Delta A — replace agent frontmatter with skill frontmatter
-//     (name + description:block-scalar from skill: block + metadata block;
-//     strip model/effort/mode/description/tools)
+//     (name + description:block-scalar from the top-level `description:` key +
+//     metadata block; strip model/effort/mode/tools and the `skill: router`
+//     scalar marker)
 //   Delta B — insert "Running as a skill (not a subagent)" section immediately
 //     after the intro paragraph block (before "## Out of Scope")
 //   Delta C — Dispatch Protocol term substitutions (Task → Agent, install path)
 //   Plus: Deliberation Protocol "ONE Task message" → "ONE message", and trailing
 //   newline stripped (the skill golden output ends without a final newline).
 //
-// Marker-driven: reads the `skill:` block from the agent frontmatter. Future
-// router agents just add the marker — no transform changes needed.
+// Marker-driven: the scalar `skill: router` marker in the agent frontmatter is
+// detected by getRouterSkills (not by this transform). The transform reads the
+// top-level `description:` block scalar as the single source for the skill
+// description. Future router agents just add the marker — no transform changes
+// needed.
 function transformAgentToSkill(content) {
   // Extract the YAML frontmatter block.
   const fm = extractFrontmatter(content)
@@ -115,52 +132,65 @@ function transformAgentToSkill(content) {
   const fmRaw = fm.fm
   const body = fm.body
 
-  // Parse agent name and the skill: block from the agent frontmatter.
+  // Parse agent name from the agent frontmatter.
   const nameMatch = fmRaw.match(/^name:\s*(.+)$/m)
   const agentName = nameMatch ? nameMatch[1].trim() : ''
 
-  // Extract the skill.description block scalar verbatim (indentation preserved).
-  // Matches: skill:\n  type: router\n  description: >\n    <indented lines>
-  const skillBlockMatch = fmRaw.match(/^skill:\s*\n((?:  [^\n]+\n?)+)/m)
-  if (!skillBlockMatch) return content
-  const skillBlock = skillBlockMatch[1]
-
-  // Pull the description block scalar lines (the indented body under description: >).
-  const descIdx = skillBlock.search(/^  description:\s*[>|]\s*\n/m)
-  let descriptionBlock = ''
-  if (descIdx >= 0) {
-    // Find where the description block scalar starts (after the "  description: >" line)
-    const after = skillBlock.slice(descIdx)
-    const lines = after.split('\n')
-    // Drop the "  description: >" header line; keep subsequent indented lines.
-    const bodyLines = lines.slice(1)
-    const collected = []
-    for (const line of bodyLines) {
-      // Description block scalar lines are indented under the skill block
-      // (4 spaces from file root: "    Fleet orchestrator...").
-      if (/^    /.test(line)) {
-        collected.push(line)
-      } else if (line.trim() === '' || /^  [a-z]/.test(line)) {
-        // End of block scalar: empty line or a new 2-space key under skill:
-        break
-      } else {
-        collected.push(line)
-      }
-    }
-    descriptionBlock = collected.join('\n')
+  // Idempotency guard: if this content is ALREADY a derived skill (the
+  // transform's own output carries `metadata: source-agent: <name>`), return
+  // it unchanged. This preserves the prior idempotency contract — re-applying
+  // the transform to its own output is a no-op. Without this guard, the
+  // top-level `description:` block scalar in the derived skill would re-trigger
+  // the transform (the derived skill keeps that block scalar), and Delta C's
+  // section-scope regex would throw on the already-substituted Dispatch Protocol
+  // body (no unsubstituted targets remain).
+  //
+  // Why `source-agent:` is the discriminating signal: it carries the source
+  // agent's name (e.g. `source-agent: ndv-flow`) and is unambiguously
+  // transform-emitted — a hand-authored agent has no reason to name itself as
+  // the source of a derivation. The prior signal (`origin: agent-derived`)
+  // used the generic word "origin", which a human could legitimately author
+  // inside a `metadata:` block for documentation. Matching on `source-agent:`
+  // prevents the guard from false-firing on a future agent that legitimately
+  // uses a `metadata:` block for documentation.
+  if (new RegExp(`^metadata:\\s*\\n${BLOCK_SCALAR_BODY}*  source-agent:\\s*\\S+`, 'm').test(fmRaw)) {
+    return content
   }
 
+  // Extract the top-level description block scalar verbatim (2-space
+  // indentation preserved — same indent as the skill output's description
+  // block scalar, so no dedent is needed). Matches:
+  //   description: >
+  //     <2-space-indented lines>
+  // The capture is the raw indented body (the lines under the block-scalar
+  // indicator). If the agent has NO top-level description block scalar, return
+  // the content unchanged — consistent with the prior "no skill block →
+  // return content" behavior (the scalar `skill: router` marker is detected
+  // separately by getRouterSkills; the transform only needs the description).
+  //
+  // YAML block scalars (`>` and `|`) permit blank lines and whitespace-only
+  // lines as paragraph separators — the content after a blank line is still
+  // part of the scalar. A block scalar continues until a line with LESS
+  // indentation than the scalar's base indent (2 spaces here). The capture
+  // therefore matches lines that are EITHER:
+  //   - indented 2+ spaces (content lines; `[^\n]*` allows trailing-only-whitespace lines like `  \n`)
+  //   - fully blank (a lone `\n`)
+  // and STOPS at a column-0 non-blank line (the next top-level key `tools:`
+  // or the closing `---` fence). See test/transform-skill.test.js H3.
+  const descriptionMatch = fmRaw.match(new RegExp(`^description:\\s*[>|]\\s*\\n(${BLOCK_SCALAR_BODY}+)`, 'm'))
+  if (!descriptionMatch) return content
+  const descriptionBlock = descriptionMatch[1]
+
   // Delta A — assemble skill frontmatter.
-  // The skill.description block scalar lives in the agent frontmatter indented
-  // 4 spaces (under the 2-space `skill:` block). In the skill output it is
-  // indented 2 spaces (direct child of the top-level `description:` key).
-  // Dedent the block scalar by 2 spaces to match the golden output exactly.
-  const dedentedDescription = descriptionBlock.replace(/^    /gm, '  ')
+  // The agent's top-level description block scalar is indented 2 spaces
+  // (direct child of the top-level `description:` key). The skill output's
+  // description block scalar is indented 2 spaces too — the body carries over
+  // at the SAME indentation. No dedent needed.
   const skillFrontmatter =
     `---\n` +
     `name: ${agentName}\n` +
     `description: >\n` +
-    `${dedentedDescription}\n` +
+    `${descriptionBlock}` +
     `metadata:\n` +
     `  type: router\n` +
     `  origin: agent-derived\n` +
@@ -762,27 +792,47 @@ function getAllSkills() {
 // single source of truth — the skill body is produced by transformAgentToSkill().
 // Marker-driven, not name-driven: future router agents just add the marker.
 // Returns agent base names (e.g. 'ndv-flow') — the install path is the skill dir.
+//
+// Process-lifetime memoization: agents/ does not change during a single CLI
+// invocation, so the router-skill set is deterministic for the whole process.
+// The cache below collapses 2-3 redundant scans per install run (installAgents
+// → installSkillsFor → buildSkillGroups) to one scan. No invalidation logic is
+// added by design — if a future test mutates agents/ between calls within one
+// process, it must clear `routerSkillsCache = null` manually; the installer CLI
+// itself never hits that case.
+// Callers receive the cached array BY REFERENCE — do not mutate it
+// (push/sort/splice) or you poison the cache for all subsequent callers.
+// All current callers are read-only (new Set(), spread, for...of).
+let routerSkillsCache = null
 function getRouterSkills() {
-  if (!existsSync(AGENTS_DIR)) return []
-  return readdirSync(AGENTS_DIR)
+  if (routerSkillsCache !== null) return routerSkillsCache
+  if (!existsSync(AGENTS_DIR)) {
+    routerSkillsCache = []
+    return routerSkillsCache
+  }
+  routerSkillsCache = readdirSync(AGENTS_DIR)
     .filter(f => f.endsWith('.md'))
     .filter(f => {
       const content = readFileSync(join(AGENTS_DIR, f), 'utf8')
       // Scope detection to the YAML frontmatter block only. The sibling
       // transforms (transformForOpenCode, transformAgentToSkill) use the same
-      // fmMatch pattern; getRouterSkills must too, or "  type: router" /
-      // "skill:" appearing in BODY prose or code blocks would falsely match.
-      // No frontmatter → not a router.
+      // fmMatch pattern; getRouterSkills must too, or "skill: router" appearing
+      // in BODY prose or code blocks would falsely match. No frontmatter →
+      // not a router.
       const fm = extractFrontmatter(content)
       if (!fm) return false
       const fmRaw = fm.fm
-      // Match the skill.type marker inside the frontmatter skill: block.
-      // The marker is indented as "  type: router" under the "skill:" key.
-      // End-anchored: "type: router" is an exact marker, not a prefix — without
-      // the `$` anchor, "type: routerized" or "type: router-foo" would match.
-      return /^\s{2}type:\s*router$/m.test(fmRaw) && /^skill:\s*\n/m.test(fmRaw)
+      // Match the top-level scalar `skill: router` marker in the frontmatter.
+      // The marker is a single line — the `skill:` key with the scalar value
+      // `router`. End-anchored: "router" is an exact marker, not a prefix —
+      // without the `$` anchor, "skill: routerized" or "skill: router-foo"
+      // would match. Trailing whitespace before line end is tolerated
+      // (`\s*$`) — YAML treats it as insignificant; a stray space must not
+      // false-reject a router agent.
+      return /^skill:\s*router\s*$/m.test(fmRaw)
     })
     .map(f => f.replace(/\.md$/, ''))
+  return routerSkillsCache
 }
 
 // Cognitive skills are the optional enhancement modules — everything that is NOT
@@ -795,6 +845,10 @@ function getCognitiveSkills() {
     if (!existsSync(skillFile)) return false
     const content = readFileSync(skillFile, 'utf8')
     if (/^\s*status:\s*frozen/m.test(content)) return false
+    // Defense-in-depth: router skills are derived from agents/ (not skills/),
+    // so metadata.type: router should never appear here. This filter prevents
+    // a misplaced router SKILL.md from being treated as cognitive. The
+    // invariant is enforced by test/validate-agents.test.js.
     return parseSkillType(content) !== 'router'
   })
 }

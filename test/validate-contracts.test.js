@@ -14,13 +14,17 @@
 
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync, existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync, existsSync, readdirSync } from 'node:fs'
+import { join, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
   ROOT, AGENTS_DIR,
   TIER1, TIER2, TIER3,
   readAgent,
 } from './helpers.js'
+
+const __dir = dirname(fileURLToPath(import.meta.url))
+const SKILLS_DIR = join(ROOT, 'skills')
 
 // ─── O(n) behavioral spec regression ─────────────────────────────────────────
 //
@@ -195,4 +199,60 @@ describe('ADR-008: Brief Contract — must contain BRIEF_REJECTED format', () =>
       )
     })
   }
+})
+
+// ─── Architectural invariant: router skills never live in skills/ ─────────────
+//
+// Router skills are DERIVED at install time from agent files that declare the
+// `skill.type: router` marker (bin/ndv.js getRouterSkills → transformAgentToSkill).
+// They must NEVER exist as static files under skills/*/SKILL.md — that would
+// create two sources of truth (the agent file AND the static skill), and the
+// derived skill would silently diverge from the static copy on agent edits.
+//
+// This was previously an incidental invariant held by comments alone
+// (getCognitiveSkills' defense-in-depth filter would silently exclude a
+// misplaced router SKILL.md, masking the architectural violation). This test
+// promotes the convention from comment to CI-enforced structural invariant:
+// any SKILL.md under skills/ declaring `metadata.type: router` fails the build.
+//
+// Mirrors parseSkillType from bin/ndv.js: `/^\s{2}type:\s*(.+)$/m`.
+
+describe('architectural invariant: no cognitive skill declares metadata.type: router', () => {
+  test('no skills/*/SKILL.md has metadata.type: router (router skills are agent-derived, never static)', () => {
+    // Arrange: collect every skills/<name>/SKILL.md in the repo.
+    const skillDirs = existsSync(SKILLS_DIR)
+      ? readdirSync(SKILLS_DIR, { withFileTypes: true })
+          .filter(d => d.isDirectory())
+          .map(d => d.name)
+      : []
+
+    // Act + Assert: each SKILL.md must NOT declare type: router.
+    const offenders = []
+    for (const name of skillDirs) {
+      const skillFile = join(SKILLS_DIR, name, 'SKILL.md')
+      if (!existsSync(skillFile)) continue
+      const content = readFileSync(skillFile, 'utf8')
+      const typeMatch = content.match(/^\s{2}type:\s*(.+)$/m)
+      const type = typeMatch ? typeMatch[1].trim() : ''
+      if (type === 'router') {
+        offenders.push(`${name} (skills/${name}/SKILL.md declares metadata.type: router)`)
+      }
+    }
+
+    assert.deepEqual(
+      offenders, [],
+      'Router skills must NEVER live under skills/*/SKILL.md — they are derived from agent files at install time. ' +
+      'A static router skill creates a second source of truth that silently diverges on agent edits. ' +
+      'Offenders: ' + (offenders.length ? offenders.join(', ') : '(none)')
+    )
+  })
+
+  test('skills/ directory is scanned (guard against the invariant test being a no-op on an empty dir)', () => {
+    // If skills/ were empty or missing, the test above would pass vacuously.
+    // This guard asserts the directory exists and contains at least one skill,
+    // so the invariant test has real content to check.
+    assert.ok(existsSync(SKILLS_DIR), 'skills/ directory must exist')
+    const skillDirs = readdirSync(SKILLS_DIR, { withFileTypes: true }).filter(d => d.isDirectory())
+    assert.ok(skillDirs.length > 0, 'skills/ must contain at least one skill directory or the router-invariant test is vacuous')
+  })
 })
