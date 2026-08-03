@@ -442,6 +442,11 @@ function writeRoutingGlobalOpenCode(jsonPath) {
   // Instructions merge — only on first install
   if (config.instructions && config.instructions.some(i => i.includes('ndv'))) {
     console.log(`  ndv already in ${jsonPath} — skipping`)
+    // Verify the rules file actually exists — the heuristic is loose (substring match)
+    const rulesFile = join(HOME, '.config', 'opencode', 'rules', 'ndv.md')
+    if (!existsSync(rulesFile)) {
+      console.warn(`  ⚠ Heuristic matched 'ndv' in instructions but ${rulesFile} not found — possible false positive. Manually verify ndv routing is installed.`)
+    }
     if (mutated) writeFileSync(jsonPath, JSON.stringify(config, null, 2) + '\n')
     return
   }
@@ -493,10 +498,15 @@ function installAgents(toolName, target, isGlobal, s = null) {
     if (existsSync(commandsDir)) {
       mkdirSync(destCommandsDir, { recursive: true })
       const commands = readdirSync(commandsDir).filter(f => f.endsWith('.md'))
+      if (commands.length === 0) {
+        console.warn(`  ⚠ No .md command files found in ${commandsDir} — slash commands not installed`)
+      }
       for (const cmd of commands) {
         writeFileSync(join(destCommandsDir, cmd), readFileSync(join(commandsDir, cmd), 'utf8'))
         commandFallbacks.add(cmd)
       }
+    } else {
+      console.warn(`  ⚠ No commands directory found at ${commandsDir} — slash commands not installed`)
     }
   }
 
@@ -509,9 +519,14 @@ function installAgents(toolName, target, isGlobal, s = null) {
     if (existsSync(commandsDir)) {
       mkdirSync(destCommandsDir, { recursive: true })
       const commands = readdirSync(commandsDir).filter(f => f.endsWith('.md'))
+      if (commands.length === 0) {
+        console.warn(`  ⚠ No .md command files found in ${commandsDir} — slash commands not installed`)
+      }
       for (const cmd of commands) {
         writeFileSync(join(destCommandsDir, cmd), readFileSync(join(commandsDir, cmd), 'utf8'))
       }
+    } else {
+      console.warn(`  ⚠ No commands directory found at ${commandsDir} — slash commands not installed`)
     }
   }
 
@@ -745,13 +760,23 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
   const outPath = '.github/copilot-instructions.md'
   if (existsSync(outPath)) {
     const existing = readFileSync(outPath, 'utf8')
-    if (existing.includes('ndv:start')) {
-      // Replace the ndv block (header) while preserving any content outside it
+    const blockRe = /<!-- ndv:start -->[\s\S]*?<!-- ndv:end -->/
+    if (blockRe.test(existing)) {
+      // Full block present — replace it, preserve content outside
       const updated = existing.replace(/<!-- ndv:start -->[\s\S]*?<!-- ndv:end -->\n?/, header)
       writeFileSync(outPath, updated + sections.join('\n\n---\n\n'))
       console.log(`Updated ndv routing block in ${outPath}`)
       return
     }
+    // No full block — refuse to write, whether or not a partial marker exists
+    if (existing.includes('ndv:start')) {
+      console.warn(`  ⚠ ${outPath} contains a partial 'ndv:start' marker but no complete ndv block.`)
+      console.warn(`    Refusing to overwrite — manually fix the marker or remove the file and re-run.`)
+    } else {
+      console.warn(`  ⚠ ${outPath} already exists without an ndv routing block.`)
+      console.warn(`    Refusing to overwrite — manually merge or remove the file and re-run.`)
+    }
+    return
   }
 
   writeFileSync(outPath, output)
