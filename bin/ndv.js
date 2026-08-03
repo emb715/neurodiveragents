@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, readdirSync, copyFileSync, symlinkSync, lstatSync, unlinkSync, readlinkSync } from 'fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, readdirSync, copyFileSync, symlinkSync, lstatSync, unlinkSync, readlinkSync, realpathSync } from 'fs'
 import { join, dirname, resolve } from 'path'
 import { homedir } from 'os'
 import { fileURLToPath } from 'url'
@@ -807,7 +807,7 @@ function getCognitiveSkills() {
     // Defense-in-depth: router skills are derived from agents/ (not skills/),
     // so metadata.type: router should never appear here. This filter prevents
     // a misplaced router SKILL.md from being treated as cognitive. The
-    // invariant is enforced by test/validate-agents.test.js.
+    // invariant is enforced by test/validate-contracts.test.js.
     return parseSkillType(content) !== 'router'
   })
 }
@@ -1114,7 +1114,39 @@ const arg = rest.find(a => !a.startsWith('-'))
 
 // CLI entry guard: only run the command dispatcher when this file is invoked
 // directly as the entry point (not when imported for unit testing).
-const isMainEntry = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+//
+// Both sides must be realpath-resolved before comparison. When this package is
+// installed globally (or via npx's cache), the bin shim on PATH is a symlink
+// into node_modules/neurodiveragents/bin/ndv.js. Node's module loader follows
+// symlinks when resolving import.meta.url (→ the real path), while
+// process.argv[1] retains the invocation path (→ the symlink path).
+// path.resolve() alone does NOT resolve symlinks, so the naive comparison
+//   resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+// fails under a global/npx install → isMainEntry is false → the dispatcher is
+// skipped → the CLI produces zero output (silent exit 0). realpathSync on both
+// sides normalizes symlinks away and makes the comparison hold in every install
+// topology. See: "global install says nothing, 0 feedback".
+//
+// realpathSync can throw on hostile/degraded filesystems (EACCES, stale mount,
+// ENOENT if argv[1] is replaced between spawn and guard eval) — the prior
+// resolve()-based guard never threw. So the realpath comparison is wrapped in
+// try/catch; on throw it falls back to the resolve()-based comparison, which
+// does not follow symlinks (so it fails to match under global/npx installs) but
+// at least does not crash. The common case is already covered by the realpath
+// branch; the fallback covers degraded-FS edge cases.
+const isMainEntry = (() => {
+  if (!process.argv[1]) return false
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))
+  } catch {
+    // Fallback: degraded filesystem where realpathSync throws (EACCES,
+    // stale mount, ENOENT on argv[1] replaced between spawn and guard eval).
+    // The pre-realpath behavior — resolve() does not follow symlinks, so
+    // this fails to match under global/npx installs, but at least does not
+    // crash. The common case is already covered by the realpath branch.
+    return resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+  }
+})()
 
 if (isMainEntry) {
   switch (cmd) {

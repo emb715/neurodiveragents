@@ -71,7 +71,7 @@ All agents default to parallel execution for 4-8 independent files/items. Always
 | `agents/` | Agent model files (source of truth) |
 | `humans/` | Human-readable character profiles |
 | `bin/ndv.js` | CLI installer — `ndv install`, `ndv list`, `ndv install-skills` |
-| `test/` | Two test files (see below) |
+| `test/` | Test suite (8 files — see below) |
 | `docs/` | Authoring guide, ADRs, manifesto |
 | `skills/` | Cognitive module skills |
 | `commands/` | Slash commands (OpenCode) |
@@ -79,7 +79,7 @@ All agents default to parallel execution for 4-8 independent files/items. Always
 ### Running tests
 
 ```bash
-# Full suite
+# Full suite (all 8 test files — the npm test script)
 npm test
 
 # Agent validation only (fast, no install simulation)
@@ -88,16 +88,22 @@ npm run test:validate
 # Install simulation only
 npm run test:install
 
-# Authoring-guide checks scoped to changed agents (CI mode)
-CHANGED_AGENTS="ndv-foo,ndv-bar" node --test test/validate-agents.test.js
+# Authoring-guide checks scoped to changed agents (local; CI runs unscoped)
+CHANGED_AGENTS="ndv-foo,ndv-bar" node --test test/validate-authoring.test.js
 ```
 
 ### Test files
 
 | File | What it tests |
 |------|--------------|
-| `test/validate-agents.test.js` | Agent/human file schema, symmetry, routing completeness, authoring-guide constraints (scoped to `CHANGED_AGENTS` in CI) |
+| `test/validate-schema.test.js` | Structural schema for agent/human files — format contracts; runs unconditionally, no `CHANGED_AGENTS` dependency |
+| `test/validate-authoring.test.js` | Authoring-guide compliance; scoped to `CHANGED_AGENTS` env var when set, else describe blocks register but produce no tests |
+| `test/validate-contracts.test.js` | Architectural contract tests (ADR-008 Domain Contracts, O(n) behavioral spec regression); runs unconditionally |
+| `test/validate-coherence.test.js` | Semantic coherence across agent sections — handoff targets, Mandatory Pipeline, Brief Contract all resolve to real slugs; static, no LLM calls |
 | `test/install.test.js` | `bin/ndv.js` install commands — simulates claude/opencode/cursor installs in a temp dir |
+| `test/install-router-skills.test.js` | Acceptance tests for router-skill auto-install behavior in `bin/ndv.js` (claude auto-install, opencode skip, cursor/copilot no skills dir) |
+| `test/transform-skill.test.js` | Adversarial unit tests for `transformAgentToSkill()` purity, determinism, boundary, and degradation behavior |
+| `test/entry-guard.test.js` | Regression test for the entry-point symlink guard — invoking `bin/ndv.js` via a symlink still runs the command dispatcher |
 
 ### Adding or changing an agent
 
@@ -105,11 +111,11 @@ CHANGED_AGENTS="ndv-foo,ndv-bar" node --test test/validate-agents.test.js
 2. Update routing in `CLAUDE.md`, `agents/ndv-flow.md`, `bin/ndv.js` (NDV_BLOCK + Copilot header), `commands/opencode/ndv-help.md`, `humans/ndv-agents.md`
 3. Edit `humans/ndv-[name].human.md` (human file — written after model file is stable)
 4. Run `npm run test:validate` locally before pushing
-5. CI runs authoring-guide checks automatically via `CHANGED_AGENTS`
+5. CI (`.github/workflows/ci.yml`) runs the full `npm test` suite unscoped on push/PR to main (Node 18, ubuntu-latest). The authoring tests scope to `CHANGED_AGENTS` when set, but CI does not set it — the suite runs in full.
 
 ### Pre-commit hook
 
-Husky runs `npm test` on every commit. Fix failures before committing — do not skip the hook.
+Husky runs `npm test` then a CSS build staleness check on every commit. Fix failures before committing — do not skip the hook.
 
 <!-- ndv:start -->
 # neurodiveragents
