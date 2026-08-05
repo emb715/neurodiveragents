@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, readdirSync, copyFileSync, symlinkSync, lstatSync, unlinkSync, readlinkSync, realpathSync } from 'fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, readdirSync, copyFileSync, symlinkSync, lstatSync, unlinkSync, readlinkSync, realpathSync, chmodSync } from 'fs'
 import { join, dirname, resolve } from 'path'
 import { homedir } from 'os'
 import { fileURLToPath } from 'url'
@@ -632,12 +632,20 @@ async function install(toolName, isGlobal = false, interactive = false) {
   if (interactive) {
     intro('neurodiveragents — agent installer')
 
-    // Confirm scope if not already specified by --global
+    // Confirm scope if not already specified by --global.
+    // For claude, default to global (first option) — the fleet is most useful
+    // as a global install, and claude-flow requires global agents to route.
     if (!isGlobal) {
-      const scope = await promptSelect('Install scope?', [
-        { value: 'project', label: 'This project', hint: `${target.dest}/` },
-        { value: 'global', label: 'Global', hint: `~/.${toolName}/agents/` },
-      ])
+      const scopeOptions = toolName === 'claude'
+        ? [
+            { value: 'global', label: 'Global', hint: `~/.${toolName}/agents/` },
+            { value: 'project', label: 'This project', hint: `${target.dest}/` },
+          ]
+        : [
+            { value: 'project', label: 'This project', hint: `${target.dest}/` },
+            { value: 'global', label: 'Global', hint: `~/.${toolName}/agents/` },
+          ]
+      const scope = await promptSelect('Install scope?', scopeOptions)
       isGlobal = scope === 'global'
     }
 
@@ -685,6 +693,13 @@ async function install(toolName, isGlobal = false, interactive = false) {
     if (isGlobal) {
       console.log(`Agents available in every ${toolName} project automatically.`)
     }
+    // claude-flow alias — only for global claude installs (it's a shell tool,
+    // not a project artifact). Interactive path: prompt the user.
+    if (toolName === 'claude' && isGlobal) {
+      installClaudeFlow(true)
+    } else if (toolName === 'claude' && !isGlobal) {
+      console.log(`\nTip: claude-flow is a global tool — run 'ndv install claude --global' to install it.`)
+    }
   } else {
     // Non-interactive (tool arg provided directly)
     installAgents(toolName, target, isGlobal)
@@ -701,6 +716,16 @@ async function install(toolName, isGlobal = false, interactive = false) {
     console.log(`\nDone. Fleet installed ${isGlobal ? 'globally' : 'for this project'}.`)
     if (isGlobal) {
       console.log(`Agents available in every ${toolName} project automatically.`)
+    }
+    // claude-flow alias — non-interactive: install only on --all --global
+    // (no confirm in non-interactive mode). Skip otherwise — too invasive
+    // without confirmation.
+    if (toolName === 'claude' && isGlobal && isAll) {
+      installClaudeFlow(false, true)
+    } else if (toolName === 'claude' && isGlobal) {
+      console.log(`\nTip: claude-flow — run 'ndv install claude --global --all' to install the alias.`)
+    } else if (toolName === 'claude' && !isGlobal) {
+      console.log(`\nTip: claude-flow is a global tool — run 'ndv install claude --global' to install it.`)
     }
   }
 }
@@ -779,6 +804,79 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 
   writeFileSync(outPath, output)
   console.log(`Copilot instructions written to .github/copilot-instructions.md`)
+}
+
+// Install the claude-flow alias to ~/.local/bin/claude-flow and write ndvRepoRoot
+// into ~/.claude/settings.json so the script can resolve the repo without a
+// shell profile entry. The primary session's read access to agent source files
+// is handled by --add-dir in the claude-flow exec line (session-scoped), NOT by
+// permissions.allow (which is for tool-scope rules like Bash(git *) and
+// mcp__server__* — filesystem globs are rejected by Claude Code).
+//
+// Callers:
+//   - interactive global claude install, after the skills step, with a confirm
+//   - non-interactive --all --global claude install, no confirm (installs by default)
+//   Returns true if installed, false if skipped (interactive decline).
+function installClaudeFlow(interactive, skipConfirm = false) {
+  const destDir = join(HOME, '.local', 'bin')
+  const destScript = join(destDir, 'claude-flow')
+  const srcScript = join(__dirname, 'claude-flow')
+  const settingsPath = join(HOME, '.claude', 'settings.json')
+  const repoRoot = join(__dirname, '..')
+
+  // Source script must exist alongside bin/ndv.js
+  if (!existsSync(srcScript)) {
+    console.warn(`  ⚠ claude-flow source not found at ${srcScript} — skipping alias install.`)
+    return false
+  }
+
+  if (interactive && !skipConfirm) {
+    const install = promptConfirm('Install claude-flow alias? (run any agent as the primary system prompt)', true)
+    if (!install) {
+      console.log(`  Skipped — manual install: cp bin/claude-flow ~/.local/bin/ && export NDV_REPO_ROOT=$(pwd)`)
+      console.log(`  See: docs/claude-flow.md`)
+      return false
+    }
+  }
+
+  // 1. Copy the script to ~/.local/bin/
+  mkdirSync(destDir, { recursive: true })
+  copyFileSync(srcScript, destScript)
+  // Preserve executable bit
+  try { chmodSync(destScript, 0o755) } catch { /* best-effort — copy may already be exec */ }
+  console.log(`  ✓ claude-flow installed to ${destScript}`)
+
+  // 2. Merge ndvRepoRoot into ~/.claude/settings.json (idempotent).
+  // Custom key — Claude Code ignores unknown keys, claude-flow reads it as the
+  // repo resolution fallback after NDV_REPO_ROOT env var and sibling-dir check.
+  let settings = {}
+  if (existsSync(settingsPath)) {
+    try {
+      settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
+    } catch {
+      console.warn(`  ⚠ Could not parse ${settingsPath} — writing fresh ndv keys only`)
+    }
+  }
+
+  const prevRepoRoot = settings.ndvRepoRoot
+  settings.ndvRepoRoot = repoRoot
+
+  writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
+
+  const repoChanged = prevRepoRoot !== repoRoot
+  console.log(`  ✓ ${settingsPath} updated: ndvRepoRoot=${repoRoot}${repoChanged ? ' (updated)' : ' (unchanged)'}`)
+  console.log(`  ✓ session read access via --add-dir in claude-flow exec line`)
+
+  // 3. Warn if ~/.local/bin is not on $PATH
+  const pathDirs = (process.env.PATH || '').split(':')
+  if (!pathDirs.includes(destDir)) {
+    console.warn(`  ⚠ ${destDir} is not on your $PATH — add it to your shell profile:`)
+    console.warn(`    export PATH="$HOME/.local/bin:$PATH"`)
+  }
+
+  console.log(`  Usage: claude-flow            # default: ndv-flow`)
+  console.log(`         claude-flow ndv-honest  # any agent`)
+  return true
 }
 
 // Skill platform support: which tools support the Agent Skills spec and where
