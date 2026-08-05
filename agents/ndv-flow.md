@@ -1,7 +1,5 @@
 ---
 name: ndv-flow
-model: claude-sonnet-4-6
-effort: high
 mode: all
 description: >
   Fleet orchestrator. Use when the work is too large for one agent — PRDs,

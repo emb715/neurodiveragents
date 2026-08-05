@@ -71,18 +71,16 @@ describe('agent files (agents/*.md)', () => {
         )
       })
 
-      test('frontmatter: model field present and non-empty', () => {
+      test('frontmatter: no "model" field (host-injected, not source-authored)', () => {
         const { get } = parseFrontmatter(agent.content, agent.file)
         const model = get('model')
-        assert.ok(model, `${agent.file}: frontmatter missing "model" field`)
-        assert.ok(model.length > 0, `${agent.file}: "model" field is empty`)
+        assert.equal(model, null, `${agent.file}: "model" field must be absent — the host injects the model, source files are model-agnostic`)
       })
 
-      test('frontmatter: effort field present and non-empty', () => {
+      test('frontmatter: no "effort" field (host-injected, not source-authored)', () => {
         const { get } = parseFrontmatter(agent.content, agent.file)
         const effort = get('effort')
-        assert.ok(effort, `${agent.file}: frontmatter missing "effort" field`)
-        assert.ok(effort.length > 0, `${agent.file}: "effort" field is empty`)
+        assert.equal(effort, null, `${agent.file}: "effort" field must be absent — the host injects the effort level, source files are effort-agnostic`)
       })
 
       test('frontmatter: no "agent" field (invalid Claude Code key, must be absent)', () => {
