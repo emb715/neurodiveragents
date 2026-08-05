@@ -440,18 +440,16 @@ function writeRoutingGlobalOpenCode(jsonPath) {
   }
 
   // Instructions merge — only on first install
-  if (config.instructions && config.instructions.some(i => i.includes('ndv'))) {
+  // Exact-path match: skip only when the instructions array contains the
+  // canonical rules file path this installer would write. A substring match
+  // like `mentions-ndv-by-name.md` must NOT trigger a skip.
+  const rulesDir = join(HOME, '.config', 'opencode', 'rules')
+  const rulesFile = join(rulesDir, 'ndv.md')
+  if (config.instructions && config.instructions.includes(rulesFile)) {
     console.log(`  ndv already in ${jsonPath} — skipping`)
-    // Verify the rules file actually exists — the heuristic is loose (substring match)
-    const rulesFile = join(HOME, '.config', 'opencode', 'rules', 'ndv.md')
-    if (!existsSync(rulesFile)) {
-      console.warn(`  ⚠ Heuristic matched 'ndv' in instructions but ${rulesFile} not found — possible false positive. Manually verify ndv routing is installed.`)
-    }
     if (mutated) writeFileSync(jsonPath, JSON.stringify(config, null, 2) + '\n')
     return
   }
-  const rulesDir = join(HOME, '.config', 'opencode', 'rules')
-  const rulesFile = join(rulesDir, 'ndv.md')
   mkdirSync(rulesDir, { recursive: true })
   writeFileSync(rulesFile, NDV_BLOCK + '\n')
   config.instructions = [...(config.instructions ?? []), `${rulesFile}`]

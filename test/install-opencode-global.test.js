@@ -150,12 +150,14 @@ test('writeRoutingGlobalOpenCode: no opencode.json → routing file created, ins
 test('writeRoutingGlobalOpenCode: existing ndv instruction → skip, no duplicate; permission block still merged if missing', () => {
   const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-oc-skip-'))
   try {
-    // Arrange: opencode.json already has an instructions entry containing "ndv"
-    // (the heuristic is `i.includes('ndv')` — a string mentioning ndv triggers skip)
-    // AND no permission block yet (to verify permission merge still runs).
+    // Arrange: opencode.json already has an instructions entry containing the
+    // EXACT canonical rules path this installer would write (exact-path match,
+    // not a substring heuristic). AND no permission block yet (to verify
+    // permission merge still runs).
     mkdirSync(join(fakeHome, '.config', 'opencode'), { recursive: true })
     const jsonPath = opencodeJsonPath(fakeHome)
-    const preExistingInstructions = ['/some/other/path/mentions-ndv-by-name.md']
+    const rulesFile = rulesFilePath(fakeHome)
+    const preExistingInstructions = [rulesFile]
     writeFileSync(jsonPath, JSON.stringify({
       instructions: preExistingInstructions,
     }, null, 2) + '\n')
@@ -166,13 +168,12 @@ test('writeRoutingGlobalOpenCode: existing ndv instruction → skip, no duplicat
 
     const config = JSON.parse(readFileSync(jsonPath, 'utf8'))
 
-    // Assert: skip fired (heuristic matched)
+    // Assert: skip fired (exact-path match)
     const combined = r.stdout + r.stderr
     assert.ok(combined.includes('ndv already in'), 'expected skip log')
 
     // Assert: NO new routing file was written (the skip path returns before writeFileSync of rules)
-    // NOTE: the heuristic skip returns early — it does NOT create the rules file.
-    const rulesFile = rulesFilePath(fakeHome)
+    // NOTE: the skip returns early — it does NOT create the rules file.
     assert.ok(
       !existsSync(rulesFile),
       'routing rules file should NOT be created when ndv instruction already present'
@@ -238,6 +239,57 @@ test('writeRoutingGlobalOpenCode: idempotent — second run skips, no duplicate 
     // external_directory is an object — duplicate keys would collapse, but count keys to be sure
     const extDirKeys = Object.keys(configAfterSecond.permission.external_directory)
     assert.equal(extDirKeys.length, 1, `external_directory should have 1 key, got ${extDirKeys.length}`)
+  } finally {
+    rmSync(fakeHome, { recursive: true, force: true })
+  }
+})
+
+// ─── AC5: Substring false-positive does NOT trigger skip ─────────────────────
+
+test('writeRoutingGlobalOpenCode: substring false-positive does NOT trigger skip — installs correctly', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-oc-falsepos-'))
+  try {
+    // Arrange: opencode.json has an instructions entry that contains the
+    // substring "ndv" but is NOT the canonical rules path. Under the old
+    // substring heuristic this would trigger a false-positive skip; under the
+    // exact-path match it must proceed to install.
+    mkdirSync(join(fakeHome, '.config', 'opencode'), { recursive: true })
+    const jsonPath = opencodeJsonPath(fakeHome)
+    const substringPath = '/some/other/path/mentions-ndv-by-name.md'
+    const rulesFile = rulesFilePath(fakeHome)
+    writeFileSync(jsonPath, JSON.stringify({
+      instructions: [substringPath],
+    }, null, 2) + '\n')
+
+    // Act
+    const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    assert.equal(r.status, 0, `exit code ${r.status}\nstderr: ${r.stderr}`)
+
+    // Assert: skip did NOT fire
+    const combined = r.stdout + r.stderr
+    assert.ok(
+      !combined.includes('ndv already in'),
+      `expected NO skip log, got:\n${combined}`
+    )
+
+    // Assert: routing rules file IS written to the canonical path
+    assert.ok(existsSync(rulesFile), 'ndv.md routing file not created (substring false-positive incorrectly skipped)')
+
+    // Assert: instructions array now contains the canonical rules path (appended),
+    // and the original substring path is preserved
+    const config = JSON.parse(readFileSync(jsonPath, 'utf8'))
+    assert.ok(
+      config.instructions.includes(rulesFile),
+      `instructions must reference canonical rules path ${rulesFile}; got ${JSON.stringify(config.instructions)}`
+    )
+    assert.ok(
+      config.instructions.includes(substringPath),
+      `original substring path ${substringPath} must be preserved; got ${JSON.stringify(config.instructions)}`
+    )
+    assert.equal(
+      config.instructions.length, 2,
+      `instructions should have 2 entries (original + canonical), got ${config.instructions.length}`
+    )
   } finally {
     rmSync(fakeHome, { recursive: true, force: true })
   }
