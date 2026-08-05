@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, readdirSync, copyFileSync, symlinkSync, lstatSync, unlinkSync, readlinkSync } from 'fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, readdirSync, copyFileSync, symlinkSync, lstatSync, unlinkSync, readlinkSync, realpathSync, chmodSync } from 'fs'
 import { join, dirname, resolve } from 'path'
 import { homedir } from 'os'
 import { fileURLToPath } from 'url'
@@ -440,13 +440,16 @@ function writeRoutingGlobalOpenCode(jsonPath) {
   }
 
   // Instructions merge — only on first install
-  if (config.instructions && config.instructions.some(i => i.includes('ndv'))) {
+  // Exact-path match: skip only when the instructions array contains the
+  // canonical rules file path this installer would write. A substring match
+  // like `mentions-ndv-by-name.md` must NOT trigger a skip.
+  const rulesDir = join(HOME, '.config', 'opencode', 'rules')
+  const rulesFile = join(rulesDir, 'ndv.md')
+  if (config.instructions && config.instructions.includes(rulesFile)) {
     console.log(`  ndv already in ${jsonPath} — skipping`)
     if (mutated) writeFileSync(jsonPath, JSON.stringify(config, null, 2) + '\n')
     return
   }
-  const rulesDir = join(HOME, '.config', 'opencode', 'rules')
-  const rulesFile = join(rulesDir, 'ndv.md')
   mkdirSync(rulesDir, { recursive: true })
   writeFileSync(rulesFile, NDV_BLOCK + '\n')
   config.instructions = [...(config.instructions ?? []), `${rulesFile}`]
@@ -493,10 +496,15 @@ function installAgents(toolName, target, isGlobal, s = null) {
     if (existsSync(commandsDir)) {
       mkdirSync(destCommandsDir, { recursive: true })
       const commands = readdirSync(commandsDir).filter(f => f.endsWith('.md'))
+      if (commands.length === 0) {
+        console.warn(`  ⚠ No .md command files found in ${commandsDir} — slash commands not installed`)
+      }
       for (const cmd of commands) {
         writeFileSync(join(destCommandsDir, cmd), readFileSync(join(commandsDir, cmd), 'utf8'))
         commandFallbacks.add(cmd)
       }
+    } else {
+      console.warn(`  ⚠ No commands directory found at ${commandsDir} — slash commands not installed`)
     }
   }
 
@@ -509,9 +517,14 @@ function installAgents(toolName, target, isGlobal, s = null) {
     if (existsSync(commandsDir)) {
       mkdirSync(destCommandsDir, { recursive: true })
       const commands = readdirSync(commandsDir).filter(f => f.endsWith('.md'))
+      if (commands.length === 0) {
+        console.warn(`  ⚠ No .md command files found in ${commandsDir} — slash commands not installed`)
+      }
       for (const cmd of commands) {
         writeFileSync(join(destCommandsDir, cmd), readFileSync(join(commandsDir, cmd), 'utf8'))
       }
+    } else {
+      console.warn(`  ⚠ No commands directory found at ${commandsDir} — slash commands not installed`)
     }
   }
 
@@ -619,12 +632,20 @@ async function install(toolName, isGlobal = false, interactive = false) {
   if (interactive) {
     intro('neurodiveragents — agent installer')
 
-    // Confirm scope if not already specified by --global
+    // Confirm scope if not already specified by --global.
+    // For claude, default to global (first option) — the fleet is most useful
+    // as a global install, and claude-flow requires global agents to route.
     if (!isGlobal) {
-      const scope = await promptSelect('Install scope?', [
-        { value: 'project', label: 'This project', hint: `${target.dest}/` },
-        { value: 'global', label: 'Global', hint: `~/.${toolName}/agents/` },
-      ])
+      const scopeOptions = toolName === 'claude'
+        ? [
+            { value: 'global', label: 'Global', hint: `~/.${toolName}/agents/` },
+            { value: 'project', label: 'This project', hint: `${target.dest}/` },
+          ]
+        : [
+            { value: 'project', label: 'This project', hint: `${target.dest}/` },
+            { value: 'global', label: 'Global', hint: `~/.${toolName}/agents/` },
+          ]
+      const scope = await promptSelect('Install scope?', scopeOptions)
       isGlobal = scope === 'global'
     }
 
@@ -672,6 +693,13 @@ async function install(toolName, isGlobal = false, interactive = false) {
     if (isGlobal) {
       console.log(`Agents available in every ${toolName} project automatically.`)
     }
+    // claude-flow alias — only for global claude installs (it's a shell tool,
+    // not a project artifact). Interactive path: prompt the user.
+    if (toolName === 'claude' && isGlobal) {
+      installClaudeFlow(true)
+    } else if (toolName === 'claude' && !isGlobal) {
+      console.log(`\nTip: claude-flow is a global tool — run 'ndv install claude --global' to install it.`)
+    }
   } else {
     // Non-interactive (tool arg provided directly)
     installAgents(toolName, target, isGlobal)
@@ -688,6 +716,16 @@ async function install(toolName, isGlobal = false, interactive = false) {
     console.log(`\nDone. Fleet installed ${isGlobal ? 'globally' : 'for this project'}.`)
     if (isGlobal) {
       console.log(`Agents available in every ${toolName} project automatically.`)
+    }
+    // claude-flow alias — non-interactive: install only on --all --global
+    // (no confirm in non-interactive mode). Skip otherwise — too invasive
+    // without confirmation.
+    if (toolName === 'claude' && isGlobal && isAll) {
+      installClaudeFlow(false, true)
+    } else if (toolName === 'claude' && isGlobal) {
+      console.log(`\nTip: claude-flow — run 'ndv install claude --global --all' to install the alias.`)
+    } else if (toolName === 'claude' && !isGlobal) {
+      console.log(`\nTip: claude-flow is a global tool — run 'ndv install claude --global' to install it.`)
     }
   }
 }
@@ -745,17 +783,100 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
   const outPath = '.github/copilot-instructions.md'
   if (existsSync(outPath)) {
     const existing = readFileSync(outPath, 'utf8')
-    if (existing.includes('ndv:start')) {
-      // Replace the ndv block (header) while preserving any content outside it
+    const blockRe = /<!-- ndv:start -->[\s\S]*?<!-- ndv:end -->/
+    if (blockRe.test(existing)) {
+      // Full block present — replace it, preserve content outside
       const updated = existing.replace(/<!-- ndv:start -->[\s\S]*?<!-- ndv:end -->\n?/, header)
       writeFileSync(outPath, updated + sections.join('\n\n---\n\n'))
       console.log(`Updated ndv routing block in ${outPath}`)
       return
     }
+    // No full block — refuse to write, whether or not a partial marker exists
+    if (existing.includes('ndv:start')) {
+      console.warn(`  ⚠ ${outPath} contains a partial 'ndv:start' marker but no complete ndv block.`)
+      console.warn(`    Refusing to overwrite — manually fix the marker or remove the file and re-run.`)
+    } else {
+      console.warn(`  ⚠ ${outPath} already exists without an ndv routing block.`)
+      console.warn(`    Refusing to overwrite — manually merge or remove the file and re-run.`)
+    }
+    return
   }
 
   writeFileSync(outPath, output)
   console.log(`Copilot instructions written to .github/copilot-instructions.md`)
+}
+
+// Install the claude-flow alias to ~/.local/bin/claude-flow and write ndvRepoRoot
+// into ~/.claude/settings.json so the script can resolve the repo without a
+// shell profile entry. The primary session's read access to agent source files
+// is handled by --add-dir in the claude-flow exec line (session-scoped), NOT by
+// permissions.allow (which is for tool-scope rules like Bash(git *) and
+// mcp__server__* — filesystem globs are rejected by Claude Code).
+//
+// Callers:
+//   - interactive global claude install, after the skills step, with a confirm
+//   - non-interactive --all --global claude install, no confirm (installs by default)
+//   Returns true if installed, false if skipped (interactive decline).
+function installClaudeFlow(interactive, skipConfirm = false) {
+  const destDir = join(HOME, '.local', 'bin')
+  const destScript = join(destDir, 'claude-flow')
+  const srcScript = join(__dirname, 'claude-flow')
+  const settingsPath = join(HOME, '.claude', 'settings.json')
+  const repoRoot = join(__dirname, '..')
+
+  // Source script must exist alongside bin/ndv.js
+  if (!existsSync(srcScript)) {
+    console.warn(`  ⚠ claude-flow source not found at ${srcScript} — skipping alias install.`)
+    return false
+  }
+
+  if (interactive && !skipConfirm) {
+    const install = promptConfirm('Install claude-flow alias? (run any agent as the primary system prompt)', true)
+    if (!install) {
+      console.log(`  Skipped — manual install: cp bin/claude-flow ~/.local/bin/ && export NDV_REPO_ROOT=$(pwd)`)
+      console.log(`  See: docs/claude-flow.md`)
+      return false
+    }
+  }
+
+  // 1. Copy the script to ~/.local/bin/
+  mkdirSync(destDir, { recursive: true })
+  copyFileSync(srcScript, destScript)
+  // Preserve executable bit
+  try { chmodSync(destScript, 0o755) } catch { /* best-effort — copy may already be exec */ }
+  console.log(`  ✓ claude-flow installed to ${destScript}`)
+
+  // 2. Merge ndvRepoRoot into ~/.claude/settings.json (idempotent).
+  // Custom key — Claude Code ignores unknown keys, claude-flow reads it as the
+  // repo resolution fallback after NDV_REPO_ROOT env var and sibling-dir check.
+  let settings = {}
+  if (existsSync(settingsPath)) {
+    try {
+      settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
+    } catch {
+      console.warn(`  ⚠ Could not parse ${settingsPath} — writing fresh ndv keys only`)
+    }
+  }
+
+  const prevRepoRoot = settings.ndvRepoRoot
+  settings.ndvRepoRoot = repoRoot
+
+  writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n')
+
+  const repoChanged = prevRepoRoot !== repoRoot
+  console.log(`  ✓ ${settingsPath} updated: ndvRepoRoot=${repoRoot}${repoChanged ? ' (updated)' : ' (unchanged)'}`)
+  console.log(`  ✓ session read access via --add-dir in claude-flow exec line`)
+
+  // 3. Warn if ~/.local/bin is not on $PATH
+  const pathDirs = (process.env.PATH || '').split(':')
+  if (!pathDirs.includes(destDir)) {
+    console.warn(`  ⚠ ${destDir} is not on your $PATH — add it to your shell profile:`)
+    console.warn(`    export PATH="$HOME/.local/bin:$PATH"`)
+  }
+
+  console.log(`  Usage: claude-flow            # default: ndv-flow`)
+  console.log(`         claude-flow ndv-honest  # any agent`)
+  return true
 }
 
 // Skill platform support: which tools support the Agent Skills spec and where
@@ -807,7 +928,7 @@ function getCognitiveSkills() {
     // Defense-in-depth: router skills are derived from agents/ (not skills/),
     // so metadata.type: router should never appear here. This filter prevents
     // a misplaced router SKILL.md from being treated as cognitive. The
-    // invariant is enforced by test/validate-agents.test.js.
+    // invariant is enforced by test/validate-contracts.test.js.
     return parseSkillType(content) !== 'router'
   })
 }
@@ -1114,7 +1235,39 @@ const arg = rest.find(a => !a.startsWith('-'))
 
 // CLI entry guard: only run the command dispatcher when this file is invoked
 // directly as the entry point (not when imported for unit testing).
-const isMainEntry = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+//
+// Both sides must be realpath-resolved before comparison. When this package is
+// installed globally (or via npx's cache), the bin shim on PATH is a symlink
+// into node_modules/neurodiveragents/bin/ndv.js. Node's module loader follows
+// symlinks when resolving import.meta.url (→ the real path), while
+// process.argv[1] retains the invocation path (→ the symlink path).
+// path.resolve() alone does NOT resolve symlinks, so the naive comparison
+//   resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+// fails under a global/npx install → isMainEntry is false → the dispatcher is
+// skipped → the CLI produces zero output (silent exit 0). realpathSync on both
+// sides normalizes symlinks away and makes the comparison hold in every install
+// topology. See: "global install says nothing, 0 feedback".
+//
+// realpathSync can throw on hostile/degraded filesystems (EACCES, stale mount,
+// ENOENT if argv[1] is replaced between spawn and guard eval) — the prior
+// resolve()-based guard never threw. So the realpath comparison is wrapped in
+// try/catch; on throw it falls back to the resolve()-based comparison, which
+// does not follow symlinks (so it fails to match under global/npx installs) but
+// at least does not crash. The common case is already covered by the realpath
+// branch; the fallback covers degraded-FS edge cases.
+const isMainEntry = (() => {
+  if (!process.argv[1]) return false
+  try {
+    return realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))
+  } catch {
+    // Fallback: degraded filesystem where realpathSync throws (EACCES,
+    // stale mount, ENOENT on argv[1] replaced between spawn and guard eval).
+    // The pre-realpath behavior — resolve() does not follow symlinks, so
+    // this fails to match under global/npx installs, but at least does not
+    // crash. The common case is already covered by the realpath branch.
+    return resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+  }
+})()
 
 if (isMainEntry) {
   switch (cmd) {
