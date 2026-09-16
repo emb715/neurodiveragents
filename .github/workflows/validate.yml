@@ -7,58 +7,28 @@ on:
     branches: [main]
 
 jobs:
-  validate-agents:
-    name: Agent schema validation
+  validate:
+    name: Validate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-
-      - name: Validate agent files and human files
-        run: node --test test/validate-schema.test.js test/validate-contracts.test.js test/validate-coherence.test.js
-
-  validate-new-agents:
-    name: Authoring-guide validation (changed agents only)
-    runs-on: ubuntu-latest
-    # Only meaningful on PRs — push to main skips (already vetted)
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          # Fetch base branch so git diff works
+          # Full history so scripts/validate.sh can diff against origin/main
+          # to scope the authoring-guide checks to changed agents.
           fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
-      - name: Detect changed agent files
-        id: changed
-        run: |
-          BASE=${{ github.event.pull_request.base.sha }}
-          HEAD=${{ github.event.pull_request.head.sha }}
+      - name: Install dependencies
+        run: npm ci
 
-          # Agent model files changed in this PR (strip path, strip .md)
-          AGENT_NAMES=$(git diff --name-only "$BASE" "$HEAD" \
-            | grep '^agents/ndv-.*\.md$' \
-            | sed 's|^agents/||; s|\.md$||' \
-            | paste -sd ',' -)
-
-          echo "agent_names=$AGENT_NAMES" >> "$GITHUB_OUTPUT"
-          echo "Changed agents: $AGENT_NAMES"
-
-      - name: Run authoring-guide checks on changed agents
-        if: steps.changed.outputs.agent_names != ''
-        env:
-          CHANGED_AGENTS: ${{ steps.changed.outputs.agent_names }}
-        run: node --test test/validate-authoring.test.js
-
-      - name: No new agent files detected — skipping authoring checks
-        if: steps.changed.outputs.agent_names == ''
-        run: echo "No agents/ndv-*.md files changed in this PR. Authoring-guide checks skipped."
+      # Same command as the pre-commit hook: full test suite (authoring checks
+      # scoped to changed agents) + CSS staleness check.
+      - name: npm run validate
+        run: npm run validate
 
   request-copilot-review:
     name: Request Copilot authoring review
@@ -97,47 +67,3 @@ jobs:
             /repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/requested_reviewers \
             -f "reviewers[]=copilot" \
             || echo "Copilot review request failed — enable Copilot code review in repository settings."
-
-  test-suite:
-    name: Full test suite
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run test suite
-        run: npm test
-
-  validate-css:
-    name: CSS build is up to date
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Rebuild CSS
-        run: npm run css:build
-
-      - name: Fail if built CSS differs from committed CSS
-        run: |
-          if ! git diff --exit-code assets/styles.css; then
-            echo ""
-            echo "✖  assets/styles.css is out of date."
-            echo "   Run 'npm run css:build' locally and commit the result."
-            exit 1
-          fi
-          echo "✔  assets/styles.css matches the build output."

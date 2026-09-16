@@ -88,20 +88,20 @@ All agents default to parallel execution for 4-8 independent files/items.
 | `skills/` | Cognitive module skills |
 | `commands/` | Slash commands (OpenCode) |
 
-### Running tests
+### Validation
 
 ```bash
-# Full suite (all 14 test files — the npm test script)
-npm test
+npm run validate
+```
 
-# Agent validation only (fast, no install simulation)
-npm run test:validate
+That is the whole merge gate, and the pre-commit hook and CI (`.github/workflows/validate.yml`) run exactly that command. It runs the full test suite (`npm test`, 14 files) and then the CSS staleness check. Authoring-guide checks are scoped to the agents changed on the branch: `scripts/validate.sh` compares against `origin/main`, or you can set `CHANGED_AGENTS="ndv-foo,ndv-bar"` yourself.
 
-# Install simulation only
-npm run test:install
+Narrower commands for iterating:
 
-# Authoring-guide checks scoped to changed agents (local; CI runs unscoped)
-CHANGED_AGENTS="ndv-foo,ndv-bar" node --test test/validate-authoring.test.js
+```bash
+npm run validate:agents   # the 6 static agent/fixture checks — fast, no installs
+npm run test:install      # install simulation only
+npm run css:check         # CSS staleness only
 ```
 
 ### Routing eval (opt-in — costs tokens, not part of `npm test`)
@@ -160,9 +160,10 @@ No thresholds are enforced yet; set them from a baseline run, not a guess.
 1. Edit `agents/ndv-[name].md` (model file — source of truth)
 2. Update routing in `CLAUDE.md`, `agents/ndv-flow.md`, `bin/ndv.js` (NDV_BLOCK + Copilot header), `commands/opencode/ndv-help.md`, `humans/ndv-agents.md`. The ndv block in `CLAUDE.md` and `NDV_BLOCK` must stay byte-identical.
 3. Edit `humans/ndv-[name].human.md` (human file — written after model file is stable)
-4. Run `npm run test:validate` locally before pushing
-5. CI (`.github/workflows/ci.yml`) runs the full `npm test` suite unscoped on push/PR to main (Node 18, ubuntu-latest). The authoring tests scope to `CHANGED_AGENTS` when set, but CI does not set it — the suite runs in full.
+4. Run `npm run validate`. The pre-commit hook and CI (Node 20, ubuntu-latest) run the same command.
 
 ### Pre-commit hook
 
-Husky runs `npm test` then a CSS build staleness check on every commit. Fix failures before committing — do not skip the hook.
+Husky runs `npm run validate` on every commit. Fix failures before committing — do not skip the hook.
+
+**Running from a git worktree:** husky's generated `.husky/_` directory is untracked, so the hook doesn't fire there. Run `npm run validate` by hand before pushing.
