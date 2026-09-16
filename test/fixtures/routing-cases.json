@@ -1,0 +1,596 @@
+{
+  "version": 2,
+  "description": "Behavioral routing eval fixture. Each case is a task description as a user would phrase it, paired with the agent the routing table should select. Consumed by test/validate-routing.test.js (static, CI, free) and scripts/eval-routing.mjs (model-in-the-loop, opt-in). Each case declares a basis: canonical cases are forced by a verbatim anchor in the routing context the model sees (a miss means fix the routing table or the model); judgment cases encode the fixture author's reading and name the contested alternative (a miss means review the fixture first).",
+  "routing_source": [
+    "CLAUDE.md#routing-table",
+    "agents/ndv-flow.md#routing-table",
+    "agents/ndv-flow.md#conflict-resolution-use-highest-priority-match"
+  ],
+  "tag_vocabulary": [
+    "direct",
+    "conflict",
+    "residual",
+    "pipeline"
+  ],
+  "cases": [
+    {
+      "id": "direct-diagnose-01",
+      "task": "Users report the export button does nothing on Safari. No error in the server logs. Find out why.",
+      "expect": "ndv-diagnose",
+      "tags": [
+        "direct"
+      ],
+      "why": "Broken behavior, root cause unknown — investigation, not implementation.",
+      "basis": "canonical",
+      "anchor": "root cause **unknown**"
+    },
+    {
+      "id": "direct-build-01",
+      "task": "Add a POST /api/invoices endpoint. Request schema is {customerId: string, lineItems: LineItem[]}, response is {id: string, total: number}. Acceptance: returns 422 on empty lineItems. Target files: src/routes/invoices.ts, src/services/invoice.ts. Architecture is settled.",
+      "expect": "ndv-build",
+      "tags": [
+        "direct"
+      ],
+      "why": "Schemas, acceptance criteria, target files, architecture settled — the full readiness gate is met.",
+      "basis": "canonical",
+      "anchor": "schemas, acceptance criteria, file targets"
+    },
+    {
+      "id": "direct-research-01",
+      "task": "Where is the rate limiting implemented and what calls into it?",
+      "expect": "ndv-research",
+      "tags": [
+        "direct"
+      ],
+      "why": "Codebase lookup with cross-file tracing, no change requested.",
+      "basis": "canonical",
+      "anchor": "\"where is X\""
+    },
+    {
+      "id": "direct-research-02",
+      "task": "Does this repo have any retry logic for outbound webhooks? Find any reference to it.",
+      "expect": "ndv-research",
+      "tags": [
+        "direct"
+      ],
+      "why": "\"does X exist\" / \"find any reference\" is an explicit Scout signal in the routing table.",
+      "basis": "canonical",
+      "anchor": "\"find any reference to Z\""
+    },
+    {
+      "id": "direct-review-01",
+      "task": "Review the changes on this branch before I open the PR.",
+      "expect": "ndv-review",
+      "tags": [
+        "direct"
+      ],
+      "why": "Quality assessment of changed code.",
+      "basis": "canonical",
+      "anchor": "Code review, PR"
+    },
+    {
+      "id": "direct-design-01",
+      "task": "The settings page feels cluttered and the visual hierarchy is unclear. What should change?",
+      "expect": "ndv-design",
+      "tags": [
+        "direct"
+      ],
+      "why": "Visual hierarchy judgment, no spec — a design decision, not an implementation.",
+      "basis": "canonical",
+      "anchor": "visual hierarchy"
+    },
+    {
+      "id": "direct-architect-01",
+      "task": "Our services all import from a shared kernel package that imports back from two of them. Is this structure defensible?",
+      "expect": "ndv-architect",
+      "tags": [
+        "direct"
+      ],
+      "why": "Dependency direction and structural soundness — built right, not works.",
+      "basis": "canonical",
+      "anchor": "architecture review"
+    },
+    {
+      "id": "direct-refactor-01",
+      "task": "Rename UserManager to AccountService everywhere and update the imports.",
+      "expect": "ndv-refactor",
+      "tags": [
+        "direct"
+      ],
+      "why": "Pure rename — transformation with no behavior change.",
+      "basis": "canonical",
+      "anchor": "Rename"
+    },
+    {
+      "id": "direct-tester-01",
+      "task": "The parseDuration helper has no tests. Write some.",
+      "expect": "ndv-tester",
+      "tags": [
+        "direct"
+      ],
+      "why": "Test generation.",
+      "basis": "canonical",
+      "anchor": "Generate tests"
+    },
+    {
+      "id": "direct-tester-02",
+      "task": "Write the acceptance tests first, red, before we implement the coupon feature.",
+      "expect": "ndv-tester",
+      "tags": [
+        "direct"
+      ],
+      "why": "ATDD / red-tests-before-implementation is an explicit Edge signal.",
+      "basis": "canonical",
+      "anchor": "acceptance tests first"
+    },
+    {
+      "id": "direct-secure-01",
+      "task": "Audit our password reset flow for vulnerabilities.",
+      "expect": "ndv-secure",
+      "tags": [
+        "direct"
+      ],
+      "why": "Explicit audit-for-vulnerability language.",
+      "basis": "canonical",
+      "anchor": "Security vulnerabilities"
+    },
+    {
+      "id": "direct-optimize-01",
+      "task": "The dashboard takes 8 seconds to load. Make it faster.",
+      "expect": "ndv-optimize",
+      "tags": [
+        "direct"
+      ],
+      "why": "Explicit latency complaint.",
+      "basis": "canonical",
+      "anchor": "Slow code"
+    },
+    {
+      "id": "direct-accessibility-01",
+      "task": "Check the checkout form against WCAG 2.2 AA — contrast, labels, keyboard nav.",
+      "expect": "ndv-accessibility",
+      "tags": [
+        "direct"
+      ],
+      "why": "Explicit WCAG audit language.",
+      "basis": "canonical",
+      "anchor": "WCAG auditing"
+    },
+    {
+      "id": "direct-telemetry-01",
+      "task": "Add structured logging and a health check endpoint to the worker service.",
+      "expect": "ndv-telemetry",
+      "tags": [
+        "direct"
+      ],
+      "why": "Observability, additive only.",
+      "basis": "canonical",
+      "anchor": "Add logging"
+    },
+    {
+      "id": "direct-scope-01",
+      "task": "This ticket started as 'add a filter dropdown' and now includes a saved-views feature and a permissions model. Sanity-check the scope.",
+      "expect": "ndv-scope",
+      "tags": [
+        "direct"
+      ],
+      "why": "Explicit scope expansion on a single ticket.",
+      "basis": "canonical",
+      "anchor": "overloaded tickets"
+    },
+    {
+      "id": "direct-explain-01",
+      "task": "Write API reference docs for the public methods on the SDK client.",
+      "expect": "ndv-explain",
+      "tags": [
+        "direct"
+      ],
+      "why": "Technical documentation for a human reader.",
+      "basis": "canonical",
+      "anchor": "API docs"
+    },
+    {
+      "id": "direct-forecast-01",
+      "task": "The team says the migration is a two-week job. Sanity-check that estimate.",
+      "expect": "ndv-forecast",
+      "tags": [
+        "direct"
+      ],
+      "why": "Estimate calibration.",
+      "basis": "canonical",
+      "anchor": "Estimate review"
+    },
+    {
+      "id": "direct-signal-01",
+      "task": "Leadership wants to set a team target of 85% test coverage. Review that as a metric.",
+      "expect": "ndv-signal",
+      "tags": [
+        "direct"
+      ],
+      "why": "A measure being turned into a target — Goodhart audit.",
+      "basis": "canonical",
+      "anchor": "coverage targets"
+    },
+    {
+      "id": "direct-honest-01",
+      "task": "Should we migrate from REST to GraphQL for the internal admin API?",
+      "expect": "ndv-honest",
+      "tags": [
+        "direct",
+        "residual"
+      ],
+      "why": "Judgment — framed as a tradeoff, but an API paradigm choice is arguably system design.",
+      "basis": "judgment",
+      "contest": "ndv-architect"
+    },
+    {
+      "id": "direct-flow-01",
+      "task": "Here's the PRD for the billing revamp — nine stories across schema, API, admin UI, and migration. Take it from here.",
+      "expect": "ndv-flow",
+      "tags": [
+        "direct"
+      ],
+      "why": "Multi-task workload requiring decomposition and routing.",
+      "basis": "canonical",
+      "anchor": "PRD, epic, multi-task workload"
+    },
+    {
+      "id": "conflict-trace-beats-secure-01",
+      "task": "500 error on the login endpoint with a NullPointerException stack trace.",
+      "expect": "ndv-diagnose",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Rule 1 — stack trace wins even when the code is auth.",
+      "basis": "canonical",
+      "anchor": "Stack trace / exception / failing test / \"debug\" language"
+    },
+    {
+      "id": "conflict-trace-beats-secure-02",
+      "task": "Our JWT refresh handler throws TypeError: cannot read property 'exp' of undefined on about 1% of requests.",
+      "expect": "ndv-diagnose",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Rule 1 — exception in auth code is still a debugging task, not an audit.",
+      "basis": "canonical",
+      "anchor": "Stack trace / exception / failing test / \"debug\" language"
+    },
+    {
+      "id": "conflict-trace-beats-optimize-01",
+      "task": "The report job got slow last week and now it's failing with OOMKilled in the pod logs.",
+      "expect": "ndv-diagnose",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Judgment — OOMKilled is a crash signal but not literal stack-trace/exception language, so Rule 1 is inferred, not matched; Rule 3's \"slow\" matches literally.",
+      "basis": "judgment",
+      "contest": "ndv-optimize"
+    },
+    {
+      "id": "conflict-trace-beats-tester-01",
+      "task": "The checkout integration test started failing on CI after yesterday's merge.",
+      "expect": "ndv-diagnose",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Rule 1 — failing test is a debugging signal, not a request for more tests.",
+      "basis": "canonical",
+      "anchor": "Stack trace / exception / failing test / \"debug\" language"
+    },
+    {
+      "id": "conflict-secure-beats-optimize-01",
+      "task": "Our search endpoint is slow because it string-concatenates the user's query into raw SQL.",
+      "expect": "ndv-secure",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Judgment — no explicit vulnerability language, so Rule 3's literal \"slow\" match competes with Rule 2; the injection surface is the dominant concern.",
+      "basis": "judgment",
+      "contest": "ndv-optimize"
+    },
+    {
+      "id": "conflict-secure-beats-review-01",
+      "task": "Review this PR specifically for exploitable input handling in the file upload path.",
+      "expect": "ndv-secure",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Rule 2 — explicit exploit language overrides the generic review framing.",
+      "basis": "canonical",
+      "anchor": "Explicit vulnerability/audit/exploit language"
+    },
+    {
+      "id": "conflict-optimize-beats-architect-01",
+      "task": "The orders page runs one SQL query per order row and takes 4 seconds to render with 500 orders.",
+      "expect": "ndv-optimize",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Rule 3 plus the N+1 routing signal — the data-access shape tempts a structural reading, but nothing asks for one.",
+      "basis": "canonical",
+      "anchor": "N+1 queries"
+    },
+    {
+      "id": "conflict-design-before-build-01",
+      "task": "Move the nav to a left sidebar and rework the page header.",
+      "expect": "ndv-design",
+      "tags": [
+        "conflict",
+        "pipeline"
+      ],
+      "why": "Rule 6 — layout change with no spec goes to Pixel first; Craft executes specs, not decisions.",
+      "basis": "canonical",
+      "anchor": "Layout/structure changes without a spec"
+    },
+    {
+      "id": "conflict-build-not-design-01",
+      "task": "Implement the approved sidebar spec: 280px fixed, collapses below 768px to an icon rail, tokens already defined in theme.ts, target file src/components/Nav.tsx. Acceptance: no layout shift on collapse, rail icons keep their tooltips.",
+      "expect": "ndv-build",
+      "tags": [
+        "conflict",
+        "pipeline"
+      ],
+      "why": "Rule 6 inverted — the design decision is already made and the spec carries acceptance criteria, so this is execution.",
+      "basis": "canonical",
+      "anchor": "schemas, acceptance criteria, file targets"
+    },
+    {
+      "id": "conflict-build-not-diagnose-01",
+      "task": "We confirmed the bug: the cache key omits the tenant id in getSettings(). Add the tenant id to the key.",
+      "expect": "ndv-build",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Root cause confirmed and fix known — implementation, not investigation.",
+      "basis": "canonical",
+      "anchor": "Root cause **confirmed**"
+    },
+    {
+      "id": "conflict-diagnose-not-build-01",
+      "task": "Settings sometimes show another tenant's values. We don't know why yet. Fix it.",
+      "expect": "ndv-diagnose",
+      "tags": [
+        "conflict"
+      ],
+      "why": "\"Fix it\" phrasing but root cause unknown — investigation precedes implementation.",
+      "basis": "canonical",
+      "anchor": "root cause **unknown**"
+    },
+    {
+      "id": "conflict-refactor-not-build-01",
+      "task": "Pull the 200-line validate() body out into smaller functions. No behavior change.",
+      "expect": "ndv-refactor",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Extraction with explicit no-behavior-change — transformation, not new capability.",
+      "basis": "canonical",
+      "anchor": "extract"
+    },
+    {
+      "id": "conflict-refactor-not-optimize-01",
+      "task": "Replace all the promise chains with async/await across the services directory.",
+      "expect": "ndv-refactor",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Syntax modernization — no performance claim is being made.",
+      "basis": "canonical",
+      "anchor": "modernize syntax"
+    },
+    {
+      "id": "conflict-architect-not-review-01",
+      "task": "Every one of our controllers talks straight to the ORM. Before I review individual PRs, is that the right boundary?",
+      "expect": "ndv-architect",
+      "tags": [
+        "conflict"
+      ],
+      "why": "The question is structural correctness, explicitly raised above PR-level review.",
+      "basis": "canonical",
+      "anchor": "architecture review"
+    },
+    {
+      "id": "conflict-review-not-architect-01",
+      "task": "Go through the six changed files on this branch and flag anything sloppy.",
+      "expect": "ndv-review",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Bounded to changed files and quality — not a structural question.",
+      "basis": "canonical",
+      "anchor": "code smells, quality"
+    },
+    {
+      "id": "conflict-accessibility-not-design-01",
+      "task": "The icon-only toolbar buttons have no accessible names and the focus ring is invisible on dark mode.",
+      "expect": "ndv-accessibility",
+      "tags": [
+        "conflict"
+      ],
+      "why": "ARIA naming and focus visibility are a11y violations, not visual preference.",
+      "basis": "canonical",
+      "anchor": "ARIA violations"
+    },
+    {
+      "id": "conflict-design-not-accessibility-01",
+      "task": "The pricing cards all look the same weight — nothing signals which plan we want people to pick.",
+      "expect": "ndv-design",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Visual emphasis and hierarchy, no accessibility barrier claimed.",
+      "basis": "canonical",
+      "anchor": "visual hierarchy"
+    },
+    {
+      "id": "conflict-signal-not-forecast-01",
+      "task": "We're tracking story points per sprint as our productivity number. Is that sound?",
+      "expect": "ndv-signal",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Auditing whether a metric measures what it claims — not calibrating an estimate.",
+      "basis": "canonical",
+      "anchor": "metrics review"
+    },
+    {
+      "id": "conflict-forecast-not-signal-01",
+      "task": "Here's the Q3 roadmap with dates for six epics. Tell me where it slips.",
+      "expect": "ndv-forecast",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Commitment-about-time calibration, not a metric-validity audit.",
+      "basis": "canonical",
+      "anchor": "roadmap sanity check"
+    },
+    {
+      "id": "conflict-scope-not-forecast-01",
+      "task": "While we're in there we may as well add SSO and the audit log. Thoughts?",
+      "expect": "ndv-scope",
+      "tags": [
+        "conflict"
+      ],
+      "why": "\"While we're at it\" is the canonical scope-creep trigger, not an estimation question.",
+      "basis": "canonical",
+      "anchor": "\"while we're at it\""
+    },
+    {
+      "id": "conflict-scope-not-flow-01",
+      "task": "This one PRD has eleven deliverables and three of them have no acceptance criteria. Is it shippable as written?",
+      "expect": "ndv-scope",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Judgment — the ask is whether scope is closed, which is PRD boundary review; but Flow's readiness gate would also reject missing criteria.",
+      "basis": "judgment",
+      "contest": "ndv-flow"
+    },
+    {
+      "id": "conflict-flow-not-scope-01",
+      "task": "This PRD is well-specified — eleven deliverables, all with criteria. Get it built.",
+      "expect": "ndv-flow",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Scope is closed and execution is requested — decomposition and dispatch.",
+      "basis": "canonical",
+      "anchor": "PRD, epic, multi-task workload"
+    },
+    {
+      "id": "conflict-telemetry-not-diagnose-01",
+      "task": "We're flying blind on the payment worker. Add tracing so next time we can see where it stalls.",
+      "expect": "ndv-telemetry",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Adding visibility for the future, not diagnosing a present failure.",
+      "basis": "canonical",
+      "anchor": "traces"
+    },
+    {
+      "id": "conflict-diagnose-not-telemetry-01",
+      "task": "The payment worker stalled twice yesterday. Figure out what happened.",
+      "expect": "ndv-diagnose",
+      "tags": [
+        "conflict"
+      ],
+      "why": "A specific past failure needing a root cause.",
+      "basis": "canonical",
+      "anchor": "root cause **unknown**"
+    },
+    {
+      "id": "conflict-explain-not-review-01",
+      "task": "New hires can't follow the auth flow. Write it up for them.",
+      "expect": "ndv-explain",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Output is prose for a human reader, not a quality judgment on code.",
+      "basis": "canonical",
+      "anchor": "Technical docs"
+    },
+    {
+      "id": "conflict-research-not-explain-01",
+      "task": "Trace how a webhook gets from ingress to the handler and tell me which files are involved.",
+      "expect": "ndv-research",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Investigation and synthesis for the requester, not durable documentation.",
+      "basis": "canonical",
+      "anchor": "cross-file tracing"
+    },
+    {
+      "id": "conflict-tester-not-build-01",
+      "task": "Coverage on the billing module is 40%. Bring it up.",
+      "expect": "ndv-tester",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Coverage improvement is test generation, not feature implementation.",
+      "basis": "canonical",
+      "anchor": "improve coverage"
+    },
+    {
+      "id": "conflict-optimize-not-build-01",
+      "task": "The bundle is 2.4MB. Get it under 1MB.",
+      "expect": "ndv-optimize",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Explicit bundle-size target.",
+      "basis": "canonical",
+      "anchor": "bundle size"
+    },
+    {
+      "id": "residual-honest-01",
+      "task": "Is it worth adopting pnpm across our repos?",
+      "expect": "ndv-honest",
+      "tags": [
+        "residual"
+      ],
+      "why": "Tooling tradeoff, no specialist domain.",
+      "basis": "canonical",
+      "anchor": "Should we switch to pnpm?"
+    },
+    {
+      "id": "residual-honest-02",
+      "task": "Run npm run lint and paste me the raw output. No analysis needed.",
+      "expect": "ndv-honest",
+      "tags": [
+        "residual"
+      ],
+      "why": "Command execution with no judgment requested — the routing table's command execution signal, with no failing-test language to trigger Rule 1.",
+      "basis": "canonical",
+      "anchor": "command execution"
+    },
+    {
+      "id": "residual-honest-03",
+      "task": "Two of the engineers want Postgres and two want DynamoDB. Give me a straight answer.",
+      "expect": "ndv-honest",
+      "tags": [
+        "residual"
+      ],
+      "why": "Judgment — explicit request for a direct answer, but a datastore choice is arguably system design.",
+      "basis": "judgment",
+      "contest": "ndv-architect"
+    },
+    {
+      "id": "residual-honest-04",
+      "task": "What do you think of this codebase overall?",
+      "expect": "ndv-honest",
+      "tags": [
+        "residual"
+      ],
+      "why": "Judgment — unscoped opinion with no bounded artifact, but \"this codebase\" invites a quality review.",
+      "basis": "judgment",
+      "contest": "ndv-review"
+    }
+  ],
+  "basis_vocabulary": [
+    "canonical",
+    "judgment"
+  ]
+}

@@ -52,25 +52,29 @@ T-shirt sizing is a **grooming input**, not a delivery output. Use this map to t
 
 ## Proportionality Check
 
-Multipliers must not stack unchecked. After applying all multipliers, compare the calibrated realistic output against the stated or assigned size boundary:
+Multipliers must not stack unchecked. After applying all multipliers, compare the result against the ceilings for the stated or assigned size.
 
-| Size | Expected realistic ceiling |
-|------|---------------------------|
-| XS | Hours — up to half a day |
-| S | 1–3 days |
-| M | 3 days – 2 weeks |
-| L | 2–6 weeks |
-| XL | 6+ weeks |
+**Size boundaries are not calendar boundaries.** A size label describes how much *uncertainty* and *verification surface* an item carries — never how many days it takes. Generation speed compresses; unknowns and review do not. When implementation is machine-assisted, a "six-week" item can produce a diff in an afternoon and still be an XL, because the unnamed integration points and the staged rollout are unchanged. Anchoring sizes to elapsed time makes the label decay the moment delivery speed shifts. Anchor to what actually resists acceleration.
 
-**If the calibrated realistic output exceeds the size boundary:**
-1. Stop — do not present an inflated range as if the size label still applies
-2. Identify which multipliers drove the breach — name them explicitly
-3. Either reclassify the size upward and explain why (e.g., *"This is actually an L, not an M, because of the unnamed integration points"*), OR confirm the original size is correct and remove unjustified multipliers — never present a size label with an out-of-boundary range without explicitly stating the size has been upgraded
+| Size | Unknown budget | Blast radius ceiling | Verification surface | Max stacked multiplier |
+|------|---------------|---------------------|---------------------|-----------------------|
+| **XS** | Zero unknowns — all named and closed | One file or module; no interface change | Diff is self-evident; existing tests cover it | ×1.5 |
+| **S** | At most one, named and bounded | One component; internal interfaces only | One reviewer with no extra context; automated tests sufficient | ×2 |
+| **M** | Two at most, each named and bounded | Several components, or one external dependency | Review needs domain context; some manual verification | ×2.5 |
+| **L** | Unnamed unknowns expected; at least one spike warranted | Cross-team or cross-service; public interface changes | Staged rollout; multiple reviewers; manual QA pass required | ×3 |
+| **XL** | Unknowns exceed knowns | System-wide, data migration, or undefined requirements | Cannot be verified in one pass — phased rollout mandatory | No ceiling — spike before any commitment |
+
+**If the calibrated output breaches any ceiling for its size:**
+1. Stop — do not present a breached result as if the size label still applies
+2. Name which ceiling broke (unknown budget, blast radius, verification surface, or multiplier product) and which multipliers drove it
+3. Either reclassify the size upward and explain why (e.g., *"This is actually an L, not an M, because of the unnamed integration points"*), OR confirm the original size is correct and remove the unjustified multipliers — never present a size label alongside an out-of-boundary result without stating the size has been upgraded
+
+**The ceilings are independent.** An item can sit inside its multiplier ceiling and still breach on verification surface. Any single breach forces step 2 — the size is wrong, or the multipliers are.
 
 **If multipliers are withheld:**
 - State which multipliers were considered and why they do not apply — omission without explanation looks like oversight
 
-This rule exists because stacking every applicable multiplier on a small item produces a range that is technically defensible but practically useless. Calibration means fitting the output to the evidence, not maximizing the pessimistic case.
+This rule exists because stacking every applicable multiplier on a small item produces a result that is technically defensible but practically useless. Calibration means fitting the output to the evidence, not maximizing the pessimistic case.
 
 ## Estimation Protocol
 
@@ -87,7 +91,7 @@ Before producing any calibrated estimate:
    - Are there named integration points? Each one is ±50% variance
    - Is this a "rewrite" or "migration"? Apply Second-System Effect — minimum 2x original estimate
    - How many people? If >1, coordination overhead applies (Brooks)
-6. **Run the Proportionality Check** — does the calibrated realistic output fit within the size boundary? If not, reclassify or justify
+6. **Run the Proportionality Check** — does the result sit inside every ceiling for its size (unknown budget, blast radius, verification surface, stacked multiplier)? Any single breach means reclassify or justify
 7. **Produce a range, not a point** — optimistic / realistic / pessimistic with the assumption that makes each true
 
 ## Risk Classification
@@ -167,9 +171,11 @@ An unknown that lacks any of these is not named. It is deferred. Deferred unknow
 
 ### Proportionality Check
 - Stated/assigned size: [size]
-- Calibrated realistic output: [time]
-- Within size boundary? Yes / No
-- [If No]: Size reclassified to [new size] because [reason] / Multiplier [X] removed because [reason]
+- Unknown budget: [count, named vs unnamed] — within ceiling? Yes / No
+- Blast radius: [what it touches] — within ceiling? Yes / No
+- Verification surface: [what review and rollout require] — within ceiling? Yes / No
+- Stacked multiplier: [product] — within ceiling? Yes / No
+- [If any No]: Size reclassified to [new size] because [ceiling breached] / Multiplier [X] removed because [reason]
 
 ## Calibrated Estimate
 
@@ -196,5 +202,6 @@ An unknown that lacks any of these is not named. It is deferred. Deferred unknow
 - Accepts "we've done this before" as grounds for skipping calibration — Hofstadter applies even to familiar work
 - Softens findings to match what the team wants to hear — the calendar does not negotiate
 - Lets a t-shirt size be the final answer — a size label is triage, not an estimate; the full protocol always runs
-- Stacks multipliers past the size boundary without running the Proportionality Check and naming the upsize — an M with an XL-range output is not a calibrated estimate, it is an unchecked cascade
+- Stacks multipliers past the size boundary without running the Proportionality Check and naming the upsize — an M breaching an XL ceiling is not a calibrated estimate, it is an unchecked cascade
+- Anchors a size label to elapsed time — sizes measure unknowns and verification surface, and a calendar-anchored size decays the moment delivery speed changes
 - Skips assigning a size when none is provided — unclassified work has no calibration baseline; Datum always assigns and states the reasoning
