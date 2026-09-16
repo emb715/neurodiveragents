@@ -104,40 +104,45 @@ npm run test:install      # install simulation only
 npm run css:check         # CSS staleness only
 ```
 
-### Routing eval (opt-in — costs tokens, not part of `npm test`)
+### Routing eval gate (local, before every release)
 
-`npm test` gates the routing fixture statically and for free. Scoring an actual
-model against it is a separate, explicit step:
+Run this before merging a release PR. It calls models, costs tokens, and is **not** part of `validate`:
 
 ```bash
-# Default runner is `claude -p`
-npm run eval:routing
-
-# Any command that reads a prompt on stdin and writes text to stdout works —
-# this is how the fleet's cross-model claims get measured per model.
-NDV_EVAL_CMD='claude -p --model claude-opus-5' npm run eval:routing
-NDV_EVAL_CMD='ollama run llama3.3' npm run eval:routing -- --label llama3.3 --out /tmp/llama.json
-
-# Narrow to the hard cases while iterating on the routing table
-npm run eval:routing -- --tag conflict
+npm run eval:gate
 ```
 
-Ground truth is `test/fixtures/routing-cases.json` (52 cases, all 18 agents
-covered, >=50% conflict/residual). Each case has a `basis`:
+It re-scores each model recorded in `test/fixtures/routing-baseline.json` against `test/fixtures/routing-cases.json`:
 
-- `canonical` (46) — forced by an `anchor`, a verbatim phrase on a routing line
-  in `CLAUDE.md` that names the expected agent. The validator checks this
-  against the same text the eval sends the model (`scripts/routing-context.mjs`).
-  A canonical miss means fix the routing table or accept the model can't hold it.
-- `judgment` (6, capped at 25%) — the fixture author's reading, with the
-  `contest`ed alternative named. A judgment miss means review the case first.
+| Verdict | Meaning | Exit code |
+|---|---|---|
+| PASS | Canonical accuracy is at or above the baseline floor, and escalation is at or below the baseline ceiling | 0 |
+| DEGRADED | Either limit is broken; the output names the new misses and escalations | 1 |
+| INCONCLUSIVE | The model provider returned errors (quota, rate limit), or the fixture changed after the baseline was recorded | 2 |
 
-The runner reports accuracy by basis, **blast-radius escalation** (share of
-cases that belong to an agent which cannot reach a diff but were routed to one
-that can — split into `direct` for Write/Edit and `dispatch` for `ndv-flow`,
-which holds neither but can dispatch `ndv-build` unattended), a per-tag
-breakdown, and a confusion matrix naming which boundaries a model fails to hold.
-No thresholds are enforced yet; set them from a baseline run, not a guess.
+Treat INCONCLUSIVE as "not checked", never as a pass.
+
+Recording a baseline:
+
+```bash
+npm run eval:baseline                                             # 3 runs each: Opus 5, Sonnet 5, Haiku 4.5
+npm run eval:baseline -- --models glm-5.3-flash                   # add a model (Ollama, needs OLLAMA_API_KEY)
+```
+
+- **The floor is the worst result across the baseline runs.** Misses are asked again (`--retries 2`, majority vote), so one unlucky answer doesn't fail a release.
+- **Editing the fixture makes the baseline stale.** `validate` then fails until you re-run `eval:baseline` and commit the new baseline file.
+- **Models are reached through `scripts/eval-providers/`:**
+  - `claude.sh` runs the Claude CLI from an empty temp directory with no tools, no MCP servers, and a minimal system prompt. With `ANTHROPIC_API_KEY` set it also adds `--bare`, which skips hooks, plugins and your personal `CLAUDE.md`.
+  - `ollama.mjs` calls Ollama's cloud API when `OLLAMA_API_KEY` is set, or a local Ollama server otherwise.
+
+**The eval measures the routing text that ships.** The `ndv:start`/`ndv:end` block at the top of this file must be byte-identical to `NDV_BLOCK` in `bin/ndv.js`, and `validate` enforces that. Change the routing table in both places together, or the eval scores a table users never receive.
+
+Ground truth: 52 cases covering all 18 agents, at least half of them conflict or residual cases. Each case has a `basis`:
+
+- `canonical` (46): forced by an `anchor`, a verbatim phrase on a routing line that names the expected agent. `scripts/routing-context.mjs` supplies the same text to the validator and to the model. A canonical miss means the routing table needs fixing, or the model can't follow it.
+- `judgment` (6, capped at 25%): the fixture author's own reading, with the `contest`ed alternative named. A judgment miss means review the case first.
+
+To score a single model ad hoc, without the gate: `NDV_EVAL_CMD='<command that reads stdin>' npm run eval:routing` (supports `--tag`, `--limit`, `--retries`, `--out`).
 
 ### Test files
 
@@ -147,7 +152,7 @@ No thresholds are enforced yet; set them from a baseline run, not a guess.
 | `test/validate-authoring.test.js` | Authoring-guide compliance; scoped to `CHANGED_AGENTS` env var when set, else describe blocks register but produce no tests |
 | `test/validate-contracts.test.js` | Architectural contract tests (ADR-008 Domain Contracts, O(n) behavioral spec regression); runs unconditionally |
 | `test/validate-coherence.test.js` | Semantic coherence across agent sections — handoff targets, Mandatory Pipeline, Brief Contract all resolve to real slugs; no agent instructs reacting to elapsed wall-clock time, asking the user what to do next, or sizing work in calendar units; static, no LLM calls |
-| `test/validate-routing.test.js` | Integrity of the behavioral routing fixture — every `expect` resolves, every agent is covered, the case mix stays hard enough to discriminate; static, no LLM calls |
+| `test/validate-routing.test.js` | Integrity of the behavioral routing fixture — every `expect` resolves, every agent is covered, the case mix stays hard enough to discriminate, canonical anchors exist in the routing text, and the committed eval baseline was recorded against this exact fixture; static, no LLM calls |
 | `test/validate-flow-protocol.test.js` | Structural gates on the orchestration protocol in `ndv-flow.md` — routing-table coverage, sentinel token consistency, handoff emit/parse grammar agreement, ledger status vocabulary, bounded BRIEF_REJECTED retry, router parity with every `CLAUDE.md` routing table (agent coverage + a declared signal list), and shipped-text parity (`CLAUDE.md`'s ndv block byte-identical to `NDV_BLOCK`; Copilot header has the same routing rows); static, no LLM calls |
 | `test/install.test.js` | `bin/ndv.js` install commands — simulates claude/opencode/cursor installs in a temp dir |
 | `test/install-router-skills.test.js` | Acceptance tests for router-skill auto-install behavior in `bin/ndv.js` (claude auto-install, opencode skip, cursor/copilot no skills dir) |
@@ -161,6 +166,7 @@ No thresholds are enforced yet; set them from a baseline run, not a guess.
 2. Update routing in `CLAUDE.md`, `agents/ndv-flow.md`, `bin/ndv.js` (NDV_BLOCK + Copilot header), `commands/opencode/ndv-help.md`, `humans/ndv-agents.md`. The ndv block in `CLAUDE.md` and `NDV_BLOCK` must stay byte-identical.
 3. Edit `humans/ndv-[name].human.md` (human file — written after model file is stable)
 4. Run `npm run validate`. The pre-commit hook and CI (Node 20, ubuntu-latest) run the same command.
+5. If routing changed, run `npm run eval:gate` before the next release.
 
 ### Pre-commit hook
 

@@ -42,6 +42,8 @@
     "css:check": "sh scripts/check-css.sh",
     "test:install": "node --test test/install.test.js",
     "eval:routing": "node scripts/eval-routing.mjs",
+    "eval:baseline": "node scripts/eval-gate.mjs --baseline",
+    "eval:gate": "node scripts/eval-gate.mjs",
     "css:build": "npx @tailwindcss/cli -i ./src/input.css -o ./assets/styles.css --minify",
     "css:watch": "npx @tailwindcss/cli -i ./src/input.css -o ./assets/styles.css --watch",
     "build": "npm run css:build",

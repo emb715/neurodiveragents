@@ -22,10 +22,13 @@
  *   --tag <tag>          only run cases carrying this tag
  *   --limit <n>          only run the first n cases
  *   --concurrency <n>    parallel requests (default 4)
+ *   --retries <n>        on a miss or error, ask n more times and score the
+ *                        majority answer (default 0)
  *   --out <path>         write the full JSON report here
  */
 
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
@@ -47,10 +50,13 @@ const TAG = arg('tag', null)
 const LIMIT = parseInt(arg('limit', '0'), 10)
 const CONCURRENCY = Math.max(1, parseInt(arg('concurrency', '4'), 10))
 const OUT = arg('out', null)
+const RETRIES = Math.max(0, parseInt(arg('retries', '0'), 10))
 
 // ─── inputs ──────────────────────────────────────────────────────────────────
 
-const fixture = JSON.parse(readFileSync(FIXTURE, 'utf8'))
+const FIXTURE_RAW = readFileSync(FIXTURE, 'utf8')
+const fixture = JSON.parse(FIXTURE_RAW)
+const sha = text => createHash('sha256').update(text).digest('hex').slice(0, 16)
 const ALL_SLUGS = readdirSync(join(ROOT, 'agents'))
   .filter(f => f.endsWith('.md')).map(f => f.replace('.md', ''))
 
@@ -151,11 +157,36 @@ console.error(`Running ${cases.length} routing cases against: ${LABEL}`)
 console.error(`(concurrency ${CONCURRENCY})\n`)
 
 let done = 0
+// One attempt: the slug the model chose, or an error / ambiguity marker.
+async function attempt(task) {
+  const res = await runModel(buildPrompt(task))
+  if (!res.ok) return { actual: null, error: res.error }
+  const got = extractSlug(res.text)
+  if (got && got.ambiguous) return { actual: null, ambiguous: got.ambiguous }
+  return { actual: got }
+}
+
+// Majority answer across attempts. Errors and non-answers never win a vote;
+// ties go to the earliest answer.
+function majority(attempts) {
+  const counts = new Map()
+  for (const a of attempts) if (a.actual) counts.set(a.actual, (counts.get(a.actual) ?? 0) + 1)
+  let best = null
+  for (const [slug, n] of counts) if (!best || n > counts.get(best)) best = slug
+  return best
+}
+
 const results = await pool(cases, CONCURRENCY, async (c) => {
-  const res = await runModel(buildPrompt(c.task))
-  const got = res.ok ? extractSlug(res.text) : null
-  const actual = typeof got === 'string' ? got : null
-  const pass = actual === c.expect
+  const attempts = [await attempt(c.task)]
+  // A miss or error gets RETRIES more asks. Passing cases are not re-asked:
+  // the retries exist to absorb one-off noise, not to re-roll good answers.
+  if (attempts[0].actual !== c.expect) {
+    for (let i = 0; i < RETRIES; i++) attempts.push(await attempt(c.task))
+  }
+  const actual = attempts.length === 1 ? attempts[0].actual : majority(attempts)
+  const votes = attempts.filter(a => a.actual === c.expect).length
+  const pass = attempts.length === 1 ? actual === c.expect : votes * 2 > attempts.length
+  const allErrored = attempts.every(a => a.error)
 
   done++
   process.stderr.write(`\r  ${done}/${cases.length}`)
@@ -166,11 +197,12 @@ const results = await pool(cases, CONCURRENCY, async (c) => {
     tags: c.tags,
     basis: c.basis,
     expect: c.expect,
-    actual,
+    actual: pass ? c.expect : actual,
     pass,
     why: c.why,
-    ...(got && got.ambiguous ? { ambiguous: got.ambiguous } : {}),
-    ...(res.ok ? {} : { error: res.error }),
+    ...(attempts.length > 1 ? { attempts: attempts.map(a => a.actual ?? (a.error ? 'error' : 'no-slug')) } : {}),
+    ...(attempts[0].ambiguous ? { ambiguous: attempts[0].ambiguous } : {}),
+    ...(allErrored ? { error: attempts[attempts.length - 1].error } : {}),
   }
 })
 process.stderr.write('\n\n')
@@ -230,6 +262,9 @@ const report = {
   label: LABEL,
   command: EVAL_CMD,
   fixture_version: fixture.version,
+  fixture_sha: sha(FIXTURE_RAW),
+  routing_context_sha: sha(CONTEXT),
+  retries: RETRIES,
   run_at: new Date().toISOString(),
   total: results.length,
   passed: passed.length,
@@ -249,7 +284,7 @@ const report = {
 const pct = n => (n * 100).toFixed(1) + '%'
 
 console.log(`ROUTING EVAL — ${LABEL}`)
-console.log(`fixture v${fixture.version} · ${results.length} cases\n`)
+console.log(`fixture v${fixture.version} · ${results.length} cases${RETRIES ? ` · retries ${RETRIES} (majority vote)` : ''}\n`)
 console.log(`  accuracy   ${pct(accuracy)}  (${passed.length}/${results.length})`)
 if (errored.length) console.log(`  errors     ${errored.length}  (counted as failures)`)
 
