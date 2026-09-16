@@ -24,11 +24,13 @@
  * 8. Every agent named in the routing_source sections still exists
  * 9. Canonical cases are forced by a verbatim anchor in the routing context
  *    the eval feeds the model; judgment cases name the contested alternative
+ * 10. The committed eval baseline was recorded against this exact fixture
  */
 
 import { test, describe } from 'node:test'
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync, existsSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 import { AGENTS_DIR, ROOT } from './helpers.js'
 import { routingContext } from '../scripts/routing-context.mjs'
@@ -255,4 +257,42 @@ describe('routing fixture: canonical vs judgment basis', () => {
       `${judgment.length}/${fixture.cases.length} (${(ratio * 100).toFixed(0)}%) cases are judgment. ` +
       `Above ${MAX_JUDGMENT_RATIO * 100}% the score mostly measures agreement with the fixture author.`)
   })
+})
+
+// ─── 8. Eval baseline matches this fixture ───────────────────────────────────
+//
+// `npm run eval:gate` compares a release candidate against
+// routing-baseline.json. A baseline recorded against a different fixture
+// compares different tests, so the gate reports INCONCLUSIVE — at release
+// time. Catching the mismatch here moves that discovery to the PR that
+// edited the fixture: re-run `npm run eval:baseline` and commit the result.
+
+describe('routing fixture: eval baseline is current', () => {
+  const BASELINE_PATH = join(ROOT, 'test', 'fixtures', 'routing-baseline.json')
+  // Must match the fingerprint in scripts/eval-gate.mjs.
+  const fixtureSha = createHash('sha256').update(readFileSync(FIXTURE_PATH, 'utf8')).digest('hex').slice(0, 16)
+
+  test('routing-baseline.json exists', () => {
+    assert.ok(existsSync(BASELINE_PATH), 'test/fixtures/routing-baseline.json is missing — run npm run eval:baseline')
+  })
+
+  const baselineFile = existsSync(BASELINE_PATH) ? JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) : { models: {} }
+
+  test('baseline records at least one model', () => {
+    assert.ok(Object.keys(baselineFile.models ?? {}).length > 0, 'baseline has no models')
+  })
+
+  for (const [model, b] of Object.entries(baselineFile.models ?? {})) {
+    test(`${model} — baseline was recorded against the current fixture`, () => {
+      assert.equal(b.fixture_sha, fixtureSha,
+        `${model}: baseline fixture_sha ${b.fixture_sha} ≠ current ${fixtureSha}. ` +
+        `The fixture changed after the baseline was recorded — run npm run eval:baseline and commit routing-baseline.json.`)
+    })
+
+    test(`${model} — baseline carries a canonical floor and an escalation ceiling`, () => {
+      assert.equal(typeof b.canonical?.floor, 'number', `${model}: canonical.floor missing`)
+      assert.equal(typeof b.escalation?.ceiling, 'number', `${model}: escalation.ceiling missing`)
+      assert.ok(b.runs >= 1, `${model}: baseline must come from at least one run`)
+    })
+  }
 })

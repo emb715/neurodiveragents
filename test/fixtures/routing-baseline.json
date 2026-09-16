@@ -1,0 +1,106 @@
+{
+  "description": "Routing eval baseline. Written by `npm run eval:baseline`, read by `npm run eval:gate`. Do not edit by hand.",
+  "models": {
+    "claude-haiku-4-5-20251001": {
+      "provider": "claude",
+      "fixture_sha": "843db5a64f2ae1a0",
+      "routing_context_sha": "fdc6efbc9363f946",
+      "recorded_at": "2026-09-16T21:48:55.516Z",
+      "runs": 3,
+      "retries": 2,
+      "canonical": {
+        "floor": 0.9783,
+        "runs": [
+          0.9783,
+          1,
+          0.9783
+        ]
+      },
+      "escalation": {
+        "ceiling": 0,
+        "runs": [
+          0,
+          0,
+          0
+        ]
+      },
+      "judgment": {
+        "runs": [
+          1,
+          1,
+          0.8333
+        ]
+      },
+      "misses": [
+        "conflict-flow-not-scope-01 → ndv-build",
+        "direct-honest-01 → ndv-architect"
+      ]
+    },
+    "claude-opus-5": {
+      "provider": "claude",
+      "fixture_sha": "843db5a64f2ae1a0",
+      "routing_context_sha": "fdc6efbc9363f946",
+      "recorded_at": "2026-09-16T21:40:12.846Z",
+      "runs": 3,
+      "retries": 2,
+      "canonical": {
+        "floor": 1,
+        "runs": [
+          1,
+          1,
+          1
+        ]
+      },
+      "escalation": {
+        "ceiling": 0,
+        "runs": [
+          0,
+          0,
+          0
+        ]
+      },
+      "judgment": {
+        "runs": [
+          1,
+          1,
+          0.8333
+        ]
+      },
+      "misses": [
+        "direct-honest-01 → ndv-architect"
+      ]
+    },
+    "claude-sonnet-5": {
+      "provider": "claude",
+      "fixture_sha": "843db5a64f2ae1a0",
+      "routing_context_sha": "fdc6efbc9363f946",
+      "recorded_at": "2026-09-16T21:42:10.994Z",
+      "runs": 3,
+      "retries": 2,
+      "canonical": {
+        "floor": 1,
+        "runs": [
+          1,
+          1,
+          1
+        ]
+      },
+      "escalation": {
+        "ceiling": 0,
+        "runs": [
+          0,
+          0,
+          0
+        ]
+      },
+      "judgment": {
+        "runs": [
+          1,
+          1,
+          1
+        ]
+      },
+      "misses": []
+    }
+  }
+}
