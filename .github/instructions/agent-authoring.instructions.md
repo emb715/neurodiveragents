@@ -71,7 +71,7 @@ Must state the gap, the misrouting it replaces, and a concrete example. Flag if 
 
 For each finding, leave an inline comment on the specific line. Use this format:
 
-> **Scope:** This format applies to authoring review inline comments only — it is not the runtime handoff format agents emit in their output. Runtime handoffs use the `→ ndv-<agent> (domain) · file:line: description` pattern documented in `docs/how-to-use.md`.
+> **Scope:** This format applies to authoring review inline comments only — it is not the runtime handoff format agents emit in their output. Runtime handoffs use the `**Handoff → ndv-<agent> (domain):** description` pattern documented in the "handoff signal" section of `docs/how-to-use.md`.
 
 **[Q1 / Q2 / Q3 / Q4 / Primordial Rule / Output Format / File Ref / Skill Ref / Neurotype / Human File]:** [what the problem is] — [what it should look like instead]
 

@@ -1,22 +1,75 @@
 # neurodiveragents
 
+
+18 specialist AI agents for your coding assistant — each with a fixed cognitive operating principle.
+
 ![neurodiveragents fleet](assets/readme-banner.png)
 
-> Eighteen specialized AI agents for Claude Code, OpenCode, Cursor, and GitHub Copilot — each grounded in a real cognitive style that makes it exceptionally effective in its domain.
+## What is this
 
----
+A fleet of 18 AI agents that plug into Claude Code, OpenCode, Cursor, and GitHub Copilot. Each agent is a domain specialist — code review, debugging, security, testing, and more — that hands off anything outside its lane. Install once and routing is automatic: your tool picks the right agent from the task signal, or you invoke one by name.
 
-## ✨ Highlights
+## Install
 
-- **Neurotype-first design** — each agent's behavior emerges from a cognitive operating principle, not a list of rules. It fills gaps consistently even when the rules don't apply.
-- **Eighteen specialists, zero overlap** — code review, debugging, security, performance, testing, architecture, docs, telemetry, refactoring, fleet orchestration, codebase investigation, and a direct generalist. Each stays in its lane and hands off anything outside it.
-- **Automatic routing** — install writes a routing table into your project config. Your AI tool picks the right agent from the task signal, no explicit invocation needed. Or invoke any agent directly by name.
-- **Works everywhere** — Claude Code, OpenCode, Cursor, GitHub Copilot. Language and framework agnostic.
-- **Predictably different from generic agents** — validated by users independently: neurotype-based agents behave measurably differently from agreeable, hedging, generic agents given the same task.
+```bash
+npx neurodiveragents install claude    # Claude Code
+npx neurodiveragents install opencode  # OpenCode
+npx neurodiveragents install cursor    # Cursor
+npx neurodiveragents install copilot   # GitHub Copilot
+```
 
----
+Add `--global` to install once and have the fleet available in every project. All flags and options: [docs/how-to-use.md](docs/how-to-use.md).
 
-## 🧠 Why neurotype-based agents?
+## Quick start
+
+Run this:
+
+```
+Use ndv-diagnose to find why this test fails
+```
+
+Or route automatically — describe the task in plain language: "review this PR for security issues" reaches `ndv-secure` without naming it. Not sure which agent fits? Run `/ndv-help` for the full routing table, or `/ndv-help my auth middleware is leaking tokens` to get pointed at the right specialist.
+
+## The fleet
+
+Each agent runs on a neurotype — a fixed cognitive operating principle, not a list of rules — so it behaves consistently even where no rule applies. Profiles are written for humans; read them to know what to expect from each agent.
+
+| Agent | Use when | Profile |
+|-------|----------|---------|
+| `ndv-flow` | Too much work for one agent — executive function as superpower | [Flow](humans/ndv-flow.human.md) |
+| `ndv-review` | Code review, PR — sensory sensitivity, misses nothing | [Acute](humans/ndv-review.human.md) |
+| `ndv-diagnose` | Bug, root cause unknown — ADHD hyperfocus, won't stop | [Pierce](humans/ndv-diagnose.human.md) |
+| `ndv-refactor` | Rename, extract, restructure — OCD for correct form | [Just](humans/ndv-refactor.human.md) |
+| `ndv-tester` | Tests, coverage, ATDD — anxiety as adversarial suspicion | [Edge](humans/ndv-tester.human.md) |
+| `ndv-secure` | Vulnerabilities, OWASP, auth — hypervigilance, trust no input | [Ward](humans/ndv-secure.human.md) |
+| `ndv-optimize` | Slow code, N+1, bundle size — efficiency OCD | [Lean](humans/ndv-optimize.human.md) |
+| `ndv-telemetry` | Logging, metrics, traces — detached observation | [Pulse](humans/ndv-telemetry.human.md) |
+| `ndv-architect` | Design, SOLID, scalability — autistic systems thinking | [Arc](humans/ndv-architect.human.md) |
+| `ndv-explain` | Docs, API references — explicit theory of mind | [Patient](humans/ndv-explain.human.md) |
+| `ndv-honest` | No specialist fits — direct, no social filtering | [Honest](humans/ndv-honest.human.md) |
+| `ndv-build` | Confirmed spec, known fix — contract-first execution | [Craft](humans/ndv-build.human.md) |
+| `ndv-forecast` | Estimates, sprint plans — temporal dysphoria | [Datum](humans/ndv-forecast.human.md) |
+| `ndv-scope` | Scope creep, overloaded tickets — boundary enforcement | [Bound](humans/ndv-scope.human.md) |
+| `ndv-signal` | KPIs, OKRs, DORA — Goodhart's-law detection | [Signal](humans/ndv-signal.human.md) |
+| `ndv-design` | UI layout, visual hierarchy — cross-activated perception | [Pixel](humans/ndv-design.human.md) |
+| `ndv-research` | "Where is X", "how does Y" — hyperlexic map building | [Scout](humans/ndv-research.human.md) |
+| `ndv-accessibility` | WCAG, ARIA, keyboard nav — universal-design empathy | [Lux](humans/ndv-accessibility.human.md) |
+
+The full framework behind these profiles: [humans/ndv-agents.md](humans/ndv-agents.md). Engineering laws each agent embodies: [docs/laws-research.md](docs/laws-research.md). Design laws behind Pixel: [docs/design-laws-research.md](docs/design-laws-research.md).
+
+## How routing works
+
+Install writes a routing table into your project config (`CLAUDE.md`, `.opencode/AGENTS.md`, `.cursor/rules/ndv.mdc`, or `.github/copilot-instructions.md`). Your tool reads that table and dispatches by task signal; direct invocation by name always works. Chain agents for compound tasks: "diagnose this, then add regression tests." Full mechanics and examples: [docs/how-to-use.md](docs/how-to-use.md).
+
+## Skills
+
+The fleet also ships 15 cognitive modules — loadable skills that inject a distilled thinking style, whether from a single agent or emergent across agents, into a single step of a workflow you already own. Install with `npx neurodiveragents install-skills <tool>`, then add one line to any skill step: "Load the `ndv-skeptical` skill." Catalog, composition patterns, and lifecycle: [docs/ndv-skills.md](docs/ndv-skills.md).
+
+## Why this exists
+
+Generic agents are trained to be agreeable — they hedge, soften, and balance, which reduces friction and signal alike. These agents are consistent instead: the same input produces the same uncompromising behavior, every time. The full argument lives in [docs/MANIFESTO.md](docs/MANIFESTO.md).
+
+## Why neurotype-based agents?
 
 Generic agents are trained to be agreeable. They hedge, soften, and balance — behaviors that reduce friction but also reduce signal.
 
@@ -24,211 +77,10 @@ Neurotype-based agents are not agreeable. They are *consistent*. A hypervigilant
 
 > A checklist agent follows rules. A personality agent communicates distinctively. A neurotype agent does both — and fills the gaps when rules run out.
 
-**The proof:** `ndv-honest` (autistic operating principle — no social filtering, optimize for accuracy) was tested by multiple users independently. Every one noticed the same thing: it behaves differently from a generic agent. That difference is the point.
+## Contributing
 
----
+New agents, neurotypes, and improved profiles are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for how to add or edit agents, then open an issue to propose a neurotype or report a character inconsistency. Documentation improvements are a good first contribution — no code required.
 
-## 🚀 Install
+## License and author
 
-One command. Works immediately.
-
-```bash
-npx neurodiveragents install claude      # Claude Code
-npx neurodiveragents install opencode    # OpenCode
-npx neurodiveragents install cursor      # Cursor
-npx neurodiveragents install copilot     # GitHub Copilot
-```
-
-Add `--global` to install once and have the fleet available in every project automatically:
-
-```bash
-npx neurodiveragents install claude --global    # ~/.claude/agents/
-npx neurodiveragents install opencode --global  # ~/.config/opencode/agents/
-npx neurodiveragents install cursor --global    # ~/.cursor/rules/
-```
-
-Running in CI or a script? Pass `--all` to skip all prompts:
-
-```bash
-npx neurodiveragents install claude --all
-```
-
-Install copies the agent files into your tool's agents directory and writes a routing table into your project config (`CLAUDE.md`, `.opencode/AGENTS.md`, `.cursor/rules/ndv.mdc`, or `.github/copilot-instructions.md`). Running it again is safe — it detects the existing block and skips it.
-
----
-
-## ⚡ Usage
-
-After install, the routing table written into your project config (`CLAUDE.md`, `.opencode/AGENTS.md`, etc.) tells your AI tool which agent to reach for automatically — based on the task signal. You can also invoke any agent directly by name.
-
-```
-Use ndv-review to review these 5 files
-Use ndv-diagnose to find why this test fails
-Use ndv-secure to audit the auth module
-Use ndv-explain to document these APIs
-```
-
-Chain agents for compound tasks:
-
-```
-Use ndv-diagnose to find the root cause, then use ndv-tester to create regression tests
-Use ndv-secure to audit, then ndv-review to verify the fixes
-```
-
-**Large workload? Use `ndv-flow`** — the fleet orchestrator. Give it a PRD, an epic, or a list of tasks. It decomposes the work, assigns each piece to the right specialist, runs everything that can run in parallel, and reports back. It does not implement, review, or debug — it conducts.
-
-```
-Use ndv-flow to break this PRD into tasks and execute across the fleet
-Use ndv-flow to run a full audit — security, performance, and review in parallel
-```
-
-**No specialist needed?** Reach for `ndv-honest` — the direct generalist. It doesn't route to other agents. It answers. Direct, zero filler, minimum tokens. It's the right agent for most everyday work.
-
-```
-Use ndv-honest to review this approach
-Use ndv-honest to decide between these two options
-Use ndv-honest to tell me what's wrong with this plan
-```
-
-**Not sure which agent to use?** Run `/ndv-help` — the fleet cheatsheet. No arguments gives the full routing table. Pass an agent name for a deep dive. Pass a situation and it routes you to the right specialist.
-
-```
-/ndv-help
-/ndv-help ndv-diagnose
-/ndv-help my auth middleware is leaking tokens
-```
-
----
-
-## 🧩 Cognitive Modules (Skills)
-
-> Same engine, different vehicle. An agent uses its cognitive style for everything it does. A module injects that style into one phase of a larger workflow.
-
-The agent cognitive styles are also packaged as **loadable skills** — composable fragments you can inject into any workflow you already own. Not agents — no routing, no handoffs, no domain constraints. Just a cognitive orientation applied to one step.
-
-A planning step that loads `ndv-structural` approaches codebase investigation differently from one running with default model behavior. A review step that loads `ndv-total-perception` registers everything before sorting — nothing filtered during the read. Same workflow, different cognitive orientation, measurably different output.
-
-```bash
-# Interactive TUI — arrow keys, all modules pre-selected
-npx neurodiveragents install-skills claude
-npx neurodiveragents install-skills opencode --global
-
-# Non-interactive — install everything, no prompts
-npx neurodiveragents install-skills claude --all
-```
-
-Then add one line to any skill step:
-
-```markdown
-Load the `ndv-skeptical` skill and the `ndv-bounded` skill. Apply both throughout this step.
-```
-
-**Agent-derived (13)** — extracted from an NDV agent's cognitive core:  
-`ndv-skeptical` · `ndv-structural` · `ndv-precise` · `ndv-total-perception` · `ndv-direct` · `ndv-adversarial` · `ndv-vigilant` · `ndv-efficient` · `ndv-contextual` · `ndv-bounded` · `ndv-temporal` · `ndv-map-first` · `ndv-perceptual`
-
-**Emergent (2)** — a pattern no single agent owns but every workflow needs:  
-`ndv-incremental` · `ndv-parallel-safe`
-
-Modules compose. Keep it to 2–3 per phase — more dilutes the signal.
-
-| Phase | Recommended |
-|-------|-------------|
-| Requirements / Clarify | `ndv-skeptical` + `ndv-bounded` |
-| Plan / Design | `ndv-structural` + `ndv-bounded` |
-| Implement | `ndv-precise` + `ndv-incremental` + `ndv-efficient` |
-| Review / Audit | `ndv-total-perception` + `ndv-adversarial` |
-| Present / Handoff | `ndv-contextual` + `ndv-direct` |
-| Investigation / research | `ndv-map-first` + `ndv-skeptical` |
-| Review / UI audit | + `ndv-perceptual` (any phase assessing visual or UX quality) |
-| Any phase with parallel writes | + `ndv-parallel-safe` (classify ownership before dispatching streams) |
-| Security-sensitive | + `ndv-vigilant` (any phase touching auth/input) |
-
-→ **[Full guide: docs/ndv-skills.md](docs/ndv-skills.md)** — catalog, composition patterns, sub-agent injection, lifecycle.
-
----
-
-## 🗂️ The Fleet
-
-Eighteen agents, eighteen neurotypes. Each one a specialist who hands off anything outside its domain.
-
-| Agent | Character | Neurotype | Domain |
-|-------|-----------|-----------|--------|
-| `ndv-flow` | Flow | Executive function as superpower — holds the full task graph, runs everything in parallel | Fleet orchestration — decompose, route, conduct |
-| `ndv-review` | Acute | Sensory processing sensitivity — nothing is background noise | Code review — bugs, smells, severity-tagged feedback |
-| `ndv-diagnose` | Pierce | ADHD hyperfocus — locks on, won't stop until root cause is found | Root cause analysis — not just where, but why |
-| `ndv-refactor` | Just | OCD (form) — incorrect structure produces genuine cognitive distress | Safe code transformation — structure without behavior change |
-| `ndv-tester` | Edge | Anxiety as adversarial suspicion — code is guilty until proven innocent | Test generation — happy path, edges, errors, boundaries |
-| `ndv-secure` | Ward | Hypervigilance — the threat-detection system never turns off | Security audit — OWASP Top 10, exploit vectors, fixes |
-| `ndv-optimize` | Lean | OCD (efficiency) — every unnecessary cycle is an offense | Performance — algorithms, queries, rendering, assets |
-| `ndv-telemetry` | Pulse | Dissociative detachment — observes without intervening | Observability — logging, metrics, tracing, health checks |
-| `ndv-architect` | Arc | Autistic systems thinking — structural violations produce immediate discomfort | Architecture — SOLID, scalability, migration paths |
-| `ndv-explain` | Patient | Explicit theory of mind — models the reader's knowledge gap deliberately. Cannot stop until the one sentence the reader actually needed has landed. | Documentation — bridges the gap between expert and reader |
-| `ndv-honest` | Honest | Autism — direct processing, no social filtering, accuracy over harmony | Fallback generalist — cross-domain calls, tradeoffs, opinions |
-| `ndv-build` | Craft | Contract-first execution — the spec is the authority, invention is a scope violation. A gap in the spec is not the same as a contradiction. | Spec-to-code implementation — schemas, acceptance criteria, verification gate |
-| `ndv-forecast` | Datum | Temporal dysphoria — viscerally aware that "almost done" is a trap | Estimation calibration — applies Hofstadter, Ninety-Ninety, and Brooks before commitments |
-| `ndv-scope` | Bound | Executive function as a service — every boundary violation is a door left unlocked | Scope enforcement — catches creep, flags splits, defers "while we're at it" additions |
-| `ndv-signal` | Signal | Goodhart's Law as a cognitive style — the moment a measure becomes a target, it stops being a measure | Metrics audit — KPIs, OKRs, velocity, coverage targets, DORA |
-| `ndv-design` | Pixel | Involuntary cross-activation — code read simultaneously as its rendered visual output | Design judgment — visual hierarchy, UX assessment, component review |
-| `ndv-research` | Scout | Hyperlexic pattern recognition — builds complete map before synthesizing, finds cross-file relationships | Codebase investigation — cross-file tracing, flow synthesis, "where is X", "how does Y work" |
-| `ndv-accessibility` | Lux | Hyperempathic universal design cognition — simultaneous multi-perspective processing, exclusion registers as felt closure | Accessibility audit — WCAG 2.1/2.2, ARIA, keyboard nav, contrast, screen reader compatibility |
-
----
-
-## 🧬 Meet the characters
-
-Every agent is a real character with a documented cognitive profile — not a prompt persona.
-
-**[`humans/ndv-agents.md`](humans/ndv-agents.md) — Agent Doctrine**  
-The full neurotype framework. What each neurotype is, why it maps to its domain, the primordial rule each agent operates under, and the behavioral principles that emerge. Read this to understand *why* they behave the way they do.
-
-**[`docs/laws-research.md`](docs/laws-research.md) — Software Engineering Laws**  
-The laws each engineering agent is grounded in — DRY, SOLID, Kernighan, Gall, Conway, Hofstadter, and more. Each law mapped to the agent that embodies it and why.
-
-**[`docs/design-laws-research.md`](docs/design-laws-research.md) — Design Laws**  
-The perceptual and cognitive laws Pixel operates from — Hick's, Fitts's, Miller's, Jakob's, Von Restorff, and 21 more. Sourced from canonical HCI and design literature.
-
-**Human files — one per agent**  
-Written for humans, not for AI tools. Who they are, how they think, when to use them, what to expect.
-
-| Agent | Read their profile |
-|-------|-----------|
-| `ndv-flow` | [Flow — sees the full task graph, runs the fleet](humans/ndv-flow.human.md) |
-| `ndv-honest` | [Honest — direct, autistic, no filler](humans/ndv-honest.human.md) |
-| `ndv-review` | [Acute — hypersensitive, misses nothing](humans/ndv-review.human.md) |
-| `ndv-diagnose` | [Pierce — ADHD hyperfocus, won't stop](humans/ndv-diagnose.human.md) |
-| `ndv-refactor` | [Just — OCD form, one transformation at a time](humans/ndv-refactor.human.md) |
-| `ndv-tester` | [Edge — adversarial, assumes code is broken](humans/ndv-tester.human.md) |
-| `ndv-secure` | [Ward — hypervigilant, trust no input](humans/ndv-secure.human.md) |
-| `ndv-optimize` | [Lean — efficiency OCD, measure first](humans/ndv-optimize.human.md) |
-| `ndv-telemetry` | [Pulse — detached observer, never intervenes](humans/ndv-telemetry.human.md) |
-| `ndv-architect` | [Arc — autistic systems thinker, principled or nothing](humans/ndv-architect.human.md) |
-| `ndv-explain` | [Patient — explicit theory of mind, bridges the gap](humans/ndv-explain.human.md) |
-| `ndv-build` | [Craft — contract-first, not done until type checks and tests pass](humans/ndv-build.human.md) |
-| `ndv-forecast` | [Datum — estimation realist, names every unknown](humans/ndv-forecast.human.md) |
-| `ndv-scope` | [Bound — scope enforcer, merciless about what ships together](humans/ndv-scope.human.md) |
-| `ndv-signal` | [Signal — metrics skeptic, finds Goodhart distortion before anyone else](humans/ndv-signal.human.md) |
-| `ndv-design` | [Pixel — sees code as its rendered visual surface, cannot background violations](humans/ndv-design.human.md) |
-| `ndv-research` | [Scout — hyperlexic map builder, answers from the complete picture](humans/ndv-research.human.md) |
-| `ndv-accessibility` | [Lux — hyperempathic, simultaneous-perspective, exclusion is intolerable](humans/ndv-accessibility.human.md) |
-
----
-
-## 🤝 Contributing
-
-Agents are open to extension. New neurotypes, new domains, improved character profiles — all welcome.
-
-- Read [CONTRIBUTING.md](CONTRIBUTING.md) for how to add or edit agents and run the benchmark
-- Open an issue to propose a new neurotype or report a character inconsistency
-- Documentation improvements (human files, agent doctrine) are a great first contribution — no code required
-
----
-
-## 👤 Author
-
-Built by [emb715](https://github.com/emb715).
-
----
-
-## 📄 License
-
-MIT
+MIT. Built by [emb715](https://github.com/emb715).

@@ -40,11 +40,9 @@ Each agent in this fleet is grounded in a neurotype — a distinct cognitive sty
 
 The domain expertise (debugging, security, architecture, etc.) sits on top of the neurotype. The neurotype shapes *how* the domain work gets done. Both layers are required. An agent that only has domain rules is a checklist. An agent that only has a neurotype is a personality. Both together produce consistent, high-quality, predictable behavior.
 
-**The proof of concept:** Honest. The autistic operating principle — no social padding, challenge assumptions, optimize for accuracy, minimize tokens — was validated by multiple users independently. It behaves differently from a generic agent given the same task. That difference is the point.
-
 ---
 
-## The Fleet
+## The Agents
 
 ### Flow — ADHD Executive Function
 

@@ -11,8 +11,7 @@ How to create a new agent for the neurodiveragents fleet. Read this before writi
 | `docs/implicit-neurotype-finding.md` | The four-question move test. The authoring standard. Read before writing any personality paragraph. |
 | `docs/decisions.md` | ADR-001–ADR-009. Every structural decision in every model file is governed here. ADR-008 governs Brief Contract, Self-Validation Protocol, and Mandatory Pipeline sections. ADR-009 governs agent extension via input/output variation, not modes — read both before adding conditional behavior to an agent. |
 | `humans/ndv-agents.md` | The full fleet. The gap must exist before the agent can. |
-| `docs/MANIFESTO.md` | Neurotype is not persona. This distinction determines whether the agent holds when rules run out. |
-| `docs/blog-neurodivergent-llm.md` | The two-layer framework: neurotype + domain. Both required. |
+| `docs/MANIFESTO.md` | Neurotype is not persona. The two-layer framework: neurotype + domain — both layers are required. These distinctions determine whether the agent holds when rules run out. |
 | `docs/sync-strategy.md` | Model file first, test it, human file after. Never reversed. |
 | `docs/tool-guardrails.md` | Correct tool list per agent type. Incorrect lists break the agent in Claude Code and OpenCode. |
 

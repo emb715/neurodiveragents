@@ -439,7 +439,7 @@ Previously all 10 gap laws were uncovered. After adding Bound, Datum, Signal, an
 | Decisions | 13 | Honest (7), Signal (2), Arc+temporal (3), Edge (1) |
 | **Total** | **58** | |
 
-**Fleet size:** 15 agents (11 original + ndv-scope/Bound, ndv-forecast/Datum, ndv-signal/Signal, ndv-build/Craft) + 13 modules (11 original + ndv-temporal + ndv-parallel-safe)
+**Fleet size:** 18 agents (11 original + ndv-scope/Bound, ndv-forecast/Datum, ndv-signal/Signal, ndv-build/Craft, ndv-design/Pixel, ndv-accessibility/Lux, ndv-research/Scout) + 15 modules (11 agent-derived + 4 emergent)
 
 **Most law-dense agent:** ndv-architect (Arc) — 22 laws across Architecture + Design + Longevity dimension via ndv-temporal
 **Most behaviorally embedded:** ndv-optimize (Lean) — every operational step implements Premature Optimization + Pareto + Amdahl
