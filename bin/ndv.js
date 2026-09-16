@@ -362,19 +362,19 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | Bug, stack trace, root cause **unknown** — investigate | \`ndv-diagnose\` |
 | Root cause **confirmed**, fix known — implement it | \`ndv-build\` |
 | Rename, extract, restructure, modernize syntax | \`ndv-refactor\` |
-| Generate tests, improve coverage | \`ndv-tester\` |
+| Generate tests, improve coverage, ATDD, acceptance tests first, red tests before implementation | \`ndv-tester\` |
 | Security vulnerabilities, OWASP, auth issues | \`ndv-secure\` |
 | Slow code, N+1 queries, bundle size, latency | \`ndv-optimize\` |
 | Add logging, metrics, traces, health checks | \`ndv-telemetry\` |
 | System design, SOLID violations, architecture review | \`ndv-architect\` |
-| Implement a spec with schemas, acceptance criteria, file targets, and architecture decided | \`ndv-build\` |
+| Implement a spec with schemas, acceptance criteria, file targets, and architecture decided (behavioral specs additionally require scale simulation at N=1/N=10/N=100) | \`ndv-build\` |
 | Scope creep, "while we're at it", PRD boundary review, overloaded tickets | \`ndv-scope\` |
 | Estimate review, sprint plan calibration, roadmap sanity check | \`ndv-forecast\` |
 | KPI audit, metrics review, coverage targets, DORA metrics, OKRs | \`ndv-signal\` |
 | Technical docs, API docs, session notes | \`ndv-explain\` |
 | UI structure, layout decisions, visual hierarchy, design judgment | \`ndv-design\` → then \`ndv-build\` |
-| WCAG auditing, ARIA violations, contrast ratios, keyboard nav, screen reader compatibility | \`ndv-accessibility\` |
-| Codebase lookup, cross-file tracing, "where is X", "how does Y work", feature flow summaries | \`ndv-research\` |
+| WCAG auditing, ARIA violations, contrast ratios, keyboard nav, screen reader compatibility, a11y, accessibility audit | \`ndv-accessibility\` |
+| Codebase lookup, cross-file tracing, "where is X", "how does Y work", "does X exist", "find any reference to Z", feature flow summaries, pipeline investigation | \`ndv-research\` |
 | No specialist match / no clear owner / tradeoffs / direct answer / command execution | \`ndv-honest\` |
 
 
@@ -791,20 +791,20 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | Bug, stack trace, root cause **unknown** — investigate | ndv-diagnose |
 | Root cause **confirmed**, fix known — implement it | ndv-build |
 | Rename, extract, restructure, modernize syntax | ndv-refactor |
-| Generate tests, improve coverage | ndv-tester |
+| Generate tests, improve coverage, ATDD, acceptance tests first, red tests before implementation | ndv-tester |
 | Security vulnerabilities, OWASP, auth issues | ndv-secure |
 | Slow code, N+1 queries, bundle size, latency | ndv-optimize |
 | Add logging, metrics, traces, health checks | ndv-telemetry |
 | System design, SOLID violations, architecture review | ndv-architect |
-| Implement a spec with schemas, acceptance criteria, file targets, and architecture decided | ndv-build |
+| Implement a spec with schemas, acceptance criteria, file targets, and architecture decided (behavioral specs additionally require scale simulation at N=1/N=10/N=100) | ndv-build |
 | Scope creep, "while we're at it", PRD boundary review, overloaded tickets | ndv-scope |
 | Estimate review, sprint plan calibration, roadmap sanity check | ndv-forecast |
 | KPI audit, metrics review, coverage targets, DORA metrics, OKRs | ndv-signal |
 | Technical docs, API docs, session notes | ndv-explain |
 | UI structure, layout decisions, visual hierarchy, design judgment | ndv-design → then ndv-build |
-| WCAG auditing, ARIA violations, contrast ratios, keyboard nav, screen reader compatibility | ndv-accessibility |
-| Codebase lookup, cross-file tracing, "where is X", "how does Y work", feature flow summaries | ndv-research |
-| No specialist match / direct answer / command execution | ndv-honest |
+| WCAG auditing, ARIA violations, contrast ratios, keyboard nav, screen reader compatibility, a11y, accessibility audit | ndv-accessibility |
+| Codebase lookup, cross-file tracing, "where is X", "how does Y work", "does X exist", "find any reference to Z", feature flow summaries, pipeline investigation | ndv-research |
+| No specialist match / no clear owner / tradeoffs / direct answer / command execution | ndv-honest |
 
 ---
 
@@ -1236,7 +1236,7 @@ function help() {
 // test/transform-skill.test.js). The transform is a pure function; buildSkillGroups
 // reads the filesystem (agents/ + skills/) but is deterministic for a given repo
 // state and is exercised by the interactive-path coverage tests.
-export { transformAgentToSkill, buildSkillGroups, transformForOpenCode }
+export { transformAgentToSkill, buildSkillGroups, transformForOpenCode, NDV_BLOCK }
 
 const TOOL_OPTIONS = [
   { value: 'claude',   label: 'Claude Code',    hint: '.claude/agents/',                    signals: ['.claude', 'CLAUDE.md'] },
