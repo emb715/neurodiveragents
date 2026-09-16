@@ -21,6 +21,9 @@
  * 9. Named cross-references resolve to real sections
  * 10. Flow's routing table and CLAUDE.md's agree on agent coverage and on a
  *     declared set of high-value routing signals
+ * 11. What ships agrees with what is measured: CLAUDE.md's managed block is
+ *     byte-identical to NDV_BLOCK, and the Copilot header has the same
+ *     routing rows
  */
 
 import { test, describe } from 'node:test'
@@ -330,4 +333,48 @@ describe('flow protocol: router parity with CLAUDE.md', () => {
         `The host model would route this task differently than Flow does.`)
     })
   }
+})
+
+// ─── 11. Shipped routing text matches the measured routing text ──────────────
+//
+// The routing eval scores CLAUDE.md. Users never receive this repo's
+// CLAUDE.md — `ndv install` writes NDV_BLOCK (Claude/OpenCode) or the Copilot
+// header. If those drift from CLAUDE.md, the eval measures a routing table
+// that does not ship. CLAUDE.md's <!-- ndv:start/end --> block is the
+// installer's own block, so it must match NDV_BLOCK exactly.
+
+describe('flow protocol: shipped routing text matches CLAUDE.md', () => {
+  const claudeMd = readFileSync(join(ROOT, 'CLAUDE.md'), 'utf8')
+  const binSrc = readFileSync(join(ROOT, 'bin', 'ndv.js'), 'utf8')
+
+  test('CLAUDE.md has one well-formed ndv:start → ndv:end block', () => {
+    const starts = [...claudeMd.matchAll(/<!-- ndv:start -->/g)].map(m => m.index)
+    const ends = [...claudeMd.matchAll(/<!-- ndv:end -->/g)].map(m => m.index)
+    assert.equal(starts.length, 1, `expected one ndv:start marker, found ${starts.length}`)
+    assert.equal(ends.length, 1, `expected one ndv:end marker, found ${ends.length}`)
+    assert.ok(starts[0] < ends[0], 'ndv:start must come before ndv:end')
+  })
+
+  test('CLAUDE.md managed block is byte-identical to NDV_BLOCK', async () => {
+    const { NDV_BLOCK } = await import(join(ROOT, 'bin', 'ndv.js'))
+    const start = claudeMd.indexOf('<!-- ndv:start -->')
+    const end = claudeMd.indexOf('<!-- ndv:end -->') + '<!-- ndv:end -->'.length
+    assert.equal(claudeMd.slice(start, end), NDV_BLOCK,
+      'CLAUDE.md\'s ndv block differs from NDV_BLOCK in bin/ndv.js. Edit the routing table in both, ' +
+      'or the eval measures text that `ndv install` does not ship.')
+  })
+
+  test('Copilot header routing rows match NDV_BLOCK (backticks aside)', async () => {
+    // Copilot renders agent names without code spans; otherwise the rows must
+    // be the same, so Copilot users get the same routing as Claude/OpenCode.
+    const { NDV_BLOCK } = await import(join(ROOT, 'bin', 'ndv.js'))
+    const at = binSrc.indexOf('# neurodiveragents — Copilot Instructions')
+    assert.ok(at !== -1, 'Copilot header not found in bin/ndv.js')
+    const header = binSrc.slice(at, binSrc.indexOf('<!-- ndv:end -->', at))
+    const rows = text => (text.match(/^\| (?!When the task|-).*$/gm) ?? []).map(r => r.replace(/`/g, ''))
+    const shipped = rows(NDV_BLOCK.slice(0, NDV_BLOCK.indexOf('## Proactive Application')))
+    assert.ok(shipped.length > 0, 'no routing rows found in NDV_BLOCK')
+    assert.deepEqual(rows(header), shipped,
+      'Copilot header routing table differs from NDV_BLOCK — update both templates in bin/ndv.js together')
+  })
 })

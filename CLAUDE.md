@@ -1,3 +1,4 @@
+<!-- ndv:start -->
 # neurodiveragents
 
 This project uses the neurodiveragents fleet. When a task matches an agent domain, use the Task tool with the matching subagent_type. Pass full context in the prompt — subagents have no prior conversation history.
@@ -147,7 +148,7 @@ No thresholds are enforced yet; set them from a baseline run, not a guess.
 | `test/validate-contracts.test.js` | Architectural contract tests (ADR-008 Domain Contracts, O(n) behavioral spec regression); runs unconditionally |
 | `test/validate-coherence.test.js` | Semantic coherence across agent sections — handoff targets, Mandatory Pipeline, Brief Contract all resolve to real slugs; no agent instructs reacting to elapsed wall-clock time, asking the user what to do next, or sizing work in calendar units; static, no LLM calls |
 | `test/validate-routing.test.js` | Integrity of the behavioral routing fixture — every `expect` resolves, every agent is covered, the case mix stays hard enough to discriminate; static, no LLM calls |
-| `test/validate-flow-protocol.test.js` | Structural gates on the orchestration protocol in `ndv-flow.md` — routing-table coverage, sentinel token consistency, handoff emit/parse grammar agreement, ledger status vocabulary, bounded BRIEF_REJECTED retry, and router parity with every `CLAUDE.md` routing table (agent coverage + a declared signal list); static, no LLM calls |
+| `test/validate-flow-protocol.test.js` | Structural gates on the orchestration protocol in `ndv-flow.md` — routing-table coverage, sentinel token consistency, handoff emit/parse grammar agreement, ledger status vocabulary, bounded BRIEF_REJECTED retry, router parity with every `CLAUDE.md` routing table (agent coverage + a declared signal list), and shipped-text parity (`CLAUDE.md`'s ndv block byte-identical to `NDV_BLOCK`; Copilot header has the same routing rows); static, no LLM calls |
 | `test/install.test.js` | `bin/ndv.js` install commands — simulates claude/opencode/cursor installs in a temp dir |
 | `test/install-router-skills.test.js` | Acceptance tests for router-skill auto-install behavior in `bin/ndv.js` (claude auto-install, opencode skip, cursor/copilot no skills dir) |
 | `test/transform-skill.test.js` | Adversarial unit tests for `transformAgentToSkill()` purity, determinism, boundary, and degradation behavior |
@@ -157,7 +158,7 @@ No thresholds are enforced yet; set them from a baseline run, not a guess.
 ### Adding or changing an agent
 
 1. Edit `agents/ndv-[name].md` (model file — source of truth)
-2. Update routing in `CLAUDE.md`, `agents/ndv-flow.md`, `bin/ndv.js` (NDV_BLOCK + Copilot header), `commands/opencode/ndv-help.md`, `humans/ndv-agents.md`
+2. Update routing in `CLAUDE.md`, `agents/ndv-flow.md`, `bin/ndv.js` (NDV_BLOCK + Copilot header), `commands/opencode/ndv-help.md`, `humans/ndv-agents.md`. The ndv block in `CLAUDE.md` and `NDV_BLOCK` must stay byte-identical.
 3. Edit `humans/ndv-[name].human.md` (human file — written after model file is stable)
 4. Run `npm run test:validate` locally before pushing
 5. CI (`.github/workflows/ci.yml`) runs the full `npm test` suite unscoped on push/PR to main (Node 18, ubuntu-latest). The authoring tests scope to `CHANGED_AGENTS` when set, but CI does not set it — the suite runs in full.
@@ -165,5 +166,3 @@ No thresholds are enforced yet; set them from a baseline run, not a guess.
 ### Pre-commit hook
 
 Husky runs `npm test` then a CSS build staleness check on every commit. Fix failures before committing — do not skip the hook.
-
-<!-- ndv:start -->
