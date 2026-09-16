@@ -138,11 +138,11 @@ Character names (`Pierce`, `Ward`, etc.) are never used as routing targets. Comm
 
 ---
 
-## Running the benchmark
+## Validating behavior changes
 
-Before submitting a PR that changes agent behavior, run the affected agent's D2 (output quality) and D4 (scope containment) cases from `docs/personality-benchmark.md`.
+Before submitting a PR that changes agent behavior, evaluate the affected agent's D2 (output quality) and D4 (scope containment): run prompts that exercise the changed behavior and confirm output quality and scope discipline hold.
 
-For new agents, run all five dimensions.
+For new agents, evaluate all five dimensions.
 
 Report results in the PR description.
 

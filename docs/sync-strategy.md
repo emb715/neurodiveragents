@@ -75,7 +75,7 @@ Exception: if you discover the human file describes behavior that doesn't match 
 ### When you add a new agent
 
 1. Write the model file first (`agents/ndv-[x].md`)
-2. Test it — run at minimum D2 (output quality) from the benchmark
+2. Test it — run prompts that exercise the agent's behavior and evaluate D2 (output quality): confirm output quality holds
 3. Write the human file after the model file is stable (`humans/ndv-[x].human.md`)
 4. Update CLAUDE.md routing table
 5. Update humans/ndv-agents.md doctrine

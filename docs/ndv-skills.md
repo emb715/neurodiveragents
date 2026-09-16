@@ -61,7 +61,7 @@ For inline application points in the step instructions, reference the loaded mod
 Sub-agents with `context: fork` start with a fresh context — they don't inherit loaded skills from the parent session. For those, extract the core directive from the module and inject it as text in the sub-agent prompt:
 
 ```markdown
-Invoke via `bmad-review-adversarial-general`. Inject into the sub-agent prompt:
+Extract the core directive from the module — this example uses `ndv-total-perception` — and inject it into the sub-agent prompt:
 "You notice everything simultaneously. Nothing is filtered as background noise.
 Classification into severity happens after noticing, not during."
 ```
@@ -72,7 +72,7 @@ Classification into severity happens after noticing, not during."
 
 15 modules across two origin types.
 
-### Agent-derived (13)
+### Agent-derived (11)
 
 Extracted directly from an NDV agent's cognitive core — the thinking style without the operational machinery.
 
@@ -83,23 +83,23 @@ Extracted directly from an NDV agent's cognitive core — the thinking style wit
 | `ndv-precise` | Just (refactor) | Follow existing patterns. Deviation requires justification. Minimal change, no scope creep. | Writing or transforming code |
 | `ndv-total-perception` | Acute (review) | Everything registers simultaneously. Classify after noticing, never during. Self-censoring a finding is a failure. | Review, audit, quality assessment |
 | `ndv-adversarial` | Edge (tester) | The happy path is an alibi. Code is guilty until proven innocent. Test every boundary condition. | Testing, validation, verification |
-| `ndv-vigilant` | Ward (secure) | Every input is hostile until validated. Trust no client-side check. | Auth, user input, trust boundaries |
-| `ndv-efficient` | Lean (optimize) | Waste is intolerable. Measure before optimizing. No N+1, no SELECT *, no sequential when parallel is safe. | Implementation, queries, asset handling |
 | `ndv-direct` | Honest | Every word must earn its place. No preamble, no filler, no restating what's known. | Presenting results, writing summaries |
 | `ndv-contextual` | Patient (explain) | The next reader does not share your context. Model the knowledge gap before writing. Lead with the entry point. | Presenting, specs, handoffs |
-| `ndv-bounded` | Bound (scope) | Scope is a wall, not a suggestion. "While I'm here" is the most expensive phrase in software. Every deliverable needs a stated exclusion or the scope is not defined. | Scope decisions, mid-task discipline |
-| `ndv-temporal` | Arc (architect) | Current state is a data point. Direction is the assessment. Append trajectory to every finding: Stable / Improving / Degrading / Aging. Applies Lindy durability and hype cycle position to dependency and technology decisions. | Architecture reviews, dependency audits, tech selection |
 | `ndv-map-first` | Scout (research) | A partial answer is not a smaller answer — it is a wrong one. Build the complete picture before reporting any of it. The adjacent finding only surfaces from a complete picture. | Investigation, planning, requirements, any phase where answering early forecloses findings you haven't reached yet |
 | `ndv-perceptual` | Pixel (design) | Read code and its visual output as a single simultaneous artifact. Register every deviation, then classify by severity. Self-censoring a visual violation as "close enough" is a perception failure. | Implementation review, component assessment, UI audit steps within a larger workflow |
+| `ndv-vigilant` | Ward (secure) | Every input is hostile until validated. Trust no client-side check. | Auth, user input, trust boundaries |
+| `ndv-efficient` | Lean (optimize) | Waste is intolerable. Measure before optimizing. No N+1, no SELECT *, no sequential when parallel is safe. | Implementation, queries, asset handling |
 
-### Emergent (2)
+### Emergent (4)
 
-Not derived from any single agent. A pattern that emerged from observing how multiple NDV agents work.
+Not derived from any single agent. A pattern that emerged from observing how multiple NDV agents work, or from a named body of practice — no agent file is its source.
 
 | Module | Synthesized from | Cognitive constraint | Use when... |
 |--------|-----------------|---------------------|-------------|
-| `ndv-incremental` | refactor + optimize + build + architect | Never build on unverified ground. One logical change, verified, then next. | Multi-step implementation |
+| `ndv-incremental` | refactor + optimize + tester | Never build on unverified ground. One logical change, verified, then next. | Multi-step implementation |
 | `ndv-parallel-safe` | build (merge surface protocol) | Parallel writes are only safe when each stream exclusively owns its files. Classify every target before dispatching. Shared files serialize, always. | Any phase dispatching parallel write streams |
+| `ndv-bounded` | cross-agent "Out of Scope" sections | Scope is a wall, not a suggestion. "While I'm here" is the most expensive phrase in software. Every deliverable needs a stated exclusion or the scope is not defined. | Scope decisions, mid-task discipline |
+| `ndv-temporal` | Lehman's Laws, Lindy Effect, Hype Cycle | Current state is a data point. Direction is the assessment. Append trajectory to every finding: Stable / Improving / Degrading / Aging. | Architecture reviews, dependency audits, tech selection |
 
 ---
 

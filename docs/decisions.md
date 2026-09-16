@@ -70,11 +70,11 @@ Key decisions made during fleet design. Each entry: what was decided, why, what 
 
 **Risk:** Personality narrative may interfere with behavioral rules — the model follows the mood rather than the checklist.
 
-**Validation:** See `personality-benchmark.md`. Run before treating this as settled.
+**Validation:** Empirical comparison of rules-only vs personality-paragraph prompts — see the Result entry below.
 
 **Result:** Benchmark run 2026-04. B scored 2.0/2.0 neurotype fidelity vs A's 1.3/2.0 (+54%). Domain accuracy identical (2.0/2.0). Scope discipline B=2.0 vs C=1.7. All three decision rule conditions met. Personality paragraphs kept. Status updated to Active.
 
-**Status updated to:** Active — Keep. See `personality-benchmark-results.md` for full data.
+**Status updated to:** Active — Keep. Full data in the Result entry above.
 
 ---
 

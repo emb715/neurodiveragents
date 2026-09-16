@@ -167,3 +167,11 @@ Six cost patterns emerged. Each one had a structural cause — not bad prompting
 Every token spent re-reading content that hasn't changed, re-deriving a rule that was already established, or investigating an error that described its own fix — is a token that produced no new information. The fleet's agents are built around cognitive styles that make them excellent at their domains. These efficiency rules are the structural complement: they prevent the fleet from paying full investigation cost for problems that don't require investigation.
 
 The rules are embedded in the agent files, not in a shared config, because each rule is domain-specific. The grep-skip rule in ndv-research has a different exception profile than the same rule in ndv-review. The re-read rule in ndv-build has a different trigger condition than in ndv-review. Centralizing them would require each agent to import knowledge from a shared doc — which is exactly the architecture ADR-008 rejected.
+
+---
+
+## Orchestrator context discipline — fresh sessions sustain longer
+
+The five mechanisms above keep the orchestrator lean regardless of how much work runs beneath it: subagents return summaries only — 3-5 bullets, max 200 words — plus structured handoff lines; Flow never ingests full subagent output into its own context; sentinels confirm completion; handoffs are routed, not accumulated. This is observable in any Flow session — the plan emits, the summaries arrive, the handoff ledger populates. The full work happens in subagents; Flow's context stays narrow.
+
+The practical implication: **a fresh Flow session sustains longer than switching to Flow mid-session.** A fresh session starts with a clean context and the protocol keeps it that way throughout. Switching mid-session is valid — it works — but it inherits whatever context has already accumulated. For large workloads, starting fresh with Flow is the structurally cleaner approach.
