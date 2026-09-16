@@ -6,7 +6,6 @@
 ### Features
 
 * add claude-flow alias and installer integration ([f656a77](https://github.com/emb715/neurodiveragents/commit/f656a775faa6fa68fd9355037ae80488daf3fa9c))
-* claude-flow alias, routing evals, and calendar-free sizing ([9e6eb91](https://github.com/emb715/neurodiveragents/commit/9e6eb914073d4b7387a2dffd8bca09aa4642750d))
 * routing evals, flow protocol gates, and calendar-free sizing ([e2bf6ca](https://github.com/emb715/neurodiveragents/commit/e2bf6ca7637f32e2aefc77f34cd01a1dd3a77ddf))
 
 
