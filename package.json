@@ -1,7 +1,7 @@
 {
   "name": "neurodiveragents",
-  "version": "1.6.0",
-  "description": "A fleet of specialized AI agents for Claude Code, OpenCode, and Cursor \u2014 each one a distinct cognitive style",
+  "version": "1.7.0",
+  "description": "A fleet of specialized AI agents for Claude Code, OpenCode, and Cursor — each one a distinct cognitive style",
   "type": "module",
   "bin": {
     "ndv": "bin/ndv.js",
