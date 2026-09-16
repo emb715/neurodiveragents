@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.7.0](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.6.0...neurodiveragents-v1.7.0) (2026-09-16)
+
+
+### Features
+
+* add claude-flow alias and installer integration ([f656a77](https://github.com/emb715/neurodiveragents/commit/f656a775faa6fa68fd9355037ae80488daf3fa9c))
+* claude-flow alias, routing evals, and calendar-free sizing ([9e6eb91](https://github.com/emb715/neurodiveragents/commit/9e6eb914073d4b7387a2dffd8bca09aa4642750d))
+* routing evals, flow protocol gates, and calendar-free sizing ([e2bf6ca](https://github.com/emb715/neurodiveragents/commit/e2bf6ca7637f32e2aefc77f34cd01a1dd3a77ddf))
+
+
+### Bug Fixes
+
+* close install-path coverage gaps found in audit ([8ecc47c](https://github.com/emb715/neurodiveragents/commit/8ecc47ceae19bdd0619ad0a7c19d5948dbdca601))
+* **opencode:** inject agent path hint into ndv-flow and allow the Claude shim ([d02f91d](https://github.com/emb715/neurodiveragents/commit/d02f91d8cb44e354b412520dbb1fa122be97bf62))
+* replace loose 'includes(ndv)' heuristic with exact-path match ([38080d2](https://github.com/emb715/neurodiveragents/commit/38080d250915bd56b0428eecd9a231a214e36ebf))
+* silent exit 0 on global install + close test gate gaps ([a7428d0](https://github.com/emb715/neurodiveragents/commit/a7428d0c3d49f1df5d9aa460438ba768b5c60f11))
+
+
+### Refactoring
+
+* strip model/effort from agent frontmatter, flip schema contract ([cb5dd4c](https://github.com/emb715/neurodiveragents/commit/cb5dd4cbdf0e4453a8b051eb531ef0fbed37ed63))
+
+
+### Documentation
+
+* rewrite README and explanation docs for clarity ([#11](https://github.com/emb715/neurodiveragents/issues/11)) ([cf3fa79](https://github.com/emb715/neurodiveragents/commit/cf3fa79db1e4d150e8ef6d995e08f14c525f30c6))
+
 ## [1.6.0](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.5.1...neurodiveragents-v1.6.0) (2026-07-31)
 
 
