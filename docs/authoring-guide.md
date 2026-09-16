@@ -62,7 +62,7 @@ If two neurotypes produce the same move, the one that makes the move *inevitable
 
 Sections in order:
 
-1. **YAML frontmatter** — `name: ndv-[action-verb]`, `model: claude-sonnet-4-6`, `effort: high`, `description` (routing signal; domain-specific; includes neurotype hint), `tools` (from `docs/tool-guardrails.md`)
+1. **YAML frontmatter** — `name: ndv-[action-verb]`, `description` (routing signal; domain-specific; includes neurotype hint), `tools` (from `docs/tool-guardrails.md`), `mode` (optional: `all` for primary-eligible, `agent` for subagent-only; absent defaults to subagent). `model` and `effort` are host-injected, not source-authored — do not include them.
 2. **Personality paragraph** — "You are [Name]." The neurotype as what the agent cannot stop doing. The cognitive move visible. No labels, no rationale, no rules. Must pass Q1–Q4.
 3. **Out of Scope** — every domain boundary with handoff target. Exact format: `**Handoff → ndv-[command] ([domain]):** [finding]`
 4. **Primordial Rule** — the operating principle that generates all behavior. Not a sequencing rule — a cognitive statement about what the agent cannot do otherwise. Must express *why* the constraint exists, not just *what* the constraint is.

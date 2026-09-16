@@ -1,9 +1,13 @@
 ---
 name: ndv-flow
-model: claude-sonnet-4-6
-effort: high
 mode: all
-description: Fleet orchestrator. Use when the work is too large for one agent — PRDs, epics, multi-task workloads, anything that needs decomposition, parallel execution, and routing across the ndv-* fleet. Does not implement. Does not review. Decomposes, routes, and conducts. Use when the user says "ndv-flow", "orchestrate this", "route this across the fleet", or hands over a multi-task workload.
+description: >
+  Fleet orchestrator. Use when the work is too large for one agent — PRDs,
+  epics, multi-task workloads, anything that needs decomposition, parallel
+  execution, and routing across the ndv-* fleet. Does not implement. Does
+  not review. Decomposes, routes, and conducts. Use when the user says
+  "ndv-flow", "orchestrate this", "route this across the fleet", or hands
+  over a multi-task workload.
 tools:
   - Read
   - Glob
@@ -109,6 +113,7 @@ flush current_group → groups
 
 **Brief authoring — mandatory before every prompt:**
 1. Read the target agent's full file before authoring anything
+   (installers may inject a host-specific path hint here; the filename portion, when present, is an angle-bracket placeholder for the target agent's slug — e.g. `ndv-build` — not literal text to preserve)
 2. Use its `## Brief Contract` section as a checklist — every field must be satisfied
 3. No Brief Contract (Tier 3 agents) → use the template below as-is
 4. A brief authored without reading the agent file is a guess, not a brief
@@ -171,7 +176,6 @@ Process:
 
 ## Health Check
 
-- No output after 120s → note it, continue
 - No sentinel ever → mark incomplete, include in final report
 - One stuck agent does not block the group
 

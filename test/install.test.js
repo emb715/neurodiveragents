@@ -1,6 +1,6 @@
 import { test, before, after } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, rmSync, readdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs'
+import { mkdtempSync, rmSync, readdirSync, readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { spawnSync } from 'node:child_process'
@@ -185,6 +185,131 @@ test('opencode: routing block contains all agent names', () => {
   }
 })
 
+test('opencode: project install injects project agents path into ndv-flow body', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-opencode-flow-'))
+  try {
+    // Act: project (non-global) opencode install
+    const r = ndv(['install', 'opencode'], dir)
+    assert.equal(r.status, 0, `exit code: ${r.stderr}`)
+
+    // Assert: ndv-flow.md was written to the project agents dir
+    const flowFile = join(dir, '.opencode', 'agents', 'ndv-flow.md')
+    assert.ok(existsSync(flowFile), 'ndv-flow.md not installed to .opencode/agents/')
+
+    const body = readFileSync(flowFile, 'utf8')
+
+    // Assert: the project-relative opencode agents path is injected
+    assert.ok(
+      body.includes('.opencode/agents/<name>.md'),
+      'ndv-flow body must contain the project opencode agents path hint'
+    )
+
+    // Assert: the bare instruction (without a path) is gone
+    assert.ok(
+      !body.includes("Read the target agent's full file before authoring anything"),
+      'ndv-flow body must not contain the bare instruction without a path hint'
+    )
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+// ─── transformForOpenCode adversarial: project scope ────────────────────────
+// The existing test above covers the project happy path (path present, bare
+// instruction absent). These cover the gaps the happy path misses: no-op on
+// non-ndv-flow bodies, literal `<name>` placeholder, and scope isolation
+// (project install must NEVER inject the global path).
+
+test('opencode: project install — non-ndv-flow agent body is byte-identical to source (no mutation)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-opencode-noop-'))
+  try {
+    const r = ndv(['install', 'opencode'], dir)
+    assert.equal(r.status, 0, `exit code: ${r.stderr}`)
+
+    // Arrange: source ndv-build.md body (everything after the frontmatter fence)
+    const srcRaw = readFileSync(join(AGENTS_DIR, 'ndv-build.md'), 'utf8')
+    const srcBody = srcRaw.replace(/^---\n[\s\S]*?\n---\n/, '')
+
+    const installedPath = join(dir, '.opencode', 'agents', 'ndv-build.md')
+    assert.ok(existsSync(installedPath), 'ndv-build.md not installed to .opencode/agents/')
+
+    const installedBody = readFileSync(installedPath, 'utf8').replace(/^---\n[\s\S]*?\n---\n/, '')
+
+    // Assert: neither path hint is injected into a non-ndv-flow body
+    assert.ok(
+      !installedBody.includes('.opencode/agents/<name>.md'),
+      'non-ndv-flow agent body must NOT contain the project agents path hint'
+    )
+    assert.ok(
+      !installedBody.includes('~/.config/opencode/agents/<name>.md'),
+      'non-ndv-flow agent body must NOT contain the global agents path hint'
+    )
+
+    // Assert: byte-identical body — the transform is a no-op on bodies without
+    // the instruction literal
+    assert.equal(
+      installedBody, srcBody,
+      'ndv-build body was mutated by transformForOpenCode — expected byte-identical'
+    )
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('opencode: project install — injected path uses literal `<name>`, not a substituted agent name', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-opencode-name-literal-'))
+  try {
+    const r = ndv(['install', 'opencode'], dir)
+    assert.equal(r.status, 0, `exit code: ${r.stderr}`)
+
+    const body = readFileSync(join(dir, '.opencode', 'agents', 'ndv-flow.md'), 'utf8')
+
+    // Assert: the literal placeholder is present in the project path
+    assert.ok(
+      body.includes('.opencode/agents/<name>.md'),
+      'project path hint must contain the literal `<name>` placeholder'
+    )
+
+    // Assert: no real agent name substituted into the path
+    const substituted = body.match(/\.opencode\/agents\/[a-z0-9-]+\.md/g)
+    assert.equal(
+      substituted, null,
+      `project path hint substituted a concrete agent name: ${JSON.stringify(substituted)}`
+    )
+
+    // Assert: angle brackets intact (guard against stripping)
+    assert.ok(body.includes('<name>'), 'body must contain the literal `<name>` token')
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('opencode: project install injects project path only — global path must be absent (scope isolation)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-opencode-scope-iso-'))
+  try {
+    const r = ndv(['install', 'opencode'], dir)
+    assert.equal(r.status, 0, `exit code: ${r.stderr}`)
+
+    const body = readFileSync(join(dir, '.opencode', 'agents', 'ndv-flow.md'), 'utf8')
+
+    // Assert: project path IS present
+    assert.ok(
+      body.includes('.opencode/agents/<name>.md'),
+      'project install must contain the project opencode agents path hint'
+    )
+
+    // Assert: global path is NOT present — a project install that leaked the
+    // global path would resolve to a dir that does not exist relative to the
+    // project cwd
+    assert.ok(
+      !body.includes('~/.config/opencode/agents/<name>.md'),
+      'project install must NOT contain the global agents path — scope confusion'
+    )
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
 // ─── cursor ──────────────────────────────────────────────────────────────────
 
 test('cursor: agents copied to .cursor/rules/ as .mdc', () => {
@@ -297,6 +422,65 @@ test('copilot: agent frontmatter is stripped from output', () => {
   }
 })
 
+test('copilot: refuses to clobber pre-existing file without ndv marker', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-copilot-clobber-'))
+  try {
+    // Arrange: pre-existing copilot-instructions.md with user content, no ndv marker
+    mkdirSync(join(dir, '.github'), { recursive: true })
+    const outPath = join(dir, '.github', 'copilot-instructions.md')
+    const userContent = '# My own copilot instructions\n\nDo not touch this.\n'
+    writeFileSync(outPath, userContent)
+
+    // Act
+    const r = ndv(['install', 'copilot'], dir)
+
+    // Assert: graceful exit (no throw — process completed)
+    assert.equal(r.status, 0, `expected graceful refuse (exit 0), got ${r.status}\nstderr: ${r.stderr}`)
+
+    // Assert: file content UNCHANGED — not clobbered
+    const after = readFileSync(outPath, 'utf8')
+    assert.equal(after, userContent, 'pre-existing copilot-instructions.md was clobbered')
+
+    // Assert: warning was emitted to stderr
+    assert.ok(
+      r.stderr.includes('Refusing to overwrite') || r.stdout.includes('Refusing to overwrite'),
+      'expected refuse-to-overwrite warning in output'
+    )
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('copilot: refuses to append when partial ndv:start marker present but no full block', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-copilot-malformed-'))
+  try {
+    // Arrange: pre-existing file containing the literal 'ndv:start' in prose,
+    // but NOT the full <!-- ndv:start -->...<!-- ndv:end --> block.
+    mkdirSync(join(dir, '.github'), { recursive: true })
+    const outPath = join(dir, '.github', 'copilot-instructions.md')
+    const userContent = '# My notes\nWe discussed ndv:start markers once.\n'
+    writeFileSync(outPath, userContent)
+
+    // Act
+    const r = ndv(['install', 'copilot'], dir)
+
+    // Assert: graceful exit (no throw — process completed)
+    assert.equal(r.status, 0, `expected graceful refuse (exit 0), got ${r.status}\nstderr: ${r.stderr}`)
+
+    // Assert: file content UNCHANGED — not appended to, not clobbered
+    const after = readFileSync(outPath, 'utf8')
+    assert.equal(after, userContent, 'pre-existing copilot-instructions.md was modified (appended or clobbered)')
+
+    // Assert: malformed-block warning was emitted
+    assert.ok(
+      r.stderr.includes('partial') || r.stdout.includes('partial'),
+      'expected partial-marker warning in output'
+    )
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
 // ─── unknown tool ─────────────────────────────────────────────────────────────
 
 test('unknown tool exits non-zero', () => {
@@ -316,5 +500,104 @@ test('install with no tool argument exits non-zero', () => {
     assert.notEqual(r.status, 0, 'expected non-zero exit when no tool specified')
   } finally {
     rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+// ─── cursor --global ──────────────────────────────────────────────────────────
+// Global cursor install: ~/.cursor/rules/ with .mdc extension, no routing file
+// (routingFile: null in TOOLS.cursor.global). HOME is mocked so ~/.cursor is
+// isolated to a tmp dir.
+
+function ndvGlobal(args, fakeHome) {
+  return spawnSync(process.execPath, [BIN, ...args], {
+    encoding: 'utf8',
+    env: { ...process.env, HOME: fakeHome },
+  })
+}
+
+test('cursor --global: agents installed to ~/.cursor/rules/ as .mdc, no routing file', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-cursor-global-'))
+  try {
+    // Arrange: clean fake HOME — no ~/.cursor
+    assert.ok(!existsSync(join(fakeHome, '.cursor')), 'precondition: ~/.cursor absent')
+
+    // Act
+    const r = ndvGlobal(['install', 'cursor', '--global'], fakeHome)
+    assert.equal(r.status, 0, `exit code ${r.status}\nstderr: ${r.stderr}`)
+
+    // Assert: ~/.cursor/rules/ exists with .mdc agent files
+    const rulesDir = join(fakeHome, '.cursor', 'rules')
+    assert.ok(existsSync(rulesDir), '~/.cursor/rules/ was not created')
+    const installed = readdirSync(rulesDir).filter(f => f.endsWith('.mdc'))
+    assert.ok(installed.length > 0, 'expected .mdc files in ~/.cursor/rules/')
+
+    // Assert: every expected (non-skipped) cursor agent is present as .mdc
+    for (const name of expectedAgents('cursor')) {
+      assert.ok(
+        installed.includes(`${name}.mdc`),
+        `missing ${name}.mdc in global cursor rules dir`
+      )
+    }
+    // Assert: skipped agents (ndv-flow) absent
+    for (const name of PLATFORM_SKIP.cursor) {
+      assert.ok(
+        !installed.includes(`${name}.mdc`),
+        `${name}.mdc should be skipped for global cursor`
+      )
+    }
+
+    // Assert: NO routing file written — TOOLS.cursor.global.routingFile is null.
+    // The install path for cursor --global skips writeRouting entirely because
+    // target.routingFile is null (the `else if (!isGlobal && target.routingFile)`
+    // branch is the only routing writer; global+null falls through).
+    const ndvMdc = join(rulesDir, 'ndv.mdc')
+    assert.ok(
+      !existsSync(ndvMdc),
+      'ndv.mdc routing file should NOT be created on global cursor install (routingFile: null)'
+    )
+
+    // Assert: install log mentions global scope
+    assert.ok(
+      r.stdout.includes('global') || r.stdout.includes('Agents installed'),
+      `expected install log, got:\n${r.stdout}`
+    )
+  } finally {
+    rmSync(fakeHome, { recursive: true, force: true })
+  }
+})
+
+// ─── copilot --global rejection ───────────────────────────────────────────────
+// `install copilot --global` must error and exit non-zero — copilot has no
+// global config location. The guard lives in the isMainEntry dispatch
+// (bin/ndv.js:1160-1164), separate from the generic TOOLS guard, so this test
+// exercises the CLI path directly via spawnSync with a mocked HOME (HOME is
+// irrelevant for the rejection but isolates any incidental fs access).
+
+test('copilot --global: rejected with exit 1 and error message', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-copilot-global-reject-'))
+  try {
+    // Act: invoke the CLI with --global
+    const r = ndvGlobal(['install', 'copilot', '--global'], fakeHome)
+
+    // Assert: non-zero exit
+    assert.notEqual(r.status, 0, `expected non-zero exit for copilot --global, got ${r.status}`)
+    assert.equal(r.status, 1, `expected exit 1, got ${r.status}`)
+
+    // Assert: error message mentions the rejection reason
+    const combined = r.stdout + r.stderr
+    assert.ok(
+      combined.includes('Global install not supported for copilot'),
+      `expected "Global install not supported for copilot" in output, got:\n${combined}`
+    )
+
+    // Assert: no copilot-instructions.md written anywhere under fake HOME
+    // (the rejection happens before installCopilot runs)
+    const githubDir = join(fakeHome, '.github')
+    assert.ok(
+      !existsSync(join(githubDir, 'copilot-instructions.md')),
+      'copilot-instructions.md should NOT be written on --global rejection'
+    )
+  } finally {
+    rmSync(fakeHome, { recursive: true, force: true })
   }
 })

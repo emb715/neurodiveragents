@@ -16,6 +16,9 @@
  * 5. Self-Validation Protocol references BRIEF_REJECTED on every Tier 1/2 agent
  * 6. Out of Scope section exists and contains at least one handoff on non-residual agents
  * 7. No agent names a non-existent slug in any cross-reference
+ * 8. No agent instructs itself to react to elapsed wall-clock time
+ * 9. No agent instructs itself to ask the user what to do next
+ * 10. No agent expresses effort or size in calendar units
  */
 
 import { test, describe } from 'node:test'
@@ -279,6 +282,74 @@ describe('coherence: no agent routes to itself in a handoff', () => {
         `${agent.file}: agent routes to itself in a handoff line:\n` +
         selfRefs.map(l => `  ${l.trim()}`).join('\n')
       )
+    })
+  }
+})
+
+// ─── 8. No instructions that depend on observing wall-clock time ─────────────
+//
+// A model has no clock. "No output after 120s → note it" cannot be executed by
+// the agent reading it — timeouts belong in the harness. Durations that
+// describe measurements (SLO windows, UX response thresholds) are fine; the
+// target is an instruction to wait for, or react to, elapsed time.
+
+const WALL_CLOCK_INSTRUCTION =
+  /\b(no (output|response|reply|sentinel)|wait(ing)?|time ?out)\b[^\n]{0,40}?\b\d+\s*(s|secs?|seconds|mins?|minutes)\b/i
+
+describe('coherence: no agent depends on observing wall-clock time', () => {
+  for (const agent of agentFiles()) {
+    test(agent.name + ' — no elapsed-time instructions', () => {
+      const { body } = parseFrontmatter(agent.content, agent.file)
+      const hits = body.split('\n').filter(l => WALL_CLOCK_INSTRUCTION.test(l))
+      assert.deepEqual(hits.map(l => l.trim()), [],
+        `${agent.file}: instruction depends on elapsed time, which a model cannot observe. ` +
+        `Move the timeout to the harness or delete it.`)
+    })
+  }
+})
+
+// ─── 9. No trailing "ask what to do next" instructions ───────────────────────
+//
+// Any agent can be dispatched by ndv-flow, where no human is on the channel
+// and Flow "never asks the user questions during execution". An instruction to
+// ask what to do next emits a question into a channel nobody reads.
+
+const ASK_NEXT_INSTRUCTION = /^\s*[-*]\s*(always\s+)?ask\b[^\n]*\b(next|proceed|continue)\b/im
+
+describe('coherence: no agent instructs asking the user what to do next', () => {
+  for (const agent of agentFiles()) {
+    test(agent.name + ' — no ask-what-next instruction', () => {
+      const { body } = parseFrontmatter(agent.content, agent.file)
+      const hit = body.match(ASK_NEXT_INSTRUCTION)
+      assert.equal(hit, null,
+        `${agent.file}: "${hit?.[0].trim()}" — dispatched agents have no human on the channel. ` +
+        `End with the result, not a question.`)
+    })
+  }
+})
+
+// ─── 10. No calendar-anchored effort or sizing ───────────────────────────────
+//
+// Size labels measure unknowns and verification surface, not elapsed time.
+// Generation speed compresses; unknowns and review do not, so a day-anchored
+// size decays the moment delivery speed changes. Describing a team's *stated*
+// estimate in days is fine (ndv-forecast has to read those) — the target is an
+// agent emitting effort or size in calendar units of its own.
+
+const CALENDAR_SIZING =
+  /(\best\.|estimated (total )?(effort|time)|\b(effort|sizing|size|sized)\b)[^\n]{0,30}?\b(hours?|days?|weeks?|months?)\b/i
+
+describe('coherence: no agent sizes work in calendar units', () => {
+  for (const agent of agentFiles()) {
+    test(agent.name + ' — no calendar-anchored effort or size', () => {
+      const { body } = parseFrontmatter(agent.content, agent.file)
+      const hits = body.split('\n')
+        .filter(l => CALENDAR_SIZING.test(l))
+        // Negations are the rule being stated, not broken.
+        .filter(l => !/\bnever\b|\bnot\b|\bno longer\b/i.test(l))
+      assert.deepEqual(hits.map(l => l.trim()), [],
+        `${agent.file}: effort or size expressed in calendar units. ` +
+        `Anchor to unknowns, blast radius, and verification surface instead.`)
     })
   }
 })

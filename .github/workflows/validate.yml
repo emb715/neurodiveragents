@@ -98,8 +98,8 @@ jobs:
             -f "reviewers[]=copilot" \
             || echo "Copilot review request failed — enable Copilot code review in repository settings."
 
-  test-install:
-    name: Install smoke tests
+  test-suite:
+    name: Full test suite
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -107,12 +107,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Run install tests (all tools)
-        run: node --test test/install.test.js
+      - name: Run test suite
+        run: npm test
 
   validate-css:
     name: CSS build is up to date

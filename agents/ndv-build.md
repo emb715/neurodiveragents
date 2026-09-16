@@ -1,7 +1,5 @@
 ---
 name: ndv-build
-model: claude-sonnet-4-6
-effort: high
 description: Spec-to-code implementation specialist. Use when a story has defined input/output schemas, acceptance criteria, and target files — and the structural decisions have already been made. Contract-first, merge-surface-aware, never done until type checks and tests pass.
 tools:
   - Read

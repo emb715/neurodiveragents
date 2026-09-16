@@ -1,5 +1,16 @@
 #!/bin/sh
 
+# ── Test suite ───────────────────────────────────────────────────────────────
+echo "▶ Running test suite..."
+if ! npm test; then
+  echo ""
+  echo "✖  Tests failed. Fix failures before committing — do not skip the hook."
+  echo "   Run: npm test"
+  echo ""
+  exit 1
+fi
+echo "✔  Tests pass."
+
 # ── CSS staleness check ─────────────────────────────────────────────────────
 # Rebuilds assets/styles.css from src/input.css and fails if the result
 # differs from what is staged — so a stale built file is never committed.

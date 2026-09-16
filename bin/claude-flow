@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+# claude-flow — start a Claude Code session with an ndv agent as the system prompt.
+#
+# The agent becomes the primary conversationalist. Claude Code remains the host:
+# it still resolves subagents from .claude/agents/ and ~/.claude/agents/, so the
+# agent's Task-tool dispatches route to the installed fleet. The script does not
+# need to know where agents live — Claude Code handles discovery.
+#
+# Usage:
+#   claude-flow                      # default: ndv-flow
+#   claude-flow ndv-diagnose         # any agent from agents/ndv-*.md
+#   claude-flow ndv-honest -c        # flags pass through to claude
+#   claude-flow ndv-honest -p "fix the bug"
+#
+# Frontmatter handling: the FIRST ---\n...\n---\n block is stripped at runtime
+# (awk, below). Source files keep name/mode/description/tools for other install
+# targets (OpenCode consumes all four; Cursor keeps them; Copilot strips the
+# whole block itself). None of those keys carry meaning once the agent runs as
+# the primary system prompt, so the script strips the entire block rather than
+# cherry-picking keys. Only the first block is stripped — some agent bodies
+# contain `---` horizontal rules later in the document (ndv-secure, ndv-signal).
+
+set -euo pipefail
+
+# Resolve the repo root from the script's own location (bin/claude-flow lives
+# at $REPO_ROOT/bin/claude-flow). Works whether the script is run from the repo
+# directly or copied to ~/.local/bin/ — in the latter case the copy resolves to
+# itself, so NDV_REPO_ROOT env var or ~/.claude/settings.json (ndvRepoRoot key)
+# is the override for copied installs.
+_SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && pwd)"
+_SCRIPT_PARENT="$(dirname "$_SCRIPT_DIR")"
+
+if [[ -n "${NDV_REPO_ROOT:-}" ]]; then
+  REPO_ROOT="$NDV_REPO_ROOT"
+elif [[ -d "$_SCRIPT_PARENT/agents" ]]; then
+  # Script is inside the repo (bin/ sibling to agents/)
+  REPO_ROOT="$_SCRIPT_PARENT"
+else
+  # Fallback: read ndvRepoRoot from Claude Code settings.json. The fleet
+  # installer writes this key on `ndv install claude --global` so the script
+  # can resolve the repo without a shell profile entry.
+  _settings="$HOME/.claude/settings.json"
+  _from_settings=""
+  if [[ -f "$_settings" ]]; then
+    _from_settings=$(node -e "try{const s=JSON.parse(require('fs').readFileSync('$_settings','utf8'));process.stdout.write(s.ndvRepoRoot||'')}catch{}" 2>/dev/null || true)
+  fi
+  if [[ -n "$_from_settings" && -d "$_from_settings/agents" ]]; then
+    REPO_ROOT="$_from_settings"
+  else
+    echo "claude-flow: cannot locate neurodiveragents repo." >&2
+    echo "  Set NDV_REPO_ROOT, or reinstall via 'ndv install claude --global'" >&2
+    echo "  (which writes ndvRepoRoot to ~/.claude/settings.json)." >&2
+    exit 1
+  fi
+fi
+
+AGENTS_DIR="$REPO_ROOT/agents"
+CLAUDE_AGENTS_PROJECT="./.claude/agents"
+CLAUDE_AGENTS_GLOBAL="$HOME/.claude/agents"
+
+# --- Resolve agent ---------------------------------------------------------
+
+agent="ndv-flow"  # default
+
+# First positional arg that doesn't start with '-' is the agent name.
+# Everything else passes through to claude.
+passthrough=()
+for arg in "$@"; do
+  if [[ "$arg" == -* ]]; then
+    passthrough+=("$arg")
+  elif [[ -z "${agent_set:-}" ]]; then
+    agent="$arg"
+    agent_set=1
+  else
+    passthrough+=("$arg")
+  fi
+done
+
+agent_file="$AGENTS_DIR/$agent.md"
+
+if [[ ! -f "$agent_file" ]]; then
+  echo "claude-flow: agent not found: $agent" >&2
+  echo "  Looked at: $agent_file" >&2
+  echo "  Available agents:" >&2
+  ls "$AGENTS_DIR"/ndv-*.md 2>/dev/null | sed 's|.*/||;s|\.md$|  |' | tr '\n' ' ' >&2
+  echo >&2
+  exit 1
+fi
+
+# Parse agent name from frontmatter (for the report below).
+# Falls back to the filename stem if frontmatter is missing or malformed.
+agent_name=$(awk '/^name:/{print $2; exit}' "$agent_file" | tr -d '\r')
+[[ -z "$agent_name" ]] && agent_name="$agent"
+
+# --- Verify the fleet is installed somewhere --------------------------------
+# Claude Code resolves subagent_type by scanning its agent dirs. If neither
+# has the fleet, Flow's Task dispatches will fail at runtime with "unknown
+# subagent_type". We warn, not block — the user may be intentionally running
+# the agent standalone without routing.
+
+fleet_installed=0
+if [[ -d "$CLAUDE_AGENTS_PROJECT" ]] && ls "$CLAUDE_AGENTS_PROJECT"/ndv-*.md &>/dev/null; then
+  fleet_installed=1
+fi
+if [[ -d "$CLAUDE_AGENTS_GLOBAL" ]] && ls "$CLAUDE_AGENTS_GLOBAL"/ndv-*.md &>/dev/null; then
+  fleet_installed=1
+fi
+
+if [[ $fleet_installed -eq 0 ]]; then
+  echo "claude-flow: warning — fleet not installed in .claude/agents/ or $CLAUDE_AGENTS_GLOBAL" >&2
+  echo "  Run 'ndv install claude' (project) or 'ndv install claude --global' first." >&2
+  echo "  Continuing — $agent_name will run, but Task dispatches to other agents will fail." >&2
+  echo >&2
+fi
+
+# --- Strip frontmatter for system-prompt use -------------------------------
+# Claude Code's --system-prompt-file reads the file verbatim, so YAML
+# frontmatter appears as literal text at the top of the system prompt. We
+# strip the whole ---\n...\n---\n block here. Source files keep name/mode/
+# description/tools for other install targets (OpenCode, Cursor, Copilot);
+# none of those keys carry meaning once the agent runs as the primary prompt.
+#
+# Only the FIRST frontmatter block is stripped — some agent bodies contain
+# `---` horizontal rules later in the document (ndv-secure, ndv-signal).
+# We use awk to match the first ---\n...\n---\n span and drop it.
+
+stripped=$(mktemp -t claude-flow)
+trap 'rm -f "$stripped"' EXIT
+
+awk '
+  BEGIN { in_fm = 0; done = 0 }
+  /^---$/ && !done && !in_fm { in_fm = 1; next }
+  /^---$/ && in_fm { in_fm = 0; done = 1; next }
+  in_fm { next }
+  { print }
+' "$agent_file" > "$stripped"
+
+# --- Exec ------------------------------------------------------------------
+# --add-dir grants the session read access to the source agents/ dir, so the
+# primary agent (e.g. Flow) can read target agent files before authoring
+# briefs, per its Dispatch Protocol. Without this, the primary lacks tool
+# access to the repo's agent source files.
+exec claude --system-prompt-file "$stripped" --add-dir "$AGENTS_DIR" ${passthrough[@]+"${passthrough[@]}"}

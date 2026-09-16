@@ -121,6 +121,7 @@ flush current_group → groups
 
 **Brief authoring — mandatory before every prompt:**
 1. Read the target agent's full file (`~/.claude/agents/<name>.md`) before authoring anything
+   (installers may inject a host-specific path hint here; the filename portion, when present, is an angle-bracket placeholder for the target agent's slug — e.g. `ndv-build` — not literal text to preserve)
 2. Use its `## Brief Contract` section as a checklist — every field must be satisfied
 3. No Brief Contract (Tier 3 agents) → use the template below as-is
 4. A brief authored without reading the agent file is a guess, not a brief
@@ -183,7 +184,6 @@ Process:
 
 ## Health Check
 
-- No output after 120s → note it, continue
 - No sentinel ever → mark incomplete, include in final report
 - One stuck agent does not block the group
 
