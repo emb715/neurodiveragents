@@ -36,7 +36,7 @@
   ],
   "scripts": {
     "prepare": "husky",
-    "test": "node --test test/install.test.js test/validate-schema.test.js test/validate-authoring.test.js test/validate-contracts.test.js test/validate-coherence.test.js test/install-router-skills.test.js test/transform-skill.test.js test/entry-guard.test.js test/install-additions.test.js test/install-commands.test.js test/install-opencode-global.test.js test/validate-routing.test.js test/validate-flow-protocol.test.js",
+    "test": "node --test test/install.test.js test/validate-schema.test.js test/validate-authoring.test.js test/validate-contracts.test.js test/validate-coherence.test.js test/install-router-skills.test.js test/transform-skill.test.js test/transform-opencode.test.js test/entry-guard.test.js test/install-additions.test.js test/install-commands.test.js test/install-opencode-global.test.js test/validate-routing.test.js test/validate-flow-protocol.test.js",
     "test:install": "node --test test/install.test.js",
     "eval:routing": "node scripts/eval-routing.mjs",
     "test:validate": "node --test test/validate-schema.test.js test/validate-authoring.test.js test/validate-contracts.test.js test/validate-coherence.test.js test/validate-routing.test.js test/validate-flow-protocol.test.js",

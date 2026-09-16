@@ -185,6 +185,131 @@ test('opencode: routing block contains all agent names', () => {
   }
 })
 
+test('opencode: project install injects project agents path into ndv-flow body', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-opencode-flow-'))
+  try {
+    // Act: project (non-global) opencode install
+    const r = ndv(['install', 'opencode'], dir)
+    assert.equal(r.status, 0, `exit code: ${r.stderr}`)
+
+    // Assert: ndv-flow.md was written to the project agents dir
+    const flowFile = join(dir, '.opencode', 'agents', 'ndv-flow.md')
+    assert.ok(existsSync(flowFile), 'ndv-flow.md not installed to .opencode/agents/')
+
+    const body = readFileSync(flowFile, 'utf8')
+
+    // Assert: the project-relative opencode agents path is injected
+    assert.ok(
+      body.includes('.opencode/agents/<name>.md'),
+      'ndv-flow body must contain the project opencode agents path hint'
+    )
+
+    // Assert: the bare instruction (without a path) is gone
+    assert.ok(
+      !body.includes("Read the target agent's full file before authoring anything"),
+      'ndv-flow body must not contain the bare instruction without a path hint'
+    )
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+// ─── transformForOpenCode adversarial: project scope ────────────────────────
+// The existing test above covers the project happy path (path present, bare
+// instruction absent). These cover the gaps the happy path misses: no-op on
+// non-ndv-flow bodies, literal `<name>` placeholder, and scope isolation
+// (project install must NEVER inject the global path).
+
+test('opencode: project install — non-ndv-flow agent body is byte-identical to source (no mutation)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-opencode-noop-'))
+  try {
+    const r = ndv(['install', 'opencode'], dir)
+    assert.equal(r.status, 0, `exit code: ${r.stderr}`)
+
+    // Arrange: source ndv-build.md body (everything after the frontmatter fence)
+    const srcRaw = readFileSync(join(AGENTS_DIR, 'ndv-build.md'), 'utf8')
+    const srcBody = srcRaw.replace(/^---\n[\s\S]*?\n---\n/, '')
+
+    const installedPath = join(dir, '.opencode', 'agents', 'ndv-build.md')
+    assert.ok(existsSync(installedPath), 'ndv-build.md not installed to .opencode/agents/')
+
+    const installedBody = readFileSync(installedPath, 'utf8').replace(/^---\n[\s\S]*?\n---\n/, '')
+
+    // Assert: neither path hint is injected into a non-ndv-flow body
+    assert.ok(
+      !installedBody.includes('.opencode/agents/<name>.md'),
+      'non-ndv-flow agent body must NOT contain the project agents path hint'
+    )
+    assert.ok(
+      !installedBody.includes('~/.config/opencode/agents/<name>.md'),
+      'non-ndv-flow agent body must NOT contain the global agents path hint'
+    )
+
+    // Assert: byte-identical body — the transform is a no-op on bodies without
+    // the instruction literal
+    assert.equal(
+      installedBody, srcBody,
+      'ndv-build body was mutated by transformForOpenCode — expected byte-identical'
+    )
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('opencode: project install — injected path uses literal `<name>`, not a substituted agent name', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-opencode-name-literal-'))
+  try {
+    const r = ndv(['install', 'opencode'], dir)
+    assert.equal(r.status, 0, `exit code: ${r.stderr}`)
+
+    const body = readFileSync(join(dir, '.opencode', 'agents', 'ndv-flow.md'), 'utf8')
+
+    // Assert: the literal placeholder is present in the project path
+    assert.ok(
+      body.includes('.opencode/agents/<name>.md'),
+      'project path hint must contain the literal `<name>` placeholder'
+    )
+
+    // Assert: no real agent name substituted into the path
+    const substituted = body.match(/\.opencode\/agents\/[a-z0-9-]+\.md/g)
+    assert.equal(
+      substituted, null,
+      `project path hint substituted a concrete agent name: ${JSON.stringify(substituted)}`
+    )
+
+    // Assert: angle brackets intact (guard against stripping)
+    assert.ok(body.includes('<name>'), 'body must contain the literal `<name>` token')
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('opencode: project install injects project path only — global path must be absent (scope isolation)', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-opencode-scope-iso-'))
+  try {
+    const r = ndv(['install', 'opencode'], dir)
+    assert.equal(r.status, 0, `exit code: ${r.stderr}`)
+
+    const body = readFileSync(join(dir, '.opencode', 'agents', 'ndv-flow.md'), 'utf8')
+
+    // Assert: project path IS present
+    assert.ok(
+      body.includes('.opencode/agents/<name>.md'),
+      'project install must contain the project opencode agents path hint'
+    )
+
+    // Assert: global path is NOT present — a project install that leaked the
+    // global path would resolve to a dir that does not exist relative to the
+    // project cwd
+    assert.ok(
+      !body.includes('~/.config/opencode/agents/<name>.md'),
+      'project install must NOT contain the global agents path — scope confusion'
+    )
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
 // ─── cursor ──────────────────────────────────────────────────────────────────
 
 test('cursor: agents copied to .cursor/rules/ as .mdc', () => {

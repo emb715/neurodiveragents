@@ -47,7 +47,7 @@ function deriveOpenCodePermissions(tools) {
 // - Strip effort: (Claude Code only, unknown key in OpenCode)
 // - Normalize mode: preserve mode: all, coerce mode: agent → subagent, inject subagent when absent
 // - Inject permission: block derived from tools
-function transformForOpenCode(content) {
+function transformForOpenCode(content, isGlobal, agentFilename) {
   const tools = parseAgentTools(content)
 
   // Extract frontmatter block
@@ -55,7 +55,7 @@ function transformForOpenCode(content) {
   if (!fmMatch) return content
 
   let fm = fmMatch[2]
-  const body = content.slice(fmMatch[0].length)
+  let body = content.slice(fmMatch[0].length)
 
   // Strip tools: block
   fm = fm.replace(/^tools:\s*\n((?:  - .+\n?)+)/m, '')
@@ -74,6 +74,25 @@ function transformForOpenCode(content) {
   const resolvedMode = sourceMode === 'all' ? 'all' : 'subagent'
   const permissions = deriveOpenCodePermissions(tools)
   fm = fm.trimEnd() + `\nmode: ${resolvedMode}\n${permissions}\n`
+
+  // Body transform: inject the canonical opencode agents path into ndv-flow's
+  // "Read the target agent's full file before authoring anything" instruction.
+  // Under opencode the model has no path hint and may resolve agent files to the
+  // Claude Code compat shim (~/.claude/agents/), triggering permission prompts.
+  // The path placeholder is `<name>` — matching the existing pattern in
+  // transformAgentToSkill (line ~253). Two-layer gate: filename is the primary
+  // guard (only ndv-flow.md carries this instruction), the literal match is the
+  // defensive belt-and-suspenders check and the actual replace mechanism —
+  // if the literal is ever absent from ndv-flow.md, the replace still no-ops.
+  if (agentFilename === 'ndv-flow.md') {
+    const ocAgentsPath = isGlobal
+      ? '~/.config/opencode/agents/<name>.md'
+      : '.opencode/agents/<name>.md'
+    body = body.replace(
+      /Read the target agent's full file before authoring anything/g,
+      "Read the target agent's full file (`" + ocAgentsPath + "`) before authoring anything"
+    )
+  }
 
   return `---\n${fm}---\n${body}`
 }
@@ -430,12 +449,28 @@ function writeRoutingGlobalOpenCode(jsonPath) {
 
   let mutated = false
 
-  // Permission merge — always runs, idempotent
+  // Permission merge — always runs, idempotent.
+  // Two external paths are allow-listed because the installer writes/links
+  // agents into both:
+  //   ~/.config/opencode/agents/**  — canonical opencode global install target
+  //   ~/.claude/agents/**           — Claude Code compat shim created by the
+  //                                   opencode global install (symlinks to the
+  //                                   canonical dir). Without this rule, any
+  //                                   subagent that resolves an agent file to
+  //                                   the shim path triggers a permission
+  //                                   prompt in every other repo. The installer
+  //                                   created the dir; it owns the consequence.
   if (!config.permission) config.permission = {}
   if (!config.permission.external_directory) config.permission.external_directory = {}
   if (!config.permission.external_directory['~/.config/opencode/agents/**']) {
     config.permission.external_directory['~/.config/opencode/agents/**'] = 'allow'
     mutated = true
+  }
+  if (!config.permission.external_directory['~/.claude/agents/**']) {
+    config.permission.external_directory['~/.claude/agents/**'] = 'allow'
+    mutated = true
+  }
+  if (mutated) {
     console.log(`  Permission block written to ${jsonPath}`)
   }
 
@@ -482,7 +517,7 @@ function installAgents(toolName, target, isGlobal, s = null) {
     }
 
     const destName = agent.replace('.md', target.ext)
-    const destContent = toolName === 'opencode' ? transformForOpenCode(content) : content
+    const destContent = toolName === 'opencode' ? transformForOpenCode(content, isGlobal, agent) : content
     writeFileSync(join(target.dest, destName), destContent)
   }
 
@@ -1201,7 +1236,7 @@ function help() {
 // test/transform-skill.test.js). The transform is a pure function; buildSkillGroups
 // reads the filesystem (agents/ + skills/) but is deterministic for a given repo
 // state and is exercised by the interactive-path coverage tests.
-export { transformAgentToSkill, buildSkillGroups }
+export { transformAgentToSkill, buildSkillGroups, transformForOpenCode }
 
 const TOOL_OPTIONS = [
   { value: 'claude',   label: 'Claude Code',    hint: '.claude/agents/',                    signals: ['.claude', 'CLAUDE.md'] },

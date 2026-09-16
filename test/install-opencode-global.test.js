@@ -85,7 +85,12 @@ test('writeRoutingGlobalOpenCode: malformed opencode.json → warn fires, instal
     assert.equal(
       config.permission.external_directory['~/.config/opencode/agents/**'],
       'allow',
-      'permission entry not set to allow'
+      'canonical permission entry not set to allow'
+    )
+    assert.equal(
+      config.permission.external_directory['~/.claude/agents/**'],
+      'allow',
+      'claude compat shim permission entry not set to allow'
     )
     assert.ok(Array.isArray(config.instructions), 'instructions must be an array')
     assert.ok(
@@ -121,6 +126,11 @@ test('writeRoutingGlobalOpenCode: no opencode.json → routing file created, ins
     assert.equal(
       config.permission.external_directory['~/.config/opencode/agents/**'],
       'allow'
+    )
+    assert.equal(
+      config.permission.external_directory['~/.claude/agents/**'],
+      'allow',
+      'claude compat shim must be allow-listed on fresh install'
     )
     assert.ok(Array.isArray(config.instructions), 'instructions must be an array')
 
@@ -191,7 +201,12 @@ test('writeRoutingGlobalOpenCode: existing ndv instruction → skip, no duplicat
     assert.equal(
       config.permission.external_directory['~/.config/opencode/agents/**'],
       'allow',
-      'permission entry not merged on skip'
+      'canonical permission entry not merged on skip'
+    )
+    assert.equal(
+      config.permission.external_directory['~/.claude/agents/**'],
+      'allow',
+      'claude compat shim permission entry not merged on skip'
     )
   } finally {
     rmSync(fakeHome, { recursive: true, force: true })
@@ -230,15 +245,21 @@ test('writeRoutingGlobalOpenCode: idempotent — second run skips, no duplicate 
       'instructions array changed on second install — duplicate added'
     )
 
-    // Assert: permission block still present, single entry (not duplicated)
+    // Assert: permission block still present, single entry per dir (not duplicated)
     assert.ok(configAfterSecond.permission)
     assert.equal(
       configAfterSecond.permission.external_directory['~/.config/opencode/agents/**'],
       'allow'
     )
-    // external_directory is an object — duplicate keys would collapse, but count keys to be sure
+    assert.equal(
+      configAfterSecond.permission.external_directory['~/.claude/agents/**'],
+      'allow'
+    )
+    // external_directory is an object — duplicate keys would collapse, but
+    // count keys to be sure. Two allow-listed dirs: the canonical opencode
+    // agents dir and the claude compat shim dir.
     const extDirKeys = Object.keys(configAfterSecond.permission.external_directory)
-    assert.equal(extDirKeys.length, 1, `external_directory should have 1 key, got ${extDirKeys.length}`)
+    assert.equal(extDirKeys.length, 2, `external_directory should have 2 keys, got ${extDirKeys.length}: ${JSON.stringify(extDirKeys)}`)
   } finally {
     rmSync(fakeHome, { recursive: true, force: true })
   }
@@ -289,6 +310,256 @@ test('writeRoutingGlobalOpenCode: substring false-positive does NOT trigger skip
     assert.equal(
       config.instructions.length, 2,
       `instructions should have 2 entries (original + canonical), got ${config.instructions.length}`
+    )
+  } finally {
+    rmSync(fakeHome, { recursive: true, force: true })
+  }
+})
+
+// ─── AC6: Claude compat shim dir is allow-listed ─────────────────────────────
+// The opencode global install mirrors agents into ~/.claude/agents/ via
+// symlinks (bin/ndv.js:564-601) for Claude Code compatibility. Without an
+// external_directory allow-rule for that path, any subagent that resolves an
+// agent file to the shim triggers a permission prompt in every other repo.
+// Regression: the installer created the dir, so it must allow-list it.
+
+test('writeRoutingGlobalOpenCode: claude compat shim ~/.claude/agents/** is allow-listed alongside canonical dir', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-oc-shim-perm-'))
+  try {
+    // Act: fresh install
+    const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    assert.equal(r.status, 0, `exit code ${r.status}\nstderr: ${r.stderr}`)
+
+    const config = JSON.parse(readFileSync(opencodeJsonPath(fakeHome), 'utf8'))
+
+    // Assert: both external paths allow-listed
+    assert.ok(config.permission?.external_directory, 'external_directory missing')
+    assert.equal(
+      config.permission.external_directory['~/.config/opencode/agents/**'],
+      'allow',
+      'canonical opencode agents dir must be allow-listed'
+    )
+    assert.equal(
+      config.permission.external_directory['~/.claude/agents/**'],
+      'allow',
+      'claude compat shim dir must be allow-listed — the installer created it, it owns the consequence'
+    )
+
+    // Assert: the shim dir was actually created and populated (symlinks)
+    const shimDir = join(fakeHome, '.claude', 'agents')
+    assert.ok(existsSync(shimDir), '~/.claude/agents/ shim dir was not created')
+    const shimEntries = readdirSync(shimDir).filter(f => f.endsWith('.md'))
+    assert.ok(shimEntries.length > 0, 'expected symlinked agent files in ~/.claude/agents/')
+  } finally {
+    rmSync(fakeHome, { recursive: true, force: true })
+  }
+})
+
+// ─── AC7: Shim permission merged on skip (existing ndv instruction) ──────────
+// A user who installed before the shim allow-rule was added has ndv in
+// instructions already → the skip path fires. The permission merge must still
+// add the shim rule so the prompt stops without requiring a full reinstall.
+
+test('writeRoutingGlobalOpenCode: existing ndv install missing shim rule → skip fires, shim permission still merged', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-oc-shim-merge-'))
+  try {
+    // Arrange: opencode.json as it looked BEFORE the shim rule existed —
+    // ndv instruction present (triggers skip), canonical permission present,
+    // shim permission ABSENT (the gap we are fixing).
+    mkdirSync(join(fakeHome, '.config', 'opencode'), { recursive: true })
+    const jsonPath = opencodeJsonPath(fakeHome)
+    const rulesFile = rulesFilePath(fakeHome)
+    writeFileSync(jsonPath, JSON.stringify({
+      instructions: [rulesFile],
+      permission: {
+        external_directory: {
+          '~/.config/opencode/agents/**': 'allow',
+          // ~/.claude/agents/** deliberately absent — pre-fix state
+        },
+      },
+    }, null, 2) + '\n')
+
+    // Act
+    const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    assert.equal(r.status, 0, `exit code ${r.status}\nstderr: ${r.stderr}`)
+
+    const config = JSON.parse(readFileSync(jsonPath, 'utf8'))
+
+    // Assert: skip fired (instruction already present)
+    const combined = r.stdout + r.stderr
+    assert.ok(combined.includes('ndv already in'), 'expected skip log for existing instruction')
+
+    // Assert: shim permission was merged despite skip
+    assert.equal(
+      config.permission.external_directory['~/.claude/agents/**'],
+      'allow',
+      'shim permission must be merged on skip — otherwise existing installs never get the fix without a full reinstall'
+    )
+
+    // Assert: canonical permission preserved (not clobbered)
+    assert.equal(
+      config.permission.external_directory['~/.config/opencode/agents/**'],
+      'allow',
+      'canonical permission must be preserved on merge'
+    )
+  } finally {
+    rmSync(fakeHome, { recursive: true, force: true })
+  }
+})
+
+// ─── AC8: transformForOpenCode injects canonical opencode agents path ─────────
+// The ndv-flow agent instructs: "Read the target agent's full file before
+// authoring anything" — but gives no path hint. Under opencode the model may
+// resolve agent files to the Claude Code compat shim (~/.claude/agents/),
+// triggering permission prompts. transformForOpenCode must inject the canonical
+// global opencode agents path so the model reads from the right place.
+
+test('transformForOpenCode: global install injects canonical opencode agents path into ndv-flow body', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-oc-flow-path-'))
+  try {
+    // Act: global opencode install
+    const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    assert.equal(r.status, 0, `exit code ${r.status}\nstderr: ${r.stderr}`)
+
+    // Assert: ndv-flow.md was written to the canonical global agents dir
+    const flowFile = join(fakeHome, '.config', 'opencode', 'agents', 'ndv-flow.md')
+    assert.ok(existsSync(flowFile), 'ndv-flow.md not installed to ~/.config/opencode/agents/')
+
+    const body = readFileSync(flowFile, 'utf8')
+
+    // Assert: the canonical global opencode agents path is injected
+    assert.ok(
+      body.includes('~/.config/opencode/agents/<name>.md'),
+      'ndv-flow body must contain the canonical global opencode agents path hint'
+    )
+
+    // Assert: the bare instruction (without a path) is gone — the model must
+    // not see the un-hinted literal that would let it guess the wrong dir
+    assert.ok(
+      !body.includes("Read the target agent's full file before authoring anything"),
+      'ndv-flow body must not contain the bare instruction without a path hint'
+    )
+  } finally {
+    rmSync(fakeHome, { recursive: true, force: true })
+  }
+})
+
+// ─── AC9: transformForOpenCode is a no-op on the body of a non-ndv-flow agent ──
+// The body transform (the path-hint injection) is gated on a literal that only
+// ndv-flow.md contains. Every other agent's body must be byte-identical to its
+// source — the transform must not mutate, rewrap, or inject anything into a
+// body that lacks the instruction. If it did, it would be corrupting agent
+// content silently. Probe with ndv-build.md (has frontmatter + a real body,
+// does NOT contain the instruction literal).
+
+test('transformForOpenCode: non-ndv-flow agent body is byte-identical to source (no path hint, no mutation)', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-oc-noop-body-'))
+  try {
+    // Act: global opencode install
+    const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    assert.equal(r.status, 0, `exit code ${r.status}\nstderr: ${r.stderr}`)
+
+    // Arrange: source ndv-build.md body (everything after the frontmatter fence)
+    const srcRaw = readFileSync(join(ROOT, 'agents', 'ndv-build.md'), 'utf8')
+    const srcBody = srcRaw.replace(/^---\n[\s\S]*?\n---\n/, '')
+
+    // Assert: installed ndv-build.md exists
+    const installedPath = join(fakeHome, '.config', 'opencode', 'agents', 'ndv-build.md')
+    assert.ok(existsSync(installedPath), 'ndv-build.md not installed to ~/.config/opencode/agents/')
+
+    const installedRaw = readFileSync(installedPath, 'utf8')
+    const installedBody = installedRaw.replace(/^---\n[\s\S]*?\n---\n/, '')
+
+    // Assert: the path hint is NOT present — the instruction literal is absent
+    // from ndv-build, so the replace must have no-oped
+    assert.ok(
+      !installedBody.includes('~/.config/opencode/agents/<name>.md'),
+      'non-ndv-flow agent body must NOT contain the opencode agents path hint'
+    )
+    assert.ok(
+      !installedBody.includes('.opencode/agents/<name>.md'),
+      'non-ndv-flow agent body must NOT contain the project agents path hint'
+    )
+
+    // Assert: body is byte-identical to source body — no silent mutation
+    assert.equal(
+      installedBody, srcBody,
+      'ndv-build body was mutated by transformForOpenCode — expected byte-identical (no-op on bodies without the instruction literal)'
+    )
+  } finally {
+    rmSync(fakeHome, { recursive: true, force: true })
+  }
+})
+
+// ─── AC10: path hint uses the literal `<name>` placeholder, not a real name ────
+// The injected path must contain the literal `<name>` so the model substitutes
+// the target agent at read time. A regression that substituted a concrete name
+// (e.g. ndv-build) would hardcode a single agent and break every other route.
+// Assert the placeholder is literal AND that no real agent name was substituted
+// into the path.
+
+test('transformForOpenCode: injected path contains literal `<name>`, not a substituted agent name', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-oc-name-literal-'))
+  try {
+    const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    assert.equal(r.status, 0, `exit code ${r.status}\nstderr: ${r.stderr}`)
+
+    const flowFile = join(fakeHome, '.config', 'opencode', 'agents', 'ndv-flow.md')
+    const body = readFileSync(flowFile, 'utf8')
+
+    // Assert: the literal placeholder `<name>` is present in the path
+    assert.ok(
+      body.includes('~/.config/opencode/agents/<name>.md'),
+      'path hint must contain the literal `<name>` placeholder'
+    )
+
+    // Assert: no real agent name was substituted into the path. Match any
+    // `~/.config/opencode/agents/<concrete-name>.md` — there must be none.
+    const substituted = body.match(/~\/\.config\/opencode\/agents\/[a-z0-9-]+\.md/g)
+    assert.equal(
+      substituted, null,
+      `path hint substituted a concrete agent name instead of the literal \`<name>\`: ${JSON.stringify(substituted)}`
+    )
+
+    // Assert: the literal `<name>` token itself is present as a substring
+    // (guards against an escape/stripping regression that dropped the angle
+    // brackets entirely)
+    assert.ok(
+      body.includes('<name>'),
+      'body must contain the literal `<name>` token (angle brackets intact)'
+    )
+  } finally {
+    rmSync(fakeHome, { recursive: true, force: true })
+  }
+})
+
+// ─── AC11: global install never injects the project-relative path ─────────────
+// A scope confusion bug would inject `.opencode/agents/<name>.md` (the project
+// path) into a global install. Under opencode the global agents dir is
+// `~/.config/opencode/agents/`; the project path would resolve to a dir that
+// does not exist in a global install and trigger a permission prompt or a
+// file-not-found. Assert the global install contains ONLY the global path and
+// NEVER the project path.
+
+test('transformForOpenCode: global install injects global path only — project path must be absent', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-oc-scope-isolation-'))
+  try {
+    const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    assert.equal(r.status, 0, `exit code ${r.status}\nstderr: ${r.stderr}`)
+
+    const flowFile = join(fakeHome, '.config', 'opencode', 'agents', 'ndv-flow.md')
+    const body = readFileSync(flowFile, 'utf8')
+
+    // Assert: the global path IS present
+    assert.ok(
+      body.includes('~/.config/opencode/agents/<name>.md'),
+      'global install must contain the global opencode agents path hint'
+    )
+
+    // Assert: the project-relative path is NOT present — scope must not leak
+    assert.ok(
+      !body.includes('.opencode/agents/<name>.md'),
+      'global install must NOT contain the project-relative agents path — scope confusion'
     )
   } finally {
     rmSync(fakeHome, { recursive: true, force: true })
