@@ -82,7 +82,7 @@ All agents default to parallel execution for 4-8 independent files/items.
 | `agents/` | Agent model files (source of truth) |
 | `humans/` | Human-readable character profiles |
 | `bin/ndv.js` | CLI installer — `ndv install`, `ndv list`, `ndv install-skills` |
-| `test/` | Test suite (13 files — see below) |
+| `test/` | Test suite (14 files — see below) |
 | `docs/` | Authoring guide, ADRs, manifesto |
 | `skills/` | Cognitive module skills |
 | `commands/` | Slash commands (OpenCode) |
@@ -90,7 +90,7 @@ All agents default to parallel execution for 4-8 independent files/items.
 ### Running tests
 
 ```bash
-# Full suite (all 13 test files — the npm test script)
+# Full suite (all 14 test files — the npm test script)
 npm test
 
 # Agent validation only (fast, no install simulation)
@@ -151,6 +151,7 @@ No thresholds are enforced yet; set them from a baseline run, not a guess.
 | `test/install.test.js` | `bin/ndv.js` install commands — simulates claude/opencode/cursor installs in a temp dir |
 | `test/install-router-skills.test.js` | Acceptance tests for router-skill auto-install behavior in `bin/ndv.js` (claude auto-install, opencode skip, cursor/copilot no skills dir) |
 | `test/transform-skill.test.js` | Adversarial unit tests for `transformAgentToSkill()` purity, determinism, boundary, and degradation behavior |
+| `test/transform-opencode.test.js` | Unit tests for `transformForOpenCode()` — the ndv-flow path-hint injection is gated on the exact bare filename, fails closed, and always injects the literal `<name>` placeholder |
 | `test/entry-guard.test.js` | Regression test for the entry-point symlink guard — invoking `bin/ndv.js` via a symlink still runs the command dispatcher |
 
 ### Adding or changing an agent
