@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.7.0...neurodiveragents-v1.7.1) (2026-09-17)
+
+
+### Bug Fixes
+
+* **install:** ship the full routing table to every install target ([8350208](https://github.com/emb715/neurodiveragents/commit/83502083e0244274796615c244b0436e52b66215))
+
 ## [1.7.0](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.6.0...neurodiveragents-v1.7.0) (2026-09-16)
 
 
