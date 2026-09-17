@@ -421,18 +421,42 @@ function writeRouting(routingFile) {
   const dir = dirname(routingFile)
   if (dir !== '.') mkdirSync(dir, { recursive: true })
 
-  if (existsSync(routingFile)) {
-    const content = readFileSync(routingFile, 'utf8')
-    if (content.includes('ndv:start')) {
-      console.log(`  ndv block already present in ${routingFile} — skipping`)
-      return
-    }
-    appendFileSync(routingFile, `\n\n${NDV_BLOCK}\n`)
-    console.log(`  Appended ndv routing block to existing ${routingFile}`)
-  } else {
+  if (!existsSync(routingFile)) {
     writeFileSync(routingFile, `${NDV_BLOCK}\n`)
     console.log(`  Created ${routingFile}`)
+    return
   }
+
+  const content = readFileSync(routingFile, 'utf8')
+  const blockRe = /<!-- ndv:start -->[\s\S]*?<!-- ndv:end -->/
+
+  // Full block present — it is installer-managed, so bring it up to date in
+  // place. Without this, a routing fix never reaches a project that already
+  // installed once. Content outside the markers is never touched.
+  const match = content.match(blockRe)
+  if (match) {
+    if (match[0] === NDV_BLOCK) {
+      console.log(`  ndv routing block already up to date in ${routingFile}`)
+      return
+    }
+    const backup = `${routingFile}.bak`
+    writeFileSync(backup, content)
+    writeFileSync(routingFile, content.replace(blockRe, NDV_BLOCK))
+    console.log(`  Updated ndv routing block in ${routingFile}`)
+    console.log(`    Previous file saved to ${backup} — delete it once you are happy with the update`)
+    return
+  }
+
+  // A marker without a complete block: the end of the managed region is
+  // unknown, so guessing risks eating the user's own content.
+  if (content.includes('ndv:start') || content.includes('ndv:end')) {
+    console.warn(`  ⚠ ${routingFile} contains a partial ndv marker but no complete ndv block.`)
+    console.warn(`    Refusing to touch it — fix the markers or remove the block and re-run.`)
+    return
+  }
+
+  appendFileSync(routingFile, `\n\n${NDV_BLOCK}\n`)
+  console.log(`  Appended ndv routing block to existing ${routingFile}`)
 }
 
 // For opencode global: inject ndv routing into ~/.config/opencode/opencode.json
