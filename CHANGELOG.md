@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.2](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.7.1...neurodiveragents-v1.7.2) (2026-09-17)
+
+
+### Bug Fixes
+
+* **install:** update an existing ndv routing block instead of skipping it ([#15](https://github.com/emb715/neurodiveragents/issues/15)) ([e441935](https://github.com/emb715/neurodiveragents/commit/e4419354ed17fe8e6e8040f1e43fafc0d00c6f4b))
+
 ## [1.7.1](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.7.0...neurodiveragents-v1.7.1) (2026-09-17)
 
 
