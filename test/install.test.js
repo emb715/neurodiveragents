@@ -83,6 +83,109 @@ test('claude: idempotent — second install skips routing block', () => {
   }
 })
 
+// ─── routing block updates in place (fix: stale blocks never updated) ────────
+//
+// Before this, writeRouting() skipped as soon as it saw an ndv:start marker,
+// so a routing-table fix never reached a project that had installed once.
+// The markers delimit installer-managed content, so a stale block is now
+// rewritten, with the previous file kept as .bak.
+
+// A routing block shaped like an older release: correct markers, stale table.
+const STALE_BLOCK = [
+  '<!-- ndv:start -->',
+  '# neurodiveragents',
+  '',
+  '## Routing Table',
+  '',
+  '| When the task involves... | Use agent |',
+  '|--------------------------|-----------|',
+  '| Generate tests, improve coverage | `ndv-tester` |',
+  '<!-- ndv:end -->',
+].join('\n')
+
+test('claude: stale ndv block is updated in place, previous file kept as .bak', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-claude-'))
+  try {
+    const file = join(dir, 'CLAUDE.md')
+    writeFileSync(file, `# My project\n\nHouse rules that must survive.\n\n${STALE_BLOCK}\n\nTrailing notes.\n`)
+    const res = ndv(['install', 'claude'], dir)
+
+    const updated = readFileSync(file, 'utf8')
+    assert.ok(updated.includes('ATDD'), 'stale routing table was not refreshed')
+    assert.equal((updated.match(/ndv:start/g) || []).length, 1, 'block duplicated instead of replaced')
+    assert.ok(updated.includes('House rules that must survive.'), 'content before the block was lost')
+    assert.ok(updated.includes('Trailing notes.'), 'content after the block was lost')
+    assert.match(res.stdout, /Updated ndv routing block/)
+
+    const backup = readFileSync(join(dir, 'CLAUDE.md.bak'), 'utf8')
+    assert.ok(backup.includes('| Generate tests, improve coverage | `ndv-tester` |'), 'backup does not hold the old block')
+    assert.ok(!backup.includes('ATDD'), 'backup holds the new block, not the previous file')
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('claude: up-to-date block is left alone — no rewrite, no .bak', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-claude-'))
+  try {
+    ndv(['install', 'claude'], dir)
+    const first = readFileSync(join(dir, 'CLAUDE.md'), 'utf8')
+    const res = ndv(['install', 'claude'], dir)
+
+    assert.equal(readFileSync(join(dir, 'CLAUDE.md'), 'utf8'), first, 'file changed on a no-op install')
+    assert.ok(!existsSync(join(dir, 'CLAUDE.md.bak')), 'wrote a .bak when nothing changed')
+    assert.match(res.stdout, /already up to date/)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('claude: partial ndv marker is refused, file untouched', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-claude-'))
+  try {
+    const file = join(dir, 'CLAUDE.md')
+    const broken = '# My project\n\n<!-- ndv:start -->\n## Routing Table\n(no end marker)\n'
+    writeFileSync(file, broken)
+    const res = ndv(['install', 'claude'], dir)
+
+    assert.equal(readFileSync(file, 'utf8'), broken, 'file was modified despite a partial marker')
+    assert.ok(!existsSync(join(dir, 'CLAUDE.md.bak')), 'wrote a .bak for a refused file')
+    assert.match(res.stderr + res.stdout, /partial ndv marker/)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('opencode: stale ndv block in AGENTS.md is updated in place', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-opencode-'))
+  try {
+    const file = join(dir, '.opencode', 'AGENTS.md')
+    mkdirSync(join(dir, '.opencode'), { recursive: true })
+    writeFileSync(file, `${STALE_BLOCK}\n`)
+    ndv(['install', 'opencode'], dir)
+    const updated = readFileSync(file, 'utf8')
+    assert.ok(updated.includes('ATDD'), 'stale routing table was not refreshed')
+    assert.ok(existsSync(join(dir, '.opencode', 'AGENTS.md.bak')), 'no .bak written')
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('cursor: stale ndv block in ndv.mdc is updated in place', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'ndv-cursor-'))
+  try {
+    const file = join(dir, '.cursor', 'rules', 'ndv.mdc')
+    mkdirSync(join(dir, '.cursor', 'rules'), { recursive: true })
+    writeFileSync(file, `${STALE_BLOCK}\n`)
+    ndv(['install', 'cursor'], dir)
+    const updated = readFileSync(file, 'utf8')
+    assert.ok(updated.includes('ATDD'), 'stale routing table was not refreshed')
+    assert.ok(existsSync(join(dir, '.cursor', 'rules', 'ndv.mdc.bak')), 'no .bak written')
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
 test('claude: routing block contains all agent names', () => {
   const dir = mkdtempSync(join(tmpdir(), 'ndv-claude-'))
   try {
