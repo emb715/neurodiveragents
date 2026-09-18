@@ -6,6 +6,11 @@
  *
  * Scoped to CHANGED_AGENTS env var (set by CI diff job).
  * When unset locally, describe blocks register but produce no tests.
+ *
+ * Unconditional blocks (guide-rule pinning, ADR clarifications) assert the
+ * amended guide/ADR text itself. They are NOT scoped by CHANGED_AGENTS: the
+ * guide is one document, and a revert there must fail every run, not only
+ * runs where an agent file happens to be diffed.
  */
 
 import { test, describe } from 'node:test'
@@ -25,6 +30,102 @@ const CHANGED_AGENTS = process.env.CHANGED_AGENTS
 const agentsToAudit = CHANGED_AGENTS
   ? agentFiles().filter(a => CHANGED_AGENTS.includes(a.name))
   : []
+
+// ─── authoring-guide: guide-rule pinning (UNCONDITIONAL) ─────────────────────
+//
+// Pins the amended guide text (docs/authoring-guide.md). Regexes are anchored
+// on stable tokens (section names, "verdict", "budget", "adversarial") so a
+// legitimate rewording does not break them — but a REVERT to the old wording
+// does. Two assertions pin the old forms as absent, so reverting is a red test.
+//
+// These check the guide document, not agent files, so they run regardless of
+// CHANGED_AGENTS.
+
+describe('authoring-guide: amended rules present (unconditional pinning)', () => {
+  const guidePath = join(ROOT, 'docs', 'authoring-guide.md')
+  const guide = existsSync(guidePath) ? readFileSync(guidePath, 'utf8') : ''
+
+  test('docs/authoring-guide.md exists', () => {
+    assert.ok(existsSync(guidePath), 'docs/authoring-guide.md is missing')
+  })
+
+  test('verdict-vocabulary paragraph exists with all three tier depths', () => {
+    // New wording: tier-calibrated paragraph after the tier lists, before
+    // "Model file rules". Anchored on stable tokens, not exact prose.
+    const m = guide.match(
+      /\*\*Output verdict vocabulary \(tier-calibrated\):\*\*[\s\S]*?(?=\n\*\*Model file rules)/
+    )
+    assert.ok(m, 'docs/authoring-guide.md: "Output verdict vocabulary (tier-calibrated)" paragraph is missing — it must sit between the tier lists and "Model file rules"')
+    const paragraph = m[0]
+    assert.match(paragraph, /Tier 1[\s\S]*?verdict[\s\S]*?exact command[\s\S]*?adversarial probe/i,
+      'guide verdict-vocabulary paragraph: Tier 1 depth (verdict + exact command + adversarial probe) missing')
+    assert.match(paragraph, /Tier 2[\s\S]*?verdict[\s\S]*?adversarial probe/i,
+      'guide verdict-vocabulary paragraph: Tier 2 depth (verdict + evidence + adversarial probe) missing')
+    assert.match(paragraph, /Tier 3[\s\S]*?evidence line only where the domain permits|Tier 3[\s\S]*?omit it rather than force/i,
+      'guide verdict-vocabulary paragraph: Tier 3 depth (evidence line only where the domain permits; prose agents omit it) missing')
+  })
+
+  test('line ~97: abstract agnostic templates permitted — new wording present', () => {
+    assert.match(guide,
+      /No codebase-specific examples[^\n]*abstract[^\n]*(?:codebase-agnostic|agnostic) format templates are permitted/i,
+      'docs/authoring-guide.md: the amended examples rule is missing — abstract, codebase-agnostic format templates must be explicitly permitted (old blanket "No examples" wording must not return)')
+  })
+
+  test('old blanket "No examples" wording is GONE', () => {
+    assert.ok(
+      !/^-\s*No examples \(bash, code, codebase-specific patterns\)\s*$/m.test(guide),
+      'docs/authoring-guide.md: the old blanket "- No examples (bash, code, codebase-specific patterns)" bullet has returned — it forbids the abstract templates the amended rule permits. Restore the amended wording.'
+    )
+  })
+
+  test('"Token-efficient throughout" bullet demands structural budgets, not token counts', () => {
+    const bullet = guide.match(/^-\s*Token-efficient throughout.*$/m)?.[0] ?? ''
+    assert.match(bullet, /structural budget|lines, bullets, or items/i,
+      'docs/authoring-guide.md: "Token-efficient throughout" bullet lost the structural-budget amendment — it must authorize structural budgets (lines, bullets, items), not token counts')
+    assert.ok(
+      !/\b\d+\s*tokens\b/i.test(bullet),
+      'docs/authoring-guide.md: "Token-efficient throughout" bullet pins a bare token count — the amendment replaced token ceilings (they rot across hosts) with structural budgets'
+    )
+  })
+
+  test('point-of-failure restatement bullet exists (fault containment)', () => {
+    assert.match(guide,
+      /^-\s*Constraints repeated at the point of failure[^\n]*(point of failure|fault containment)/im,
+      'docs/authoring-guide.md: the point-of-failure restatement bullet is missing from Model file rules — constraints a protocol step could violate must be restated at that step'
+    )
+  })
+})
+
+// ─── decisions.md: ADR clarifications (UNCONDITIONAL) ────────────────────────
+//
+// No existing test read docs/decisions.md before this block; this is the most
+// fitting existing home (validate-authoring already pins guide-level rules).
+
+describe('decisions.md: ADR clarifications present (unconditional pinning)', () => {
+  const decisionsPath = join(ROOT, 'docs', 'decisions.md')
+  const decisions = existsSync(join(ROOT, 'docs', 'decisions.md'))
+    ? readFileSync(join(ROOT, 'docs', 'decisions.md'), 'utf8') : ''
+
+  test('docs/decisions.md exists', () => {
+    assert.ok(existsSync(join(ROOT, 'docs', 'decisions.md')), 'docs/decisions.md is missing')
+  })
+
+  test('ADR-001 carries the abstract-templates clarification', () => {
+    // Scoped to the ADR-001 section so a later copy of similar wording in
+    // another ADR cannot mask a deletion here.
+    const section = decisions.match(/## ADR-001 [\s\S]*?(?=\n## ADR-002)/)?.[0] ?? ''
+    assert.ok(section, 'docs/decisions.md: ADR-001 section not found')
+    assert.match(section, /Clarification:[^\n]*abstract[^\n]*(?:format templates|codebase-agnostic)[^\n]*permitted/i,
+      'docs/decisions.md ADR-001: the abstract-templates clarification sentence is missing (abstract, codebase-agnostic format templates are rules, not examples, and are permitted)')
+  })
+
+  test('ADR-008 carries the output-verdict clarification', () => {
+    const section = decisions.match(/## ADR-008 [\s\S]*?(?=\n## ADR-009)/)?.[0] ?? ''
+    assert.ok(section, 'docs/decisions.md: ADR-008 section not found')
+    assert.match(section, /Clarification:[^\n]*(?:output-verdict|verdict)[^\n]*(?:Output Format|tier-appropriate)/i,
+      'docs/decisions.md ADR-008: the output-verdict clarification sentence is missing (output-verdict verification lives in each agent\'s Output Format at tier-appropriate depth and does not constitute a Self-Validation Protocol section)')
+  })
+})
 
 // ─── authoring-guide: model body constraints ─────────────────────────────────
 
