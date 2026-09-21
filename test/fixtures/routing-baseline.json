@@ -5,14 +5,14 @@
       "provider": "claude",
       "fixture_sha": "843db5a64f2ae1a0",
       "routing_context_sha": "fdc6efbc9363f946",
-      "recorded_at": "2026-09-16T21:48:55.516Z",
+      "recorded_at": "2026-09-21T15:08:34.497Z",
       "runs": 3,
       "retries": 2,
       "canonical": {
         "floor": 0.9783,
         "runs": [
           0.9783,
-          1,
+          0.9783,
           0.9783
         ]
       },
@@ -26,13 +26,14 @@
       },
       "judgment": {
         "runs": [
-          1,
-          1,
+          0.8333,
+          0.6667,
           0.8333
         ]
       },
       "misses": [
         "conflict-flow-not-scope-01 → ndv-build",
+        "conflict-secure-beats-optimize-01 → ndv-optimize",
         "direct-honest-01 → ndv-architect"
       ]
     },
@@ -40,7 +41,7 @@
       "provider": "claude",
       "fixture_sha": "843db5a64f2ae1a0",
       "routing_context_sha": "fdc6efbc9363f946",
-      "recorded_at": "2026-09-16T21:40:12.846Z",
+      "recorded_at": "2026-09-21T15:00:36.686Z",
       "runs": 3,
       "retries": 2,
       "canonical": {
@@ -61,9 +62,9 @@
       },
       "judgment": {
         "runs": [
-          1,
-          1,
-          0.8333
+          0.8333,
+          0.8333,
+          1
         ]
       },
       "misses": [
@@ -74,7 +75,7 @@
       "provider": "claude",
       "fixture_sha": "843db5a64f2ae1a0",
       "routing_context_sha": "fdc6efbc9363f946",
-      "recorded_at": "2026-09-16T21:42:10.994Z",
+      "recorded_at": "2026-09-21T15:02:38.492Z",
       "runs": 3,
       "retries": 2,
       "canonical": {
