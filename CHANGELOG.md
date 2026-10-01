@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.3](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.7.2...neurodiveragents-v1.7.3) (2026-10-01)
+
+
+### Bug Fixes
+
+* **install:** update existing routing blocks + tier-calibrated prompt architecture ([#17](https://github.com/emb715/neurodiveragents/issues/17)) ([f547c6e](https://github.com/emb715/neurodiveragents/commit/f547c6e6dfb170cadb99c7c1638e1974a1f546ae))
+
 ## [1.7.2](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.7.1...neurodiveragents-v1.7.2) (2026-09-17)
 
 
