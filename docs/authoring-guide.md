@@ -91,13 +91,16 @@ Current Tier 1: `ndv-build`, `ndv-refactor`, `ndv-optimize`, `ndv-telemetry`
 Current Tier 2: `ndv-review`, `ndv-architect`, `ndv-secure`, `ndv-tester`, `ndv-diagnose`, `ndv-accessibility`, `ndv-design`
 Current Tier 3: `ndv-research`, `ndv-explain`, `ndv-scope`, `ndv-forecast`, `ndv-signal`, `ndv-flow`, `ndv-honest`
 
+**Output verdict vocabulary (tier-calibrated):** every agent's Output Format carries verification at tier-appropriate depth. Tier 1: a verdict line (PASS/FAIL/PARTIAL) + the exact command run + observed evidence + one adversarial probe against its own output before PASS. Tier 2: verdict + evidence + adversarial probe (no command required where the domain has none). Tier 3: an evidence line only where the domain permits — agents whose output is prose with nothing to verify against omit it rather than force a mechanism that does not fit. ndv-flow's evidence mechanism is its handoff ledger — every dispatched task carries a status from the declared vocabulary, making the ledger its verifiable trace.
+
 **Model file rules (ADR-001, ADR-004):**
 - No design rationale
 - No historical context
-- No examples (bash, code, codebase-specific patterns)
+- No codebase-specific examples — abstract, codebase-agnostic format templates are permitted (they are rules expressed concretely); codebase-specific snippets, tool-specific one-liners, and project names remain forbidden
 - No narrative beyond the identity paragraph
-- Token-efficient throughout
+- Token-efficient throughout — where an Output Format section has no numeric budget, author one as a structural budget (lines, bullets, or items), not a token count; token ceilings rot across hosts
 - The personality paragraph is load-bearing — validated empirically to improve neurotype fidelity 54% over rules-only prompts (see `docs/decisions.md` ADR-004)
+- Constraints repeated at the point of failure — any constraint that a protocol step could violate is restated at that step (fault containment). Global "Never Does" lists are not enough: the rule lives where the failure happens
 - **No file references of any kind** — no markdown links, no relative paths, no filenames with extensions. Agent files are loaded as system prompts; any file reference points to a path that does not exist in the model's context.
 - **No skill references of any kind** — agents do not consume skills. Skills are extracted from agent behavior; the relationship is one-directional. An agent already embodies its cognitive style natively — it never loads or delegates to a skill. If behavior is required, express it directly in the agent file.
 

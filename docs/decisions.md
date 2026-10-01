@@ -23,6 +23,8 @@ Key decisions made during fleet design. Each entry: what was decided, why, what 
 
 **Revisit when:** Fleet exceeds 15 agents, or manual sync errors become frequent, or a contributor joins who needs the build step to stay sane.
 
+Clarification: abstract, codebase-agnostic format templates are rules, not examples, and are permitted; codebase-specific snippets, tool-specific one-liners, and project names remain forbidden.
+
 ---
 
 ## ADR-002 — Model file is source of truth
@@ -343,6 +345,8 @@ The five-criterion spec readiness gate (structural criteria 1–4 for all specs;
   a signal the classification is wrong and the agent should move to Tier 2
 - A new agent is added — its author classifies it into a tier and writes its contracts
   before the model file is considered complete (add to authoring-guide verification checklist)
+
+Clarification: output-verdict verification lives in each agent's Output Format at tier-appropriate depth and does not constitute a Self-Validation Protocol section; Tier 3 classification is unchanged. For ndv-flow, the handoff ledger's declared-vocabulary status entries constitute its evidence mechanism — every dispatched task is tracked with an outcome from the declared vocabulary, and that ledger is the verifiable trace of its report.
 
 ---
 

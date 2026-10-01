@@ -9,7 +9,8 @@
  *
  * Baseline (test/fixtures/routing-baseline.json), per model:
  *   canonical.floor     lowest canonical accuracy seen across baseline runs
- *   escalation.ceiling  highest blast-radius escalation count seen
+ *   escalation.ceiling  highest canonical blast-radius escalation count seen
+ *                       (judgment-contested cases excluded — see splitEscalations)
  *   judgment            recorded for context, never gated
  *
  * Gate verdict, per model:
@@ -103,6 +104,35 @@ const basisAccuracy = (report, basis) => {
   return b && b.total ? Number((b.pass / b.total).toFixed(4)) : null
 }
 
+// Split blast-radius escalations by fixture basis. Judgment cases are
+// author-contested by design — the fixture itself names the contested
+// alternative as a possibility — so routing a judgment case to that
+// alternative is a fixture-review signal, not a release-gating escalation.
+// Canonical cases carry anchors: a canonical escalation means the routing
+// table failed to hold, and that is what the ceiling polices.
+//
+// The runner's escalation cases ({id, expect, actual, reach}) carry no basis,
+// but every escalation case is by construction a failure (actual diverges from
+// expect toward a write/dispatch-capable agent), and report.failures carries
+// basis per case id. Case ids are unique in the fixture, so the join is exact.
+function splitEscalations(report) {
+  const basisById = new Map(report.failures.map(f => [f.id, f.basis]))
+  const withBasis = report.escalation.cases.map(c => ({ ...c, basis: basisById.get(c.id) }))
+  const canonical = withBasis.filter(c => c.basis !== 'judgment')
+  const judgment = withBasis.filter(c => c.basis === 'judgment')
+  return {
+    canonicalCount: canonical.length,
+    judgmentCount: judgment.length,
+    canonicalCases: canonical,
+    judgmentCases: judgment,
+  }
+}
+
+// "escalation: 0 canonical / 1 judgment-contested" — judgment stays visible
+// so operators see the behavior instead of it silently vanishing from the gate.
+const escalationLabel = s =>
+  `escalation: ${s.canonicalCount} canonical / ${s.judgmentCount} judgment-contested`
+
 const pct = n => (n === null || n === undefined) ? '—' : (n * 100).toFixed(1) + '%'
 
 // ─── baseline mode ───────────────────────────────────────────────────────────
@@ -125,7 +155,8 @@ if (BASELINE_MODE) {
     if (!reports.length) continue
 
     const canonical = reports.map(r => basisAccuracy(r, 'canonical'))
-    const escalation = reports.map(r => r.escalation.total)
+    const splits = reports.map(splitEscalations)
+    const canonicalEscalations = splits.map(s => s.canonicalCount)
     baseline.models[model] = {
       provider: MODELS[model],
       fixture_sha: fixtureSha,
@@ -134,11 +165,13 @@ if (BASELINE_MODE) {
       runs: reports.length,
       retries: RETRIES,
       canonical: { floor: Math.min(...canonical), runs: canonical },
-      escalation: { ceiling: Math.max(...escalation), runs: escalation },
+      escalation: { ceiling: Math.max(...canonicalEscalations), runs: canonicalEscalations },
       judgment: { runs: reports.map(r => basisAccuracy(r, 'judgment')) },
       misses: [...new Set(reports.flatMap(r => r.failures.map(f => `${f.id} → ${f.actual ?? 'none'}`)))].sort(),
     }
-    console.error(`[baseline] ${model}: canonical floor ${pct(Math.min(...canonical))}, escalation ceiling ${Math.max(...escalation)}`)
+    const judgmentEscalations = splits.map(s => s.judgmentCount)
+    console.error(`[baseline] ${model}: canonical floor ${pct(Math.min(...canonical))}, escalation ceiling ${Math.max(...canonicalEscalations)} (canonical)` +
+      (judgmentEscalations.some(n => n > 0) ? `, judgment-contested ${judgmentEscalations.join(' / ')}` : ''))
   }
 
   baseline.description = 'Routing eval baseline. Written by `npm run eval:baseline`, read by `npm run eval:gate`. Do not edit by hand.'
@@ -173,7 +206,11 @@ for (const model of models) {
   }
 
   const canonical = basisAccuracy(report, 'canonical')
-  const escalation = report.escalation.total
+  const esc = splitEscalations(report)
+  // The ceiling polices canonical escalations only. Judgment cases are
+  // author-contested by design — see splitEscalations — and are reported,
+  // never gated.
+  const escalation = esc.canonicalCount
   const reasons = []
   if (canonical < b.canonical.floor) {
     const known = new Set(b.misses.map(m => m.split(' → ')[0]))
@@ -182,8 +219,10 @@ for (const model of models) {
       (fresh.length ? ` — new misses: ${fresh.map(f => `${f.id} (${f.expect} → ${f.actual ?? 'none'})`).join(', ')}` : ''))
   }
   if (escalation > b.escalation.ceiling) {
-    reasons.push(`escalation ${escalation} > ceiling ${b.escalation.ceiling} — ${report.escalation.cases.map(c => `${c.id} → ${c.actual} [${c.reach}]`).join(', ')}`)
+    reasons.push(escalationLabel(esc) + ` exceeds ceiling ${b.escalation.ceiling} — ` +
+      esc.canonicalCases.map(c => `${c.id} → ${c.actual} [${c.reach}]`).join(', '))
   }
+  const judgmentEscalations = esc.judgmentCases.map(c => `${c.id} → ${c.actual} [${c.reach}] (judgment-contested, not gated)`)
 
   rows.push({
     model,
@@ -191,6 +230,8 @@ for (const model of models) {
     reasons,
     canonical, floor: b.canonical.floor,
     escalation, ceiling: b.escalation.ceiling,
+    escalationLabel: escalationLabel(esc),
+    judgmentEscalations,
     judgment: basisAccuracy(report, 'judgment'),
     contextChanged: report.routing_context_sha !== b.routing_context_sha,
   })
@@ -199,10 +240,11 @@ for (const model of models) {
 console.log('\nROUTING EVAL GATE')
 for (const r of rows) {
   const nums = r.canonical !== undefined
-    ? `canonical ${pct(r.canonical)} (floor ${pct(r.floor)})  escalation ${r.escalation} (ceiling ${r.ceiling})  judgment ${pct(r.judgment)}`
+    ? `canonical ${pct(r.canonical)} (floor ${pct(r.floor)})  ${r.escalationLabel} (ceiling ${r.ceiling})  judgment ${pct(r.judgment)}`
     : ''
   console.log(`  ${r.verdict.padEnd(13)} ${r.model.padEnd(28)} ${nums}`)
   for (const reason of r.reasons) console.log(`                ↳ ${reason}`)
+  for (const j of r.judgmentEscalations ?? []) console.log(`                ↳ ${j}`)
   if (r.contextChanged) console.log('                ↳ routing text changed since baseline (this is what was tested)')
 }
 

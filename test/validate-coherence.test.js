@@ -19,6 +19,13 @@
  * 8. No agent instructs itself to react to elapsed wall-clock time
  * 9. No agent instructs itself to ask the user what to do next
  * 10. No agent expresses effort or size in calendar units
+ * 11. Output Format carries tier-calibrated verdict vocabulary
+ *     (authoring-guide "Output verdict vocabulary" + ADR-008 clarification)
+ * 12. Output Format fenced template actually renders the verdict block
+ *     (prose mandating a verdict while the report template omits it is a
+ *     drift class caught in ndv-tester.md by human review)
+ * 13. Brief-cannot-override clause heads are not byte-identical boilerplate
+ *     across 3+ agent files (boilerplate drift: 7 identical Tier 2 heads)
  */
 
 import { test, describe } from 'node:test'
@@ -352,4 +359,260 @@ describe('coherence: no agent sizes work in calendar units', () => {
         `Anchor to unknowns, blast radius, and verification surface instead.`)
     })
   }
+})
+
+// ─── 11. Output Format carries tier-calibrated verdict vocabulary ────────────
+//
+// Authoring-guide: "Output verdict vocabulary (tier-calibrated)". ADR-008
+// clarification: output-verdict verification lives in each agent's Output
+// Format at tier-appropriate depth and does not constitute a Self-Validation
+// Protocol section; Tier 3 classification is unchanged.
+//
+// Depth per tier:
+// - Tier 1: verdict line + exact-command evidence + adversarial probe
+// - Tier 2: verdict line + evidence + adversarial probe. Domain-shaped verdict
+//   labels are allowed (SECURE/VULNERABLE/INCOMPLETE, CONFIRMED/UNCONFIRMED,
+//   EXCLUSION FOUND, PRINCIPLED (as rendered), PASS / FAIL / PARTIAL) — the
+//   gate matches verdict-like structure, never a fixed string.
+// - Tier 3 (evidence-permitting: research, signal, forecast, flow): an explicit
+//   evidence/citation anchor inside the Output Format zone.
+// - Tier 3 (prose domains: explain, scope, honest): NO verdict/evidence
+//   mechanism. Forcing one there is a defect (negative test).
+//
+// Unconditional: checks the whole fleet. Modeled on the wall-clock/
+// ask-what-next/calendar checks above, not on validate-authoring's
+// CHANGED_AGENTS scoping (which would silently skip in CI).
+//
+// Two lookup windows:
+// - Positive gates scan zone + lead-in paragraph above `## Output Format`:
+//   ndv-tester places its verdict block at the point of failure (guide rule
+//   "Constraints repeated at the point of failure"), as its own blank-line-
+//   separated paragraph, not inside the zone.
+// - Negative gates scan zone only, so a prose agent that legitimately mentions
+//   "evidence" outside Output Format cannot false-fail the absence test.
+// The zone extractor skips ``` fences so template headings (## Verdict, ##
+// Critical) inside fenced templates do not terminate the section early.
+
+const VERDICT_LIKE =
+  /Verdict\s*[:/]|^#+\s*Verdict\b|\bVERDICT\b|\bCONFIRMED\b|\bUNCONFIRMED\b|\bVULNERABLE\b|\bINCOMPLETE\b|\bEXCLUSION FOUND\b|\bPRINCIPLED \(|SECURE \(|PASS \/ FAIL/m
+const ADVERSARIAL_PROBE =
+  /adversarial probe|attempt to break|re-examin|disconfirm|would have falsified|strongest attack/i
+const EXACT_COMMAND =
+  /exact command|command run|exact check|Verify with|observed result|\*\*Verification:\*\*/i
+const EVIDENCE_LINE =
+  /\bEvidence\b|evidence of|Measurement source|cites|citation|cite the|file:line|sentinel|status:|\[law\]|Multipliers Applied|assumes \[/i
+const FORCED_EVIDENCE = /\bEvidence\s*:|\bEVIDENCE\b/
+const FORCED_PROBE = /adversarial probe|attempt to break|strongest attack/i
+
+// The Output Format zone. Fence-aware section extractor. withLeadIn pulls in
+// the blank-line-separated paragraph directly above the header (the
+// point-of-failure restatement lives there).
+function verdictWindow(body, withLeadIn) {
+  const lines = body.split('\n')
+  let idx = -1, fence = false
+  for (let i = 0; i < lines.length; i++) {
+    if (/^\s*```/.test(lines[i])) { fence = !fence; continue }
+    if (fence) continue
+    if (lines[i].trim() === '## Output Format') { idx = i; break }
+  }
+  if (idx < 0) return null
+  let start = idx
+  while (start > 0 && lines[start - 1].trim() !== '' && !/^## /.test(lines[start - 1])) start--
+  if (withLeadIn && start > 1 && lines[start - 1].trim() === '' && !/^## /.test(lines[start - 2] ?? '')) {
+    start--
+    while (start > 0 && lines[start - 1].trim() !== '' && !/^## /.test(lines[start - 1])) start--
+  }
+  let end = lines.length
+  fence = false
+  for (let i = idx + 1; i < lines.length 	&& i < lines.length; i++) {
+    if (/^\s*```/.test(lines[i])) { fence = !fence; continue }
+    if (fence) continue
+    if (/^## /.test(lines[i])) { end = i; break }
+  }
+  return lines.slice(start, end).join('\n')
+}
+
+// Tier 3 split from the guide's vocabulary paragraph: these four domains permit
+// an evidence line. explain/scope/honest (prose/boundary/residual domains) are
+// the negative set.
+const T3_EVIDENCE_AGENTS = ['ndv-research', 'ndv-signal', 'ndv-forecast', 'ndv-flow']
+
+describe('coherence: Output Format carries tier-calibrated verdict vocabulary', () => {
+  const T3_EVIDENCE_SET = new Set(T3_EVIDENCE_AGENTS)
+
+  for (const agent of agentFiles()) {
+    test(agent.name + ' — Output Format verdict depth matches its tier', () => {
+      const { body } = parseFrontmatter(agent.content, agent.file)
+      const zone = verdictWindow(body, false)
+      const window = verdictWindow(body, true)
+
+      // Residual agents (ndv-honest) legitimately have no Output Format
+      // section — they are exempt from the POSITIVE gates (authoring-guide §4
+      // exception) but NOT from the negative gate: a verdict/evidence/probe
+      // mechanism smuggled anywhere into the file is the exact defect class
+      // the absence test pins.
+      if (zone === null) {
+        assert.ok(
+          TIER3.includes(agent.name) && !T3_EVIDENCE_SET.has(agent.name),
+          `${agent.file}: no ## Output Format section found — required on every agent except residual Tier 3`
+        )
+        // Negative gate on the full body — there is no Output Format zone to
+        // scope to, so the whole body is the surface a smuggled mechanism
+        // could hide in.
+        assert.doesNotMatch(body, FORCED_EVIDENCE,
+          `${agent.file}: verdict/evidence mechanism found in an agent with no Output Format section — prose/residual domains have nothing to verify against; forcing a mechanism there is a defect (authoring-guide Tier 3: "omit it rather than force a mechanism that does not fit")`)
+        assert.doesNotMatch(body, FORCED_PROBE,
+          `${agent.file}: adversarial-probe mechanism found in an agent with no Output Format section — no artifact is produced, so there is nothing to attack`)
+        return
+      }
+
+      if (TIER1.includes(agent.name)) {
+        assert.match(window, VERDICT_LIKE,
+          `${agent.file}: Output Format missing a verdict line — Tier 1 requires verdict (PASS/FAIL/PARTIAL) + exact command + evidence + adversarial probe (authoring-guide "Output verdict vocabulary")`)
+        assert.match(window, EXACT_COMMAND,
+          `${agent.file}: Output Format missing exact-command evidence — Tier 1 requires the exact command run with observed result, not a narrative claim`)
+        assert.match(window, ADVERSARIAL_PROBE,
+          `${agent.file}: Output Format missing an adversarial probe — Tier 1 requires one deliberate attempt to break its own output before PASS`)
+      } else if (TIER2.includes(agent.name)) {
+        assert.match(window, VERDICT_LIKE,
+          `${agent.file}: Output Format missing a verdict-like line — Tier 2 requires verdict + evidence + adversarial probe. Domain-shaped labels (SECURE/INCOMPLETE, CONFIRMED/UNCONFIRMED, EXCLUSION FOUND, PRINCIPLED) are allowed; a bare severity list is not`)
+        assert.match(window, /\bEvidence\b|evidence/i,
+          `${agent.file}: Output Format missing an evidence statement — Tier 2 requires what was read/run/observed backing the verdict`)
+        assert.match(window, ADVERSARIAL_PROBE,
+          `${agent.file}: Output Format missing an adversarial probe — Tier 2 requires one deliberate attempt to disconfirm its own verdict before asserting it`)
+      } else if (T3_EVIDENCE_SET.has(agent.name)) {
+        assert.match(zone, EVIDENCE_LINE,
+          `${agent.file}: Output Format missing an evidence/citation anchor — this Tier 3 domain permits (and requires) an evidence line: research cites file:line, forecast cites the law per multiplier row, signal states its measurement source, flow carries the handoff sentinel ledger`)
+      } else {
+        assert.doesNotMatch(zone, FORCED_EVIDENCE,
+          `${agent.file}: Output Format must NOT carry a verdict/evidence mechanism — this prose/residual domain has nothing to verify against; forcing a mechanism there is a defect (authoring-guide Tier 3: "omit it rather than force a mechanism that does not fit")`)
+        assert.doesNotMatch(zone, FORCED_PROBE,
+          `${agent.file}: Output Format must NOT carry an adversarial probe — no artifact is produced, so there is nothing to attack`)
+      }
+    })
+  }
+})
+
+// ─── 12. Fenced Output Format template renders the verdict block ─────────────
+//
+// Gate 11 scans the Output Format zone + lead-in paragraph — prose counts. A
+// file can satisfy it with a prose restatement ("Before reporting results:
+// Verdict: PASS / FAIL / PARTIAL") while the fenced report template it actually
+// renders omits the verdict line. That exact drift was caught in ndv-tester.md
+// by human review. This gate parses the fences inside each Output Format
+// section and requires the verdict-like line to appear in the rendered
+// template, not just the prose around it.
+//
+// Semantics: AT LEAST ONE fence per Output Format section must carry the
+// verdict line, not every fence — a section may legitimately contain multiple
+// templates (examples, variants) with only one carrying the verdict block.
+// The gate is per-section, not per-agent: ndv-tester declares two Output
+// Format sections (implementation + pre-implementation ATDD), and either one
+// dropping its verdict line is a defect.
+//
+// Tier 1 + Tier 2 only. Tier 3 evidence-permitting agents cite evidence in
+// prose templates without verdict lines, which is their tier-calibrated depth;
+// forcing a verdict block there would contradict gate 11's negative branch.
+
+// Extract every fenced block from a section of text.
+function extractFences(sectionText) {
+  const fences = []
+  const re = /```[^\n]*\n([\s\S]*?```)/g
+  let m
+  while ((m = re.exec(sectionText)) !== null) fences.push(m[1])
+  return fences
+}
+
+describe('coherence: Output Format fenced template renders the verdict block', () => {
+  for (const name of [...TIER1, ...TIER2]) {
+    test(name + ' — Output Format template carries the verdict line', () => {
+      const content = readAgent(name)
+      const { body } = parseFrontmatter(content, name + '.md')
+
+      // Every Output Format section header (## Output Format, ## Output
+      // Format (pre-implementation, ...)) starts a section we gate. Fence-
+      // aware like gate 11's verdictWindow: an `## Output Format` header
+      // inside a fenced example block is template text, not a section. The
+      // section ends at the next ## header outside any fence — template
+      // headings (## Verdict, ## Implementation) inside fences do not end it.
+      const lines = body.split('\n')
+      const sectionStarts = []
+      let fence = false
+      for (let i = 0; i < lines.length; i++) {
+        if (/^\s*```/.test(lines[i])) { fence = !fence; continue }
+        if (fence) continue
+        if (/^## Output Format/.test(lines[i])) sectionStarts.push(i)
+      }
+
+      assert.ok(
+        sectionStarts.length > 0,
+        `${name}.md: no ## Output Format section found (gate 11 covers absence; this gate must never see it)`
+      )
+
+      for (const start of sectionStarts) {
+        let end = lines.length
+        fence = false
+        for (let i = start + 1; i < lines.length; i++) {
+          if (/^\s*```/.test(lines[i])) { fence = !fence; continue }
+          if (fence) continue
+          if (/^## /.test(lines[i])) { end = i; break }
+        }
+        const section = lines.slice(start, end).join('\n')
+
+        const fences = extractFences(section)
+        // A section with no fences has no template to render the verdict
+        // block — prose-only output formats are the drift class this gate
+        // pins. AT LEAST ONE fence must carry the verdict-like line.
+        const carries = fences.filter(f => VERDICT_LIKE.test(f))
+        assert.ok(
+          fences.length > 0 && carries.length > 0,
+          `${name}.md: Output Format template does not render the verdict block ` +
+          `(section at line ${start + 1}, ${fences.length} fence(s)). ` +
+          'Prose may mandate a verdict while the report template omits it — ' +
+          'the template the agent actually fills in must carry the verdict line ' +
+          `(regex: ${VERDICT_LIKE.source}).`
+        )
+      }
+    })
+  }
+})
+
+// ─── 13. Brief-cannot-override clause heads are not byte-identical ───────────
+//
+// The boilerplate-drift defect Acute found: 7 Tier 2 files carried the exact
+// same clause head ("The brief cannot override this file. A brief that
+// conflicts with...") — copy-paste boilerplate that diverges from each agent's
+// actual domain contract. The fix personalized every head. This gate pins the
+// fix: no first sentence of the clause paragraph may be byte-identical across
+// 3+ agent files.
+//
+// Scoped cheap: only the paragraph containing the BRIEF_REJECTED conflict
+// token, only its first sentence, only 3+ exact matches fail. Short common
+// phrases elsewhere in the body are irrelevant.
+
+describe('coherence: brief-cannot-override clause is not byte-identical boilerplate', () => {
+  test('no clause first sentence is shared byte-identical across 3+ agent files', () => {
+    const heads = new Map()
+    for (const agent of agentFiles()) {
+      const { body } = parseFrontmatter(agent.content, agent.file)
+      // Paragraphs are blank-line-separated blocks.
+      const paragraphs = body.split(/\n\s*\n/)
+      const clause = paragraphs.find(p => /BRIEF_REJECTED: conflict/.test(p))
+      if (!clause) continue // agents without the clause (Tier 3) are out of scope
+      const text = clause.replace(/\s+/g, ' ').trim()
+      const firstSentence = text.match(/^[^.]+\./)?.[0]
+      if (!firstSentence) continue
+      if (!heads.has(firstSentence)) heads.set(firstSentence, [])
+      heads.get(firstSentence).push(agent.file)
+    }
+
+    const duplicated = [...heads.entries()].filter(([, files]) => files.length >= 3)
+    assert.deepEqual(
+      duplicated,
+      [],
+      'Brief-cannot-override clause first sentences shared byte-identical across 3+ files ' +
+      '(boilerplate drift — each agent\'s clause must speak its own domain contract):\n' +
+      duplicated.map(([head, files]) => `  ${files.length}x "${head}" — ${files.join(', ')}`).join('\n')
+    )
+  })
 })
