@@ -150,21 +150,35 @@ Report results in the PR description.
 
 ## Commit style
 
-```
-type: short description
+This repo uses conventional commits — release-please depends on them to compute versions and changelogs.
 
-Types: add, fix, update, remove, docs, refactor
+```
+type(scope): short description
+
+Types: feat, fix, docs, refactor, chore, test. Scope is optional — e.g. fix(install), feat(agents), chore(eval).
 ```
 
 Examples:
 ```
-add: ndv-planner agent — ADHD time-blindness as scheduling superpower
+feat: ndv-planner agent — ADHD time-blindness as scheduling superpower
 fix: ndv-tester scope gate — was fixing source bugs instead of flagging
-update: Ward primordial rule — tighten language on trust boundary
+fix(install): update an existing routing block instead of skipping it
 docs: add ndv-arc human file
 ```
 
 One logical change per commit. Don't bundle agent additions with refactors.
+
+---
+
+## Merging pull requests
+
+release-please scores only the commit title on main for the version bump and changelog section. Body bullets are invisible to it.
+
+A squash-merged PR takes its PR title as the commit title — so the PR title must carry the dominant conventional type. Mixed feat+fix work (feat present anywhere in the change) → title starts with `feat:`, or split into separate PRs if changelog accuracy matters.
+
+A fix-titled PR carrying feature work bumps PATCH and files the features under Bug Fixes. Real case: the tier-calibrated prompt-architecture adoption landed under Bug Fixes in 1.7.3.
+
+Release PRs (`chore(main): release x.y.z`) can be merged with any method — squash-merge is supported by release-please for Release PRs. Tag and GitHub Release follow automatically.
 
 ---
 
@@ -175,4 +189,4 @@ One logical change per commit. Don't bundle agent additions with refactors.
 - Minor (1.x.0): new agent, new tool support, behavioral improvement to existing agent
 - Major (x.0.0): breaking change to install format, agent command renamed, neurotype framework changed
 
-Update version in `package.json` and tag the release before publishing to npm.
+release-please (`.github/workflows/release.yml`) maintains the version bump, changelog, tag, and GitHub Release through its release PR; merging that PR is the release action. npm publishing is manual — the workflow has no publish step.
