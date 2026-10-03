@@ -337,8 +337,36 @@ The five-criterion spec readiness gate (structural criteria 1–4 for all specs;
 
 ---
 
+### Amendment — Mandatory Pipeline scaled to change scale (2026-10-03)
+
+ADR-008 made every Mandatory Pipeline agent blocking after any non-trivial Tier 1 output.
+In practice the per-agent "trivial" definitions almost never fire on real work —
+ndv-tester's "any new behavior" matches a one-line CSS change — so a one-file change paid
+the same blocking review and test gate as a migration. Flow now sizes every task into a
+change scale (S0 direct / S1 contained / S2 structural, defined in `ndv-flow.md` under
+Change Scale) and applies the pipeline accordingly:
+
+- **S2** — blocking, unchanged from the original ADR.
+- **S1** — deferred: batched into one dispatch per pipeline agent at a checkpoint — the end
+  of the run, or a point the human names. It still runs before the run is reported complete.
+- **S0** — skipped, and the skip is written to the final report's Deferred block.
+
+The guarantee ADR-008 protects — Tier 1 output does not ship unreviewed — is preserved for
+S1 and S2. S0 trades it for a visible record, on the grounds that the change has one file,
+no new interface, and a decision the human already made. Agent files are unchanged: each
+agent's own "non-trivial" definition still applies within a scale, and where an agent's
+definition and the scale table diverge, Flow's scale wins until there is data to revisit.
+Change scale and agent tier are independent axes and must not be conflated.
+
+Flow's briefs also carry a verification level (V0/V1/V2) that bounds what the brief may
+demand *beyond* the agent's own declared gate. The level never waives an agent's gate —
+that would be a brief overriding an agent file, which ADR-008 forbids.
+
 ### Revisit when
 
+- Dispatches per change, by scale, stop falling for S0/S1 while S2 stays flat — or S2
+  also gets cheaper, which means the scale boundary is set too loose
+- Zero escalations from S0 over a sustained period — the floor is set too high
 - Fleet grows past 30 agents and Brief Contract section lookup becomes a meaningful
   context cost — at that point, consider a compiled contract registry
 - A Tier 3 agent repeatedly produces output that requires downstream review — that is
