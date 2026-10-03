@@ -33,6 +33,13 @@ import { spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
+
+// Local eval configuration: .env at the repo root (gitignored; .env.example is
+// the contract). Shell variables take precedence. The runner inherits this
+// environment, and so do the providers it spawns.
+const ENV_FILE = join(ROOT, '.env')
+if (existsSync(ENV_FILE) && typeof process.loadEnvFile === 'function') process.loadEnvFile(ENV_FILE)
+
 const FIXTURE = join(ROOT, 'test', 'fixtures', 'routing-cases.json')
 // NDV_GATE_BASELINE and NDV_GATE_PROVIDER_CMD exist for exercising the gate
 // with stub models; normal use sets neither.
@@ -41,6 +48,7 @@ const RUNNER = join(ROOT, 'scripts', 'eval-routing.mjs')
 
 const PROVIDERS = {
   claude: `sh ${join(ROOT, 'scripts', 'eval-providers', 'claude.sh')}`,
+  anthropic: `node ${join(ROOT, 'scripts', 'eval-providers', 'anthropic.mjs')}`,
   ollama: `node ${join(ROOT, 'scripts', 'eval-providers', 'ollama.mjs')}`,
 }
 
@@ -59,6 +67,15 @@ function arg(name, fallback) {
   return i !== -1 && process.argv[i + 1] ? process.argv[i + 1] : fallback
 }
 const BASELINE_MODE = process.argv.includes('--baseline')
+// --provider overrides the per-model default (e.g. `--provider anthropic` to
+// score Claude models through the API instead of the CLI). The provider is
+// recorded on each baseline row, and gate mode reuses the recorded one so a
+// baseline is always compared against the same transport it was taken with.
+const PROVIDER_OVERRIDE = arg('provider', null)
+if (PROVIDER_OVERRIDE && !PROVIDERS[PROVIDER_OVERRIDE]) {
+  console.error(`Unknown provider: ${PROVIDER_OVERRIDE}. Known: ${Object.keys(PROVIDERS).join(', ')}`)
+  process.exit(2)
+}
 const RUNS = Math.max(1, parseInt(arg('runs', '3'), 10))
 const RETRIES = Math.max(0, parseInt(arg('retries', '2'), 10))
 const CONCURRENCY = arg('concurrency', '4')
@@ -79,6 +96,15 @@ if (models.length === 0) {
   process.exit(2)
 }
 
+// Baseline mode: the override, else the model's default. Gate mode: the
+// provider the baseline row was recorded with, when the gate knows it.
+function providerFor(model) {
+  if (PROVIDER_OVERRIDE) return PROVIDER_OVERRIDE
+  const recorded = baseline.models[model]?.provider
+  if (!BASELINE_MODE && recorded && PROVIDERS[recorded]) return recorded
+  return MODELS[model]
+}
+
 // ─── one runner invocation → parsed report ───────────────────────────────────
 
 function runOnce(model, label) {
@@ -88,7 +114,7 @@ function runOnce(model, label) {
     const child = spawn(process.execPath, [
       RUNNER, '--label', label, '--retries', String(RETRIES), '--concurrency', CONCURRENCY, '--out', out,
     ], {
-      env: { ...process.env, NDV_EVAL_CMD: process.env.NDV_GATE_PROVIDER_CMD || PROVIDERS[MODELS[model]], NDV_EVAL_MODEL: model },
+      env: { ...process.env, NDV_EVAL_CMD: process.env.NDV_GATE_PROVIDER_CMD || PROVIDERS[providerFor(model)], NDV_EVAL_MODEL: model },
       stdio: ['ignore', 'ignore', 'inherit'],
     })
     child.on('close', () => {
@@ -145,7 +171,8 @@ if (BASELINE_MODE) {
       console.error(`\n[baseline] ${model} — run ${r}/${RUNS}`)
       const report = await runOnce(model, `${model} baseline ${r}/${RUNS}`)
       if (!report || report.errors > 0) {
-        console.error(`[baseline] ${model}: run ${r} had ${report ? report.errors + ' provider error(s)' : 'no report'} — not recording a baseline from it`)
+        const sample = report ? report.failures.filter(f => f.error).slice(0, 3).map(f => `\n    ${f.id}: ${f.error.split('\n')[0]}`).join('') : ''
+        console.error(`[baseline] ${model}: run ${r} had ${report ? report.errors + ' provider error(s)' : 'no report'} — not recording a baseline from it${sample}`)
         reports.length = 0
         failed = true
         break
@@ -158,7 +185,7 @@ if (BASELINE_MODE) {
     const splits = reports.map(splitEscalations)
     const canonicalEscalations = splits.map(s => s.canonicalCount)
     baseline.models[model] = {
-      provider: MODELS[model],
+      provider: providerFor(model),
       fixture_sha: fixtureSha,
       routing_context_sha: reports[0].routing_context_sha,
       recorded_at: new Date().toISOString(),

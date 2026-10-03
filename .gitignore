@@ -7,3 +7,8 @@ node_modules/
 .vscode/
 research/
 promote-agents.sh
+
+# Local eval configuration — keys and gateway URLs. The example is the contract.
+.env
+.env.*
+!.env.example
