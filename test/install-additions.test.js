@@ -221,6 +221,34 @@ test('symlink: pre-existing regular file (non-ndv agent) — must NOT be clobber
     // Assert: content is unchanged
     const contentAfter = readFileSync(filePath, 'utf8')
     assert.equal(contentAfter, originalContent, 'file content was overwritten')
+
+    // Assert: the skip is reported by name, with a count, and the summary line
+    // does not claim every agent was symlinked. A regular file in
+    // ~/.claude/agents never updates with this install; the user has to be
+    // told, or a stale copy sits there indefinitely (real case: eighteen
+    // fleet copies two months behind the installed fleet).
+    const out = r.stdout + r.stderr
+    assert.ok(out.includes('1 regular file(s) left in place'), `expected the kept-file warning with a count; got:\n${out}`)
+    assert.ok(out.includes(SAMPLE_AGENT), 'kept file must be named in the warning')
+    assert.ok(out.includes(`Symlinked ${REAL_AGENT_COUNT - 1} agent(s)`), `summary must count only what was actually linked; got:\n${out}`)
+  } finally {
+    rmSync(fakeHome, { recursive: true, force: true })
+  }
+})
+
+test('symlink: fresh install reports the full count and no kept files', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-sym-report-'))
+  try {
+    const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    assert.equal(r.status, 0, `install failed: ${r.stderr}`)
+    const out = r.stdout + r.stderr
+    assert.ok(out.includes(`Symlinked ${REAL_AGENT_COUNT} agent(s)`), `expected full count on a fresh install; got:\n${out}`)
+    assert.ok(!out.includes('left in place'), 'fresh install must not warn about kept files')
+
+    // Second run: everything is already linked; nothing new, nothing kept.
+    const r2 = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    const out2 = r2.stdout + r2.stderr
+    assert.ok(out2.includes(`Symlinked 0 agent(s)`) && out2.includes(`(${REAL_AGENT_COUNT} already linked)`), `second run must report already-linked count; got:\n${out2}`)
   } finally {
     rmSync(fakeHome, { recursive: true, force: true })
   }
