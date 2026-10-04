@@ -213,6 +213,84 @@ test('writeRoutingGlobalOpenCode: existing ndv instruction → skip, no duplicat
   }
 })
 
+// ─── AC3b: Registered AND rules file present but stale → refreshed in place ──
+//
+// The registration in opencode.json happens once. The rules file it points at
+// is installer-managed and must follow routing changes, or a global OpenCode
+// install keeps the routing table from the day it was first installed (real
+// case: a rules file three months and twelve routing lines behind NDV_BLOCK).
+// The skip still applies to the instructions array; only the block refreshes.
+
+test('writeRoutingGlobalOpenCode: stale rules block on an existing install is updated in place, with a backup, without touching instructions', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-oc-refresh-'))
+  try {
+    // Arrange: a real first install, then age the rules file: mutate one line
+    // inside the managed block and add user content outside it.
+    const r1 = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    assert.equal(r1.status, 0, `first install failed: ${r1.stderr}`)
+    const rulesFile = rulesFilePath(fakeHome)
+    const jsonPath = opencodeJsonPath(fakeHome)
+    const fresh = readFileSync(rulesFile, 'utf8')
+    assert.ok(fresh.includes('<!-- ndv:start -->') && fresh.includes('<!-- ndv:end -->'), 'precondition: managed block present')
+    const staleBlock = fresh.replace('## Routing Table', '## Routing Table (stale)')
+    assert.notEqual(staleBlock, fresh, 'precondition: mutation must change the block')
+    const userTrailer = '\n\n# user notes below the managed block\n'
+    writeFileSync(rulesFile, staleBlock + userTrailer)
+    const instructionsBefore = JSON.parse(readFileSync(jsonPath, 'utf8')).instructions.slice()
+
+    // Act: second install
+    const r2 = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    assert.equal(r2.status, 0, `second install failed: ${r2.stderr}`)
+    const out = r2.stdout + r2.stderr
+
+    // Assert: skip log still fires for the registration
+    assert.ok(out.includes('ndv already in'), 'expected skip log for instructions registration')
+
+    // Assert: block refreshed, reported, backed up
+    assert.ok(out.includes(`Updated ndv routing block in ${rulesFile}`), `expected update log; got:\n${out}`)
+    const after = readFileSync(rulesFile, 'utf8')
+    assert.ok(!after.includes('## Routing Table (stale)'), 'stale block content survived the second install')
+    const block = after.match(/<!-- ndv:start -->[\s\S]*?<!-- ndv:end -->/)?.[0]
+    assert.equal(block, fresh.trim(), 'managed block was not brought back to the current NDV_BLOCK')
+    assert.ok(after.endsWith(userTrailer), 'user content outside the managed block was not preserved')
+    assert.ok(existsSync(rulesFile + '.bak'), 'no backup written before the in-place update')
+    assert.equal(readFileSync(rulesFile + '.bak', 'utf8'), staleBlock + userTrailer, 'backup is not the pre-update file')
+
+    // Assert: instructions untouched
+    const instructionsAfter = JSON.parse(readFileSync(jsonPath, 'utf8')).instructions
+    assert.deepEqual(instructionsAfter, instructionsBefore, 'instructions array changed on refresh')
+
+    // Act again: third install on a current block must not write a new backup
+    rmSync(rulesFile + '.bak')
+    const r3 = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    assert.equal(r3.status, 0, `third install failed: ${r3.stderr}`)
+    assert.ok((r3.stdout + r3.stderr).includes('already up to date'), 'current block should be reported as up to date')
+    assert.ok(!existsSync(rulesFile + '.bak'), 'a current block must not produce a backup')
+  } finally {
+    rmSync(fakeHome, { recursive: true, force: true })
+  }
+})
+
+test('writeRoutingGlobalOpenCode: registered but rules file has no ndv block → left untouched with a warning', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-oc-noblock-'))
+  try {
+    mkdirSync(join(fakeHome, '.config', 'opencode', 'rules'), { recursive: true })
+    const rulesFile = rulesFilePath(fakeHome)
+    const userContent = '# my own rules, no ndv markers\n'
+    writeFileSync(rulesFile, userContent)
+    writeFileSync(opencodeJsonPath(fakeHome), JSON.stringify({ instructions: [rulesFile] }, null, 2) + '\n')
+
+    const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    assert.equal(r.status, 0, `install failed: ${r.stderr}`)
+
+    assert.equal(readFileSync(rulesFile, 'utf8'), userContent, 'a rules file without markers must not be modified')
+    assert.ok((r.stdout + r.stderr).includes('has no ndv block'), 'expected a warning that the file was left untouched')
+    assert.ok(!existsSync(rulesFile + '.bak'), 'no backup should be written when nothing changes')
+  } finally {
+    rmSync(fakeHome, { recursive: true, force: true })
+  }
+})
+
 // ─── AC4: Idempotent — second run with ndv present → skip, no duplicates ─────
 
 test('writeRoutingGlobalOpenCode: idempotent — second run skips, no duplicate instructions or routing writes', () => {

@@ -417,6 +417,43 @@ Example: "Should we switch to pnpm?" → \`ndv-honest\`
 All agents default to parallel execution for 4-8 independent files/items.
 <!-- ndv:end -->`
 
+// Bring the installer-managed ndv block in an existing file up to date, in
+// place. Content outside the markers is never touched. Returns what was found:
+//   'updated' — block differed and was replaced; previous file saved as .bak
+//   'current' — block already matches NDV_BLOCK
+//   'partial' — a marker without a complete block; refused, nothing written
+//   'none'    — no markers at all; nothing written, caller decides
+// Shared by every routing target so a routing fix reaches every install that
+// already ran once, not only the ones that write a project CLAUDE.md.
+function refreshRoutingBlock(routingFile) {
+  const content = readFileSync(routingFile, 'utf8')
+  const blockRe = /<!-- ndv:start -->[\s\S]*?<!-- ndv:end -->/
+
+  const match = content.match(blockRe)
+  if (match) {
+    if (match[0] === NDV_BLOCK) {
+      console.log(`  ndv routing block already up to date in ${routingFile}`)
+      return 'current'
+    }
+    const backup = `${routingFile}.bak`
+    writeFileSync(backup, content)
+    writeFileSync(routingFile, content.replace(blockRe, NDV_BLOCK))
+    console.log(`  Updated ndv routing block in ${routingFile}`)
+    console.log(`    Previous file saved to ${backup} — delete it once you are happy with the update`)
+    return 'updated'
+  }
+
+  // A marker without a complete block: the end of the managed region is
+  // unknown, so guessing risks eating the user's own content.
+  if (content.includes('ndv:start') || content.includes('ndv:end')) {
+    console.warn(`  ⚠ ${routingFile} contains a partial ndv marker but no complete ndv block.`)
+    console.warn(`    Refusing to touch it — fix the markers or remove the block and re-run.`)
+    return 'partial'
+  }
+
+  return 'none'
+}
+
 function writeRouting(routingFile) {
   const dir = dirname(routingFile)
   if (dir !== '.') mkdirSync(dir, { recursive: true })
@@ -427,33 +464,7 @@ function writeRouting(routingFile) {
     return
   }
 
-  const content = readFileSync(routingFile, 'utf8')
-  const blockRe = /<!-- ndv:start -->[\s\S]*?<!-- ndv:end -->/
-
-  // Full block present — it is installer-managed, so bring it up to date in
-  // place. Without this, a routing fix never reaches a project that already
-  // installed once. Content outside the markers is never touched.
-  const match = content.match(blockRe)
-  if (match) {
-    if (match[0] === NDV_BLOCK) {
-      console.log(`  ndv routing block already up to date in ${routingFile}`)
-      return
-    }
-    const backup = `${routingFile}.bak`
-    writeFileSync(backup, content)
-    writeFileSync(routingFile, content.replace(blockRe, NDV_BLOCK))
-    console.log(`  Updated ndv routing block in ${routingFile}`)
-    console.log(`    Previous file saved to ${backup} — delete it once you are happy with the update`)
-    return
-  }
-
-  // A marker without a complete block: the end of the managed region is
-  // unknown, so guessing risks eating the user's own content.
-  if (content.includes('ndv:start') || content.includes('ndv:end')) {
-    console.warn(`  ⚠ ${routingFile} contains a partial ndv marker but no complete ndv block.`)
-    console.warn(`    Refusing to touch it — fix the markers or remove the block and re-run.`)
-    return
-  }
+  if (refreshRoutingBlock(routingFile) !== 'none') return
 
   appendFileSync(routingFile, `\n\n${NDV_BLOCK}\n`)
   console.log(`  Appended ndv routing block to existing ${routingFile}`)
@@ -507,6 +518,15 @@ function writeRoutingGlobalOpenCode(jsonPath) {
   if (config.instructions && config.instructions.includes(rulesFile)) {
     console.log(`  ndv already in ${jsonPath} — skipping`)
     if (mutated) writeFileSync(jsonPath, JSON.stringify(config, null, 2) + '\n')
+    // The registration is done once; the rules file it points at is not. It
+    // is installer-managed, so an install after a routing change must bring
+    // it up to date — otherwise every global OpenCode install keeps the
+    // routing table from the day it was first installed. A registered but
+    // missing file is left alone: the user removed it, and silently
+    // recreating it would undo that.
+    if (existsSync(rulesFile) && refreshRoutingBlock(rulesFile) === 'none') {
+      console.warn(`  ⚠ ${rulesFile} has no ndv block — left untouched. Remove it and re-run to regenerate.`)
+    }
     return
   }
   mkdirSync(rulesDir, { recursive: true })
@@ -625,6 +645,10 @@ function installAgents(toolName, target, isGlobal, s = null) {
     const claudeAgentsDir = join(HOME, '.claude', 'agents')
     mkdirSync(claudeAgentsDir, { recursive: true })
     const installedAgents = readdirSync(target.dest).filter(f => f.endsWith('.md'))
+    let linked = 0
+    let current = 0
+    const keptFiles = []
+    const keptDangling = []
     for (const agent of installedAgents) {
       const linkPath = join(claudeAgentsDir, agent)
       const targetPath = join(target.dest, agent)
@@ -634,9 +658,10 @@ function installAgents(toolName, target, isGlobal, s = null) {
         const stat = lstatSync(linkPath)
         if (stat.isSymbolicLink()) {
           // Symlink exists — check if it points to the right place
-          const current = readlinkSync(linkPath)
-          if (resolve(dirname(linkPath), current) === resolve(targetPath)) {
+          const linkTarget = readlinkSync(linkPath)
+          if (resolve(dirname(linkPath), linkTarget) === resolve(targetPath)) {
             skip = true // already correct — leave it
+            current++
           } else {
             // Symlink points somewhere else. Only replace if it's a VALID (non-dangling) link.
             // A dangling symlink (target doesn't exist) may be the user's intentional pointer
@@ -645,18 +670,32 @@ function installAgents(toolName, target, isGlobal, s = null) {
               unlinkSync(linkPath) // valid link, wrong target — remove and recreate below
             } else {
               skip = true // dangling — preserve, do not clobber
+              keptDangling.push(agent)
             }
           }
         } else {
-          skip = true // regular file (non-ndv) — do not clobber
+          skip = true // regular file — do not clobber, but say so below
+          keptFiles.push(agent)
         }
       } catch {
         // lstatSync threw — path does not exist, proceed to create
       }
       if (skip) continue
       symlinkSync(targetPath, linkPath)
+      linked++
     }
-    console.log(`  Symlinked agents to ${claudeAgentsDir}/`)
+    // Report what actually happened. "Symlinked agents" after skipping every
+    // one of them is how a stale ~/.claude/agents goes unnoticed for months:
+    // a regular file there never updates with this install.
+    console.log(`  Symlinked ${linked} agent(s) to ${claudeAgentsDir}/` + (current ? ` (${current} already linked)` : ''))
+    if (keptFiles.length > 0) {
+      console.warn(`  ⚠ ${keptFiles.length} regular file(s) left in place in ${claudeAgentsDir} — not symlinked, will not update with this install:`)
+      console.warn(`    ${keptFiles.join(', ')}`)
+      console.warn(`    If these are old ndv copies, move them out of the directory and re-run.`)
+    }
+    if (keptDangling.length > 0) {
+      console.warn(`  ⚠ ${keptDangling.length} dangling symlink(s) left in place in ${claudeAgentsDir}: ${keptDangling.join(', ')}`)
+    }
   }
 
   // Parity check: warn if installed count doesn't match source count
