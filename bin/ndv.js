@@ -401,7 +401,7 @@ Apply without being asked when the signal is clear:
 3. Explicit performance/latency/slow language → \`ndv-optimize\`
 4. If still ambiguous: diagnose first with \`ndv-diagnose\`, then hand off
 5. \`ndv-honest\` handles anything — it is a pure communication layer, not a router.
-6. Layout/structure changes without a spec → \`ndv-design\` first. \`ndv-build\` executes specs, not decisions.
+6. Layout/structure changes without a spec → \`ndv-design\` first. \`ndv-build\` executes specs, not decisions — but a human instruction that fully specifies the outcome is the spec. "Centre the row, two lines" is a decision already made; routing it through design re-opens a closed question. Route to design when the decision is open, not when the change is merely visual.
 
 Example: "500 error + NullPointerException stack trace in login endpoint" → \`ndv-diagnose\`
 Example: "Should we switch to pnpm?" → \`ndv-honest\`

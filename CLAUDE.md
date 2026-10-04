@@ -51,7 +51,7 @@ Apply without being asked when the signal is clear:
 3. Explicit performance/latency/slow language → `ndv-optimize`
 4. If still ambiguous: diagnose first with `ndv-diagnose`, then hand off
 5. `ndv-honest` handles anything — it is a pure communication layer, not a router.
-6. Layout/structure changes without a spec → `ndv-design` first. `ndv-build` executes specs, not decisions.
+6. Layout/structure changes without a spec → `ndv-design` first. `ndv-build` executes specs, not decisions — but a human instruction that fully specifies the outcome is the spec. "Centre the row, two lines" is a decision already made; routing it through design re-opens a closed question. Route to design when the decision is open, not when the change is merely visual.
 
 Example: "500 error + NullPointerException stack trace in login endpoint" → `ndv-diagnose`
 Example: "Should we switch to pnpm?" → `ndv-honest`
@@ -132,8 +132,11 @@ npm run eval:baseline -- --models glm-5.3-flash                   # add a model 
 - **The floor is the worst result across the baseline runs.** Misses are asked again (`--retries 2`, majority vote), so one unlucky answer doesn't fail a release.
 - **Editing the fixture makes the baseline stale.** `validate` then fails until you re-run `eval:baseline` and commit the new baseline file.
 - **Models are reached through `scripts/eval-providers/`:**
-  - `claude.sh` runs the Claude CLI from an empty temp directory with no tools, no MCP servers, and a minimal system prompt. With `ANTHROPIC_API_KEY` set it also adds `--bare`, which skips hooks, plugins and your personal `CLAUDE.md`.
+  - `claude.sh` (default for Claude models) runs the Claude CLI from an empty temp directory with no tools, no MCP servers, and a minimal system prompt. With `ANTHROPIC_API_KEY` set it also adds `--bare`, which skips hooks, plugins and your personal `CLAUDE.md`. Without it, your user-level `CLAUDE.md` still loads into every scoring call.
+  - `anthropic.mjs` calls the Messages API directly: the clean-room number. Select it with `--provider anthropic`. Key from `NDV_ANTHROPIC_API_KEY` or `ANTHROPIC_API_KEY`; base URL from `NDV_ANTHROPIC_BASE_URL` to score through an Anthropic-compatible gateway. Some gateways resolve a bare alias such as `claude-opus-5` to a different snapshot than Anthropic does; `NDV_ANTHROPIC_MODEL_ALIASES=label=served-id,...` maps the label to the id the gateway must receive, so the row measures the model its label names. Rate limits are retried with backoff; through a gateway pass `--concurrency 2`, since the default 4 trips a per-minute quota.
   - `ollama.mjs` calls Ollama's cloud API when `OLLAMA_API_KEY` is set, or a local Ollama server otherwise.
+- **Each baseline row records its provider**, and `eval:gate` scores through the same one. Recording with `--provider anthropic` and gating through the CLI would compare two transports, not two releases.
+- **Keys and gateway settings live in `.env`** at the repo root, gitignored. `.env.example` is the contract; copy it and fill it in. The eval scripts load it when present and shell variables take precedence. Never put a key or a gateway URL in a tracked file.
 
 **The eval measures the routing text that ships.** The `ndv:start`/`ndv:end` block at the top of this file must be byte-identical to `NDV_BLOCK` in `bin/ndv.js`, and `validate` enforces that. Change the routing table in both places together, or the eval scores a table users never receive.
 

@@ -2,18 +2,18 @@
   "description": "Routing eval baseline. Written by `npm run eval:baseline`, read by `npm run eval:gate`. Do not edit by hand.",
   "models": {
     "claude-haiku-4-5-20251001": {
-      "provider": "claude",
-      "fixture_sha": "843db5a64f2ae1a0",
-      "routing_context_sha": "fdc6efbc9363f946",
-      "recorded_at": "2026-09-21T15:08:34.497Z",
+      "provider": "anthropic",
+      "fixture_sha": "45322ee50490df42",
+      "routing_context_sha": "0e2d25ee4fbaedf9",
+      "recorded_at": "2026-10-03T18:07:18.852Z",
       "runs": 3,
       "retries": 2,
       "canonical": {
-        "floor": 0.9783,
+        "floor": 0.9787,
         "runs": [
-          0.9783,
-          0.9783,
-          0.9783
+          1,
+          1,
+          0.9787
         ]
       },
       "escalation": {
@@ -27,21 +27,20 @@
       "judgment": {
         "runs": [
           0.8333,
-          0.6667,
-          0.8333
+          0.8333,
+          1
         ]
       },
       "misses": [
         "conflict-flow-not-scope-01 → ndv-build",
-        "conflict-secure-beats-optimize-01 → ndv-optimize",
-        "direct-honest-01 → ndv-architect"
+        "conflict-secure-beats-optimize-01 → ndv-optimize"
       ]
     },
     "claude-opus-5": {
-      "provider": "claude",
-      "fixture_sha": "843db5a64f2ae1a0",
-      "routing_context_sha": "fdc6efbc9363f946",
-      "recorded_at": "2026-09-21T15:00:36.686Z",
+      "provider": "anthropic",
+      "fixture_sha": "45322ee50490df42",
+      "routing_context_sha": "0e2d25ee4fbaedf9",
+      "recorded_at": "2026-10-03T18:02:22.492Z",
       "runs": 3,
       "retries": 2,
       "canonical": {
@@ -64,18 +63,18 @@
         "runs": [
           0.8333,
           0.8333,
-          1
+          0.8333
         ]
       },
       "misses": [
-        "direct-honest-01 → ndv-architect"
+        "conflict-secure-beats-optimize-01 → ndv-optimize"
       ]
     },
     "claude-sonnet-5": {
-      "provider": "claude",
-      "fixture_sha": "843db5a64f2ae1a0",
-      "routing_context_sha": "fdc6efbc9363f946",
-      "recorded_at": "2026-09-21T15:02:38.492Z",
+      "provider": "anthropic",
+      "fixture_sha": "45322ee50490df42",
+      "routing_context_sha": "0e2d25ee4fbaedf9",
+      "recorded_at": "2026-10-03T18:14:49.010Z",
       "runs": 3,
       "retries": 2,
       "canonical": {
@@ -98,10 +97,12 @@
         "runs": [
           1,
           1,
-          1
+          0.8333
         ]
       },
-      "misses": []
+      "misses": [
+        "conflict-secure-beats-optimize-01 → ndv-optimize"
+      ]
     }
   }
 }

@@ -336,6 +336,18 @@
       "anchor": "schemas, acceptance criteria, file targets"
     },
     {
+      "id": "conflict-build-not-design-02",
+      "task": "Centre the pricing card row and cap each card's description at two lines with an ellipsis. That is the whole change — no other layout work.",
+      "expect": "ndv-build",
+      "tags": [
+        "conflict",
+        "pipeline"
+      ],
+      "why": "Rule 6 — a human instruction that fully specifies the outcome is the spec. Nothing is left for Pixel to decide; routing it through design re-opens a closed question. No schemas or file targets are stated, so this isolates the instruction-is-spec clause from the readiness-gate anchor.",
+      "basis": "canonical",
+      "anchor": "fully specifies the outcome is the spec"
+    },
+    {
       "id": "conflict-build-not-diagnose-01",
       "task": "We confirmed the bug: the cache key omits the tenant id in getSettings(). Add the tenant id to the key.",
       "expect": "ndv-build",

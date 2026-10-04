@@ -27,7 +27,7 @@
  *   --out <path>         write the full JSON report here
  */
 
-import { readFileSync, writeFileSync, readdirSync } from 'node:fs'
+import { readFileSync, writeFileSync, readdirSync, existsSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -35,6 +35,13 @@ import { spawn } from 'node:child_process'
 import { routingContext } from './routing-context.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
+
+// Local eval configuration: .env at the repo root (gitignored; .env.example is
+// the contract). Shell variables take precedence. Loaded here as well as in
+// the gate so `npm run eval:routing` standalone sees the same values.
+const ENV_FILE = join(ROOT, '.env')
+if (existsSync(ENV_FILE) && typeof process.loadEnvFile === 'function') process.loadEnvFile(ENV_FILE)
+
 const FIXTURE = join(ROOT, 'test', 'fixtures', 'routing-cases.json')
 
 // ─── args ────────────────────────────────────────────────────────────────────

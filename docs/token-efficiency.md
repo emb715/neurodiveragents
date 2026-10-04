@@ -154,7 +154,7 @@ Six cost patterns emerged. Each one had a structural cause — not bad prompting
 
 ## What was not changed
 
-**ndv-review's Mandatory Pipeline role.** The review gate after Tier 1 agent output was not weakened. Proportionality applies to file re-reads within verification, not to whether review runs at all. A review that consumes context from the brief rather than re-reading files is still a full review — it just doesn't pay the re-read cost.
+**ndv-review's Mandatory Pipeline role.** The review gate after Tier 1 agent output was not weakened by the patterns above. Proportionality applies to file re-reads within verification, not to whether review runs at all. A review that consumes context from the brief rather than re-reading files is still a full review — it just doesn't pay the re-read cost. (Later amended: the ADR-008 amendment of 2026-10-03 scales *when* the pipeline runs by change scale — blocking on S2, deferred on S1, skipped and recorded on S0. The review itself is unchanged.)
 
 **Scout's map-first principle.** The grep-skip rule applies to pattern-detection tasks with a known target pattern. It does not apply when the task is structural exploration — understanding architecture, tracing dependency chains, mapping a codebase. Those require full reads regardless of what grep returns, because the purpose is map-building, not pattern-finding.
 
