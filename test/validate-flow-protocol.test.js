@@ -15,7 +15,10 @@
  * 3. The sentinel token is declared and used in one consistent form
  * 4. The sub-agent return contract declares a numeric word cap
  * 5. Handoff emit grammar and handoff parse grammar agree
- * 6. The handoff ledger declares its status vocabulary and failure state
+ * 6. The handoff ledger declares its status vocabulary and failure state, and
+ *    every status it declares is defined in prose
+ * 6b. Every Deferred field can read `none`, and the prose says which scales
+ *    owe no V2 — a cost line that overstates its debt stops being read
  * 7. BRIEF_REJECTED has a declared escalation path with a bounded retry count
  * 8. Parallel Safety Algorithm specifies overlap detection and serialization
  * 9. Named cross-references resolve to real sections
@@ -184,9 +187,35 @@ describe('flow protocol: handoff ledger', () => {
   test('the ledger line declares its status vocabulary', () => {
     const ledger = body.match(/\[agent\] ← \[task ID\].*status:\s*(.+)/)?.[1] ?? ''
     assert.ok(ledger.length > 0, 'ndv-flow.md has no handoff ledger line')
-    for (const status of ['dispatched', 'pending']) {
+    // `withheld` is load-bearing, not decoration: without it, a pipeline agent
+    // the human excluded from scope has no status but `pending`, which
+    // Never-Does calls a failure state and which bars the run from completing.
+    // Observed: a run reported Complete carrying two pending handoffs because
+    // the human said "no new tests" and the vocabulary had no word for that.
+    for (const status of ['dispatched', 'pending', 'withheld']) {
       assert.ok(ledger.includes(status), `ledger status vocabulary is missing "${status}": ${ledger}`)
     }
+  })
+
+  test('every status the template declares is defined in the prose', () => {
+    // The template is inside a fence; sub-agents are held to the prose. A
+    // status word that appears only in the template is a status nobody defined.
+    const ledger = body.match(/\[agent\] ← \[task ID\].*status:\s*(.+)/)?.[1] ?? ''
+    const declared = ledger.split('/').map(s => s.trim()).filter(Boolean)
+    assert.ok(declared.length >= 2, `could not split the status vocabulary: ${ledger}`)
+    const undefinedStatuses = declared.filter(s => !prose.includes('`' + s + '`'))
+    assert.deepEqual(undefinedStatuses, [],
+      `statuses in the ledger template with no prose definition: ${undefinedStatuses.join(', ')}.\n` +
+      `Define each one outside the fenced template, in backticks.`)
+  })
+
+  test('withheld is declared terminal and requires the instruction that closed it', () => {
+    assert.match(prose, /`withheld`/,
+      'the ledger vocabulary must define `withheld` in prose, not only in the template')
+    assert.match(prose, /[Ww]ithheld is terminal/,
+      '`withheld` must be declared terminal — otherwise it is read as a second spelling of pending')
+    assert.match(prose, /never `withheld`/,
+      'the prose must close the loophole: an entry with no named instruction is pending, never withheld')
   })
 
   test('pending is declared a failure state', () => {
@@ -199,6 +228,51 @@ describe('flow protocol: handoff ledger', () => {
     assert.ok(never.length > 0, 'ndv-flow.md has no ## What Flow Never Does section')
     assert.match(never, /complete while any handoff has status `pending`/,
       'the pending-handoff prohibition must be listed under What Flow Never Does')
+  })
+
+  test('withheld does not weaken the pending prohibition', () => {
+    // The two statuses must stay distinguishable in the Never-Does list:
+    // `withheld` exists to stop a human decision being filed as a failure, not
+    // to give an undispatched handoff a second name that passes the gate.
+    const never = section('What Flow Never Does')
+    assert.match(never, /`withheld` without naming the instruction/,
+      'Never-Does must forbid a withheld entry with no named instruction')
+  })
+})
+
+// ─── 6b. Deferred block ──────────────────────────────────────────────────────
+//
+// The Deferred block is the run's cost line. Every field reports debt, so a
+// field that reports debt on a run that never incurred any trains the reader
+// to skip the block. Observed: `V2 gate not run since: T1` on a run made of
+// one S0 task, which owed no V2 at any point.
+
+describe('flow protocol: deferred block', () => {
+  const deferred = body.match(/## Deferred\n([^\n]+)/)?.[1] ?? ''
+
+  test('the final report template carries a Deferred block', () => {
+    assert.ok(deferred.length > 0, 'the final report template has no ## Deferred block')
+  })
+
+  test('every Deferred field offers none as a value', () => {
+    const fields = deferred.split('.').map(s => s.trim()).filter(Boolean)
+    assert.ok(fields.length >= 2, `expected at least two Deferred fields, got: ${deferred}`)
+    const missing = fields.filter(f => !/\bnone\b/.test(f))
+    assert.deepEqual(missing, [],
+      `Deferred fields with no "none" option: ${missing.join(' | ')}.\n` +
+      `A field that cannot read none gets filled with a task ID on a run that owed nothing.`)
+  })
+
+  test('the prose states which scales owe no V2', () => {
+    assert.match(prose, /S0 and S1 owe no V2/,
+      'the Deferred block must state that S0 and S1 owe no V2 unless one was deferred — ' +
+      'without that rule the V2 field collects a task ID on every run')
+  })
+
+  test('What Flow Never Does prohibits reporting a V2 that was never owed', () => {
+    const never = section('What Flow Never Does')
+    assert.match(never, /Reports a V2 as owed on a run that never owed one/,
+      'the overstated-debt prohibition must be listed under What Flow Never Does')
   })
 })
 

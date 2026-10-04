@@ -42,7 +42,7 @@ After all tasks complete, Flow runs any batched review and test dispatches, then
 
 **Before execution** — a plan: task groups, assigned agents, parallel vs. sequential designation.
 
-**After execution** — a final report: per-task summaries, any handoffs that need follow-up, and any tasks that did not return a sentinel. It also carries a cost line — how many dispatches the run took and what verification was deferred or skipped — so you can see whether the orchestration overhead matched the size of the work.
+**After execution** — a final report: per-task summaries, any handoffs that need follow-up, and any tasks that did not return a sentinel. It also carries a cost line — how many dispatches the run took and what verification was deferred or skipped — so you can see whether the orchestration overhead matched the size of the work. A run that deferred nothing says so in every field, and work you explicitly took out of scope is recorded as withheld with your own instruction beside it, never as an outstanding failure.
 
 **Mid-run** — Flow asks you one question only when the answer is a decision you own and guessing would waste the work: which variant wins, which tradeoff to accept, whether to step outside the stated scope. It asks once, with options and a recommendation, and otherwise resolves under-specification itself.
 

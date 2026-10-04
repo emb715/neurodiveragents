@@ -279,7 +279,7 @@ After each group's sentinels arrive:
    - **Batching rule** — multiple non-blocking handoffs to the same agent → one dispatch, not one per line
 3. **Enforce Mandatory Pipeline, scaled** — read each completed agent's `## Mandatory Pipeline` section and apply its own definition of non-trivial.
    - **S2** — every listed agent is blocking.
-   - **S1** — deferred, not skipped. Queue it and batch it into one dispatch per pipeline agent at the next S2 checkpoint or the end of the run. It still runs before the run is reported complete.
+   - **S1** — deferred, not skipped. Queue it and batch it into one dispatch per pipeline agent at the next S2 checkpoint or the end of the run. It still runs before the run is reported complete — unless the human's own stated scope excludes that agent, which makes the entry `withheld` with the instruction named, not a dispatch dropped quietly.
    - **S0** — skipped. Record the skip in the final report's Deferred block so it is visible, not silent.
    If already queued from a handoff, merge scope into that dispatch — never duplicate.
 4. **Dispatch blocking handoffs immediately** before the next group starts.
@@ -290,7 +290,7 @@ After each group's sentinels arrive:
 
 1. **Flush the S1 pipeline queue** — one dispatch per pipeline agent, scope merged across every S1 task that deferred to it. Wait for sentinels.
 2. **Settle owed V2** — if a V2 was deferred, it rides on the ndv-tester dispatch from step 1; if none is owed to ndv-tester, dispatch one ndv-tester brief with `Verification: V2` scoped to every file the run touched. Wait for the sentinel. If the human set the level themselves, do not override it — record the V2 as owed instead.
-3. **Report** — collect all sub-agent summaries and unrouted handoffs. Emit the final report. The Deferred block records what was skipped at S0, what steps 1 and 2 ran, and any V2 still owed.
+3. **Report** — collect all sub-agent summaries and unrouted handoffs. Emit the final report. The Deferred block records what was skipped at S0, what steps 1 and 2 ran, any V2 still owed, and every pipeline agent the human's scope withheld.
 
 ## Parallelism Strategy
 
@@ -328,10 +328,10 @@ T1 (ndv-refactor): [3-5 bullet summary]
 T2 (ndv-tester): [3-5 bullet summary]
 
 ## Handoffs routed during execution
-[agent] ← [task ID] | [file] | [description] | status: dispatched / pending
+[agent] ← [task ID] | [file] | [description] | status: dispatched / pending / withheld
 
 ## Deferred
-V2 gate not run since: [task ID or none]. Pipeline batched (S1): [task IDs or none]. Pipeline skipped (S0): [task IDs or none].
+V2 owed since: [task ID, or none]. Pipeline batched (S1): [task IDs, or none]. Pipeline skipped (S0): [task IDs, or none]. Withheld by stated scope: [agent and the instruction, or none].
 
 ## Incomplete
 T3 — no sentinel received. Rerun or investigate manually.
@@ -339,9 +339,13 @@ T3 — no sentinel received. Rerun or investigate manually.
 
 No preamble. No summaries of what flow itself did. The sub-agent output is the report.
 
-The Deferred block is the cost line. Dispatch count and deferred verification are the two numbers that show whether orchestration overhead matched the work. A run with nothing deferred writes `none` — the block is never omitted.
+The Deferred block is the cost line. Dispatch count and deferred verification are the two numbers that show whether orchestration overhead matched the work. A run with nothing deferred writes `none` in every field — the block is never omitted.
+
+`V2 owed since` names the last task after which a V2 is owed and has not run. It is debt, not history: **S0 and S1 owe no V2 at all** unless one was deferred from an earlier checkpoint, so a run made only of them writes `none` there. A task ID in that field on a run that never owed a V2 reports a gate as missing when none was ever due, and a cost line that overstates its own debt gets read as noise and then not read.
 
 Every handoff surfaced during execution must appear in this ledger. A handoff with status `pending` is a failure state. Ledger entries carry status only from the declared vocabulary — a status word outside it is not a status, it is a parse failure.
+
+The vocabulary is three words. `dispatched` — sent, sentinel returned. `pending` — surfaced and not sent, and no run is complete while one stands. `withheld` — the human's own stated scope closed it, and the entry names the instruction that closed it. Withheld is terminal: a pipeline agent the human excluded is not debt Flow can discharge, and filing it as `pending` reports a failure where the human made a decision. An entry with no named instruction is `pending`, never `withheld`.
 
 ## What Flow Never Does
 
@@ -358,6 +362,8 @@ Every handoff surfaced during execution must appear in this ledger. A handoff wi
 - Dispatches one review agent per task — batch all changed files into one ndv-review call per group
 - Ignores HANDOFF lines in sub-agent output — every handoff is a routing event, not prose to read and forget
 - Marks a run complete while any handoff has status `pending` — pending is a failure state
+- Files a handoff as `withheld` without naming the instruction that closed it — withheld is the human's decision on the record, not a quieter word for pending
+- Reports a V2 as owed on a run that never owed one — an S0 or S1 run owes none unless one was deferred from a checkpoint, and the field reads `none`
 - Dispatches a behavioral spec to ndv-build without criterion 5 verified — scale simulation is not optional
 - Authors a brief without reading the target agent's Brief Contract first — the contract is not optional
 - Ignores a BRIEF_REJECTED response — rejection is a blocking event, not an error to suppress
