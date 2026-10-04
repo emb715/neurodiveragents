@@ -17,8 +17,9 @@
  * 5. Handoff emit grammar and handoff parse grammar agree
  * 6. The handoff ledger declares its status vocabulary and failure state, and
  *    every status it declares is defined in prose
- * 6b. Every Deferred field can read `none`, and the prose says which scales
- *    owe no V2 — a cost line that overstates its debt stops being read
+ * 6b. The Deferred block is labelled one field per line, the final report
+ *    prints no level or scale token, and the plan still does — the report is
+ *    the human's artifact, the briefs are where V0/V1/V2 and S0/S1/S2 live
  * 7. BRIEF_REJECTED has a declared escalation path with a bounded retry count
  * 8. Parallel Safety Algorithm specifies overlap detection and serialization
  * 9. Named cross-references resolve to real sections
@@ -248,31 +249,63 @@ describe('flow protocol: handoff ledger', () => {
 // one S0 task, which owed no V2 at any point.
 
 describe('flow protocol: deferred block', () => {
-  const deferred = body.match(/## Deferred\n([^\n]+)/)?.[1] ?? ''
+  const finalReport = body.match(/\*\*Final report \(after execution\):\*\*\n```\n([\s\S]*?)\n```/)?.[1] ?? ''
+  const deferred = finalReport.match(/## Deferred\n([\s\S]*?)(?=\n\n|$)/)?.[1] ?? ''
 
-  test('the final report template carries a Deferred block', () => {
+  test('the final report template is extractable and carries a Deferred block', () => {
+    assert.ok(finalReport.length > 0, 'could not locate the **Final report (after execution):** template')
     assert.ok(deferred.length > 0, 'the final report template has no ## Deferred block')
   })
 
-  test('every Deferred field offers none as a value', () => {
-    const fields = deferred.split('.').map(s => s.trim()).filter(Boolean)
-    assert.ok(fields.length >= 2, `expected at least two Deferred fields, got: ${deferred}`)
-    const missing = fields.filter(f => !/\bnone\b/.test(f))
-    assert.deepEqual(missing, [],
-      `Deferred fields with no "none" option: ${missing.join(' | ')}.\n` +
-      `A field that cannot read none gets filled with a task ID on a run that owed nothing.`)
+  test('the Deferred block declares a labelled field per line', () => {
+    const lines = deferred.split('\n').filter(Boolean)
+    assert.ok(lines.length >= 3, `expected at least three Deferred fields, got: ${JSON.stringify(lines)}`)
+    const unlabelled = lines.filter(l => !/^[A-Z][^:]*: \[.+\]$/.test(l))
+    assert.deepEqual(unlabelled, [],
+      `Deferred lines that are not "Label: [value]": ${unlabelled.join(' | ')}.\n` +
+      `One field per line, each labelled in words the human reads.`)
   })
 
-  test('the prose states which scales owe no V2', () => {
-    assert.match(prose, /S0 and S1 owe no V2/,
-      'the Deferred block must state that S0 and S1 owe no V2 unless one was deferred — ' +
-      'without that rule the V2 field collects a task ID on every run')
+  // The report is the human's artifact. V0/V1/V2 and S0/S1/S2 are vocabulary
+  // the briefs carry, and a reader of the report holds no level table in mind.
+  // Observed: `verification: V0` in the header and `V2 gate not run since: T1`
+  // in the block, on a run that owed no gate at all.
+  test('the final report prints no level or scale token', () => {
+    const tokens = [...new Set(finalReport.match(/\b[VS][012]\b/g) ?? [])]
+    assert.deepEqual(tokens, [],
+      `the final report template prints brief vocabulary: ${tokens.join(', ')}.\n` +
+      `Render the level with the Verification Levels "Reported as" words instead.`)
   })
 
-  test('What Flow Never Does prohibits reporting a V2 that was never owed', () => {
+  test('the plan template still carries scale, which is where it belongs', () => {
+    // Negative control for the gate above: stripping scale from every template
+    // would also satisfy it, and the plan is exactly where the human needs to
+    // see how each task was sized before anything is dispatched.
+    const plan = body.match(/\*\*Plan \(before execution\):\*\*\n```\n([\s\S]*?)\n```/)?.[1] ?? ''
+    assert.ok(plan.length > 0, 'could not locate the **Plan (before execution):** template')
+    assert.match(plan, /\bS[012]\b/,
+      "the plan template must show each task's scale — that is the sizing decision the human reviews")
+  })
+
+  test('the prose states that only populated fields print and the block is never omitted', () => {
+    assert.match(prose, /Only fields with content print/,
+      'the Deferred block must state that only populated fields print')
+    assert.match(prose, /never omitted/,
+      'the Deferred block must state that it is never omitted — silence is the defect it prevents')
+  })
+
+  test('the prose states that empty sections are dropped from the report', () => {
+    assert.match(prose, /omitted when empty/,
+      'the report must state that other empty sections are dropped — ' +
+      'a one-file change should not emit four empty headers')
+  })
+
+  test('What Flow Never Does prohibits level tokens and omitted unchecked files', () => {
     const never = section('What Flow Never Does')
-    assert.match(never, /Reports a V2 as owed on a run that never owed one/,
-      'the overstated-debt prohibition must be listed under What Flow Never Does')
+    assert.match(never, /Prints a level or scale token in the final report/,
+      'the no-token prohibition must be listed under What Flow Never Does')
+    assert.match(never, /Omits the unchecked files when no full project gate ran/,
+      'the unchecked-files prohibition must be listed under What Flow Never Does')
   })
 })
 
