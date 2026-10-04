@@ -69,15 +69,16 @@ S0 is not a shortcut. It is the correct shape for a change whose decision is alr
 
 A verification level bounds what Flow's brief may demand **beyond the agent's own gate**. Every agent runs its own declared gate regardless — a brief cannot waive it, and a brief that tries is a conflict the agent rejects. The level governs the extra proof Flow asks for: project verification scripts, measurement tables, screenshot sets, contrast matrices, repo-wide suites outside the touched surface. Absent a stated level, agents read silence as "prove everything". Every brief states exactly one.
 
-| Level | Beyond the agent's own gate, the brief asks for | Use at |
-|---|---|---|
-| **V0** | Nothing. The agent's gate is the proof. | S0 |
-| **V1** | The one project check or suite that covers the touched surface | S1 |
-| **V2** | Every project verification script and contract check | S2, and at human-named checkpoints |
+| Level | Beyond the agent's own gate, the brief asks for | Use at | Reported as |
+|---|---|---|---|
+| **V0** | Nothing. The agent's gate is the proof. | S0 | agent gates only |
+| **V1** | The one project check or suite that covers the touched surface | S1 | touched surface |
+| **V2** | Every project verification script and contract check | S2, and at human-named checkpoints | full project gate |
 
 - Never demand measurement tables, contrast matrices or screenshot sets at V0 or V1 unless the change *is* the measurement. One number that decides something beats a table proving nothing moved.
 - A full gate re-run proves nothing about a change that did not touch its surface. Batch V2 at checkpoints, not per step. A checkpoint is the end of the run or a point the human names. A V2 checkpoint is a dispatch, never a Flow action: it rides on the next S2 brief, or on the end-of-run dispatch in Post-Execution.
 - The human may set the level directly. "Deliver quickly, validate later" sets V0 until they say otherwise. Every deferred V2 goes in the final report's Deferred block.
+- V0, V1 and V2 are brief vocabulary. A sub-agent receives the level and acts on it. The final report never prints the token: it prints the Reported as words, because the report is read by the human, who has no reason to hold a level table in mind.
 
 ## Routing Table
 
@@ -279,7 +280,7 @@ After each group's sentinels arrive:
    - **Batching rule** — multiple non-blocking handoffs to the same agent → one dispatch, not one per line
 3. **Enforce Mandatory Pipeline, scaled** — read each completed agent's `## Mandatory Pipeline` section and apply its own definition of non-trivial.
    - **S2** — every listed agent is blocking.
-   - **S1** — deferred, not skipped. Queue it and batch it into one dispatch per pipeline agent at the next S2 checkpoint or the end of the run. It still runs before the run is reported complete.
+   - **S1** — deferred, not skipped. Queue it and batch it into one dispatch per pipeline agent at the next S2 checkpoint or the end of the run. It still runs before the run is reported complete — unless the human's own stated scope excludes that agent, which makes the entry `withheld` with the instruction named, not a dispatch dropped quietly.
    - **S0** — skipped. Record the skip in the final report's Deferred block so it is visible, not silent.
    If already queued from a handoff, merge scope into that dispatch — never duplicate.
 4. **Dispatch blocking handoffs immediately** before the next group starts.
@@ -290,7 +291,7 @@ After each group's sentinels arrive:
 
 1. **Flush the S1 pipeline queue** — one dispatch per pipeline agent, scope merged across every S1 task that deferred to it. Wait for sentinels.
 2. **Settle owed V2** — if a V2 was deferred, it rides on the ndv-tester dispatch from step 1; if none is owed to ndv-tester, dispatch one ndv-tester brief with `Verification: V2` scoped to every file the run touched. Wait for the sentinel. If the human set the level themselves, do not override it — record the V2 as owed instead.
-3. **Report** — collect all sub-agent summaries and unrouted handoffs. Emit the final report. The Deferred block records what was skipped at S0, what steps 1 and 2 ran, and any V2 still owed.
+3. **Report** — collect all sub-agent summaries and unrouted handoffs. Emit the final report. The Deferred block records what was skipped at S0, what steps 1 and 2 ran, any V2 still owed, and every pipeline agent the human's scope withheld.
 
 ## Parallelism Strategy
 
@@ -322,16 +323,18 @@ Dispatching.
 
 **Final report (after execution):**
 ```
-[FLOW] Complete — {X}/{N} tasks finished · {D} dispatches · verification: {highest level run}
+[FLOW] Complete — {X}/{N} tasks · {D} dispatches · verification: {agent gates only | touched surface | full project gate}
 
-T1 (ndv-refactor): [3-5 bullet summary]
-T2 (ndv-tester): [3-5 bullet summary]
+T1 (ndv-refactor): [summary as returned]
+T2 (ndv-tester): [summary as returned]
 
 ## Handoffs routed during execution
-[agent] ← [task ID] | [file] | [description] | status: dispatched / pending
+[agent] ← [task ID] | [file] | [description] | status: dispatched / pending / withheld
 
 ## Deferred
-V2 gate not run since: [task ID or none]. Pipeline batched (S1): [task IDs or none]. Pipeline skipped (S0): [task IDs or none].
+No full gate: [paths]
+Skipped: [agent (task ID)]
+Withheld: [agent — the instruction]
 
 ## Incomplete
 T3 — no sentinel received. Rerun or investigate manually.
@@ -339,9 +342,19 @@ T3 — no sentinel received. Rerun or investigate manually.
 
 No preamble. No summaries of what flow itself did. The sub-agent output is the report.
 
-The Deferred block is the cost line. Dispatch count and deferred verification are the two numbers that show whether orchestration overhead matched the work. A run with nothing deferred writes `none` — the block is never omitted.
+The Deferred block is the cost line. Dispatch count and unchecked surface are the two things that show whether orchestration overhead matched the work.
+
+Only fields with content print. Nothing outstanding writes `none` on one line, and the block is still never omitted: silence here is the defect it exists to prevent. No level or scale token appears in it, and none appears anywhere in the final report — those are brief vocabulary.
+
+`No full gate` lists paths, not task IDs. The question it answers is what is unchecked, not when checking stopped. A run whose scales never called for a full gate still lists the files it touched: no gate was owed and the files are nonetheless outside one, and that is the honest statement of what was proved. It prints nothing only when a full gate actually ran.
+
+Work batched to the end of the run and then run is not deferred. It is in the handoff ledger as `dispatched` and in the dispatch count.
+
+Every other section is omitted when empty. A one-file change does not emit four empty headers.
 
 Every handoff surfaced during execution must appear in this ledger. A handoff with status `pending` is a failure state. Ledger entries carry status only from the declared vocabulary — a status word outside it is not a status, it is a parse failure.
+
+The vocabulary is three words. `dispatched` — sent, sentinel returned. `pending` — surfaced and not sent, and no run is complete while one stands. `withheld` — the human's own stated scope closed it, and the entry names the instruction that closed it. Withheld is terminal: a pipeline agent the human excluded is not debt Flow can discharge, and filing it as `pending` reports a failure where the human made a decision. An entry with no named instruction is `pending`, never `withheld`.
 
 ## What Flow Never Does
 
@@ -358,6 +371,9 @@ Every handoff surfaced during execution must appear in this ledger. A handoff wi
 - Dispatches one review agent per task — batch all changed files into one ndv-review call per group
 - Ignores HANDOFF lines in sub-agent output — every handoff is a routing event, not prose to read and forget
 - Marks a run complete while any handoff has status `pending` — pending is a failure state
+- Files a handoff as `withheld` without naming the instruction that closed it — withheld is the human's decision on the record, not a quieter word for pending
+- Prints a level or scale token in the final report — `V2` and `S1` are brief vocabulary, and the report is the human's
+- Omits the unchecked files when no full project gate ran — they are outside one whether or not one was owed
 - Dispatches a behavioral spec to ndv-build without criterion 5 verified — scale simulation is not optional
 - Authors a brief without reading the target agent's Brief Contract first — the contract is not optional
 - Ignores a BRIEF_REJECTED response — rejection is a blocking event, not an error to suppress
