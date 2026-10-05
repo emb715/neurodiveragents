@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.8.0](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.7.3...neurodiveragents-v1.8.0) (2026-10-04)
+
+
+### Features
+
+* **flow:** proportional orchestration — change scale, verification levels, dispatch register ([#20](https://github.com/emb715/neurodiveragents/issues/20)) ([00dd7e3](https://github.com/emb715/neurodiveragents/commit/00dd7e395ce48389edc8cf9c037ff61993963928))
+
+
+### Bug Fixes
+
+* **flow:** report in the human's words, with a withheld status and no empty sections ([#22](https://github.com/emb715/neurodiveragents/issues/22)) ([b194d3d](https://github.com/emb715/neurodiveragents/commit/b194d3d4da8634f48091fb8df3f7a7ec0854c9ae))
+* **install:** refresh the global OpenCode routing block and report shim files left in place ([#21](https://github.com/emb715/neurodiveragents/issues/21)) ([190d084](https://github.com/emb715/neurodiveragents/commit/190d0841578f48cbfa827a5a776211e0266f0b76))
+
+
+### Documentation
+
+* PR titles must carry the dominant conventional type ([8378ead](https://github.com/emb715/neurodiveragents/commit/8378ead80c3d4860572b161f5d75ef8424d141f6))
+
 ## [1.7.3](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.7.2...neurodiveragents-v1.7.3) (2026-10-01)
 
 
