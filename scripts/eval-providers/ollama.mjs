@@ -12,6 +12,12 @@
 
 import { readFileSync } from 'node:fs'
 
+// System prompt: the routing instruction, or the file named by
+// NDV_EVAL_SYSTEM_FILE (the behavior eval passes an agent's model file).
+const SYSTEM = process.env.NDV_EVAL_SYSTEM_FILE
+  ? readFileSync(process.env.NDV_EVAL_SYSTEM_FILE, 'utf8')
+  : 'You are a task router. Follow the routing instructions in the user message exactly and reply with only the requested agent slug.'
+
 const model = process.env.NDV_EVAL_MODEL
 if (!model) {
   console.error('NDV_EVAL_MODEL is required for the ollama provider')
@@ -32,7 +38,7 @@ const res = await fetch(`${base}/api/chat`, {
     stream: false,
     think: false,
     messages: [
-      { role: 'system', content: 'You are a task router. Follow the routing instructions in the user message exactly and reply with only the requested agent slug.' },
+      { role: 'system', content: SYSTEM },
       { role: 'user', content: readFileSync(0, 'utf8') },
     ],
   }),

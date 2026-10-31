@@ -1,0 +1,630 @@
+{
+  "version": 1,
+  "description": "Behavioral output eval: does each agent do its job once a task reaches it? Scored by scripts/eval-behavior.mjs; integrity gated by test/validate-behavior.test.js.",
+  "kinds": {
+    "finds": "The input plants one defect or question inside the agent's domain. Pass: the output names it.",
+    "lane": "The input also plants a defect outside the agent's domain. Pass: the output hands it to the named agent.",
+    "brief": "A Flow brief with one required Brief Contract field missing or too vague. Pass: the output rejects it with BRIEF_REJECTED."
+  },
+  "cases": [
+    {
+      "id": "accessibility-finds",
+      "agent": "ndv-accessibility",
+      "kind": "finds",
+      "input": "Audit this signup form component for WCAG 2.2 AA. Users of concern: keyboard-only and screen reader.\n\n```jsx\nexport function Signup({ submit }) {\n  return (\n    <form>\n      <input type=\"email\" placeholder=\"Email\" />\n      <div className=\"btn\" onClick={submit}>Create account</div>\n    </form>\n  )\n}\n```",
+      "checks": [
+        {
+          "pattern": "keyboard|tabindex|<button|role=.?button|focusable",
+          "name": "clickable div is not keyboard operable"
+        },
+        {
+          "pattern": "label|aria-label|accessible name|placeholder",
+          "name": "input has no programmatic label"
+        }
+      ],
+      "why": "Two textbook AA failures: a click-only div and an input labelled only by placeholder."
+    },
+    {
+      "id": "accessibility-lane",
+      "agent": "ndv-accessibility",
+      "kind": "lane",
+      "input": "Audit this profile card for WCAG 2.2 AA (screen reader users).\n\n```jsx\nexport function ProfileCard({ user }) {\n  const ref = useRef()\n  useEffect(() => { ref.current.innerHTML = user.bio }, [user.bio])\n  return (\n    <section>\n      <img src={user.avatar} />\n      <div ref={ref} />\n    </section>\n  )\n}\n```\n`user.bio` is free text that any user can edit on their own profile.",
+      "checks": [
+        {
+          "pattern": "alt",
+          "name": "image without alt text"
+        },
+        {
+          "handoff": "ndv-secure"
+        }
+      ],
+      "why": "innerHTML with user-controlled bio is stored XSS: out of lane, must be handed to ndv-secure."
+    },
+    {
+      "id": "accessibility-brief",
+      "agent": "ndv-accessibility",
+      "kind": "brief",
+      "input": "Brief from ndv-flow:\n- WCAG level: AA\n- User populations of concern: screen reader users\n- Component type: form\n\nBegin the audit.",
+      "checks": [
+        {
+          "rejected": true
+        }
+      ],
+      "why": "The surface to audit is missing."
+    },
+    {
+      "id": "architect-finds",
+      "agent": "ndv-architect",
+      "kind": "finds",
+      "input": "Question being decided: we must add PayPal next quarter next to Stripe. Can OrderService absorb that as it stands, or does its structure need to change first?\nAlready settled: Node + TypeScript, MySQL stays. Constraints: team of 3, one deployable.\nTrigger: the PayPal feature.\n\n```ts\nexport class OrderService {\n  async checkout(cart: Cart) {\n    const repo = new MySqlOrderRepo()\n    const stripe = new StripeClient(process.env.STRIPE_KEY!)\n    const order = await repo.create(cart)\n    await stripe.charge(order.total, cart.cardToken)\n    await new SmtpMailer().send(cart.email, 'Thanks for your order')\n    return order\n  }\n}\n```",
+      "checks": [
+        {
+          "pattern": "dependency inversion|\\bDIP\\b|inject|interface|abstraction|port|adapter|open.closed|\\bOCP\\b",
+          "name": "concrete payment dependency blocks extension"
+        }
+      ],
+      "why": "The service news up Stripe directly; adding PayPal means editing it. The answer names inversion or an abstraction."
+    },
+    {
+      "id": "architect-lane",
+      "agent": "ndv-architect",
+      "kind": "lane",
+      "input": "Question being decided: should reporting stay inside OrderService or move to its own module?\nAlready settled: Node + TypeScript, Postgres. Constraints: one deployable. Trigger: reporting is growing.\n\n```ts\nexport class OrderService {\n  async monthlyReport(month: string) {\n    const orders = await db.query('SELECT * FROM orders WHERE month = $1', [month])\n    for (const o of orders) {\n      o.customer = await db.query('SELECT * FROM customers WHERE id = $1', [o.customer_id])\n    }\n    return orders\n  }\n  async checkout(cart: Cart) { /* ... */ }\n}\n```",
+      "checks": [
+        {
+          "handoff": "ndv-optimize"
+        }
+      ],
+      "why": "The per-order customer query is an N+1: a performance finding for ndv-optimize, not an architecture call."
+    },
+    {
+      "id": "architect-brief",
+      "agent": "ndv-architect",
+      "kind": "brief",
+      "input": "Brief from ndv-flow:\n- What already exists: billing module in src/billing, Postgres, REST API\n- Constraints: team of 4, monolith\n- Trigger: general health check\n\nReview the architecture of the billing module.",
+      "checks": [
+        {
+          "rejected": true
+        }
+      ],
+      "why": "\"Review the architecture\" is not a question being decided."
+    },
+    {
+      "id": "build-finds",
+      "agent": "ndv-build",
+      "kind": "finds",
+      "input": "Spec:\n- What to implement: `paginate(items, page, pageSize)` returning the items for that page.\n- Acceptance criteria:\n  1. `page` is 1-based: `paginate([1,2,3,4,5], 1, 2)` returns `[1,2]`.\n  2. A page past the end returns `[]`.\n  3. `pageSize <= 0` throws a `RangeError`.\n- Target files: src/paginate.js (new file, ESM, named export)\n- Architectural constraints: no dependencies; throw built-in errors only.\n- Spec type: code artifact.\n\nYou have no tools in this session: write the full file contents in your answer.",
+      "checks": [
+        {
+          "pattern": "RangeError",
+          "name": "implements the pageSize guard"
+        },
+        {
+          "pattern": "export\\s+(function|const)\\s+paginate",
+          "name": "named export as specified"
+        }
+      ],
+      "why": "A fully specified artifact; the output must carry the guard and the export."
+    },
+    {
+      "id": "build-lane",
+      "agent": "ndv-build",
+      "kind": "lane",
+      "input": "Spec:\n- What to implement: add a `GET /users/:id/orders` route that returns the user's orders as JSON.\n- Acceptance criteria: returns 200 with an array; returns 404 when the user does not exist.\n- Target files: src/routes/users.js (existing, shown below)\n- Architectural constraints: use the existing `db.query` helper; Express.\n- Spec type: code artifact.\n\nExisting file:\n```js\nrouter.get('/users/:id', async (req, res) => {\n  const rows = await db.query(\"SELECT * FROM users WHERE id = \" + req.params.id)\n  if (!rows.length) return res.sendStatus(404)\n  res.json(rows[0])\n})\n```\nYou have no tools in this session: write the changed file in your answer.",
+      "checks": [
+        {
+          "handoff": "ndv-secure"
+        }
+      ],
+      "why": "The existing route concatenates req.params into SQL. Craft implements around it and hands it to ndv-secure."
+    },
+    {
+      "id": "build-brief",
+      "agent": "ndv-build",
+      "kind": "brief",
+      "input": "Brief from ndv-flow:\n- What to implement: add pagination to the user list\n- Target files: src/users.ts\n- Architectural constraints: keep the existing repository pattern\n- Spec type: code artifact\n\nImplement it.",
+      "checks": [
+        {
+          "rejected": true
+        }
+      ],
+      "why": "Acceptance criteria are missing."
+    },
+    {
+      "id": "design-finds",
+      "agent": "ndv-design",
+      "kind": "finds",
+      "input": "Assess the visual hierarchy of our pricing page hero. Users: small-business owners comparing plans on desktop. Already decided: brand blue #2457F5, Inter.\n\nLayout, top to bottom:\n- Headline \"Simple pricing\" at 24px, same size and weight as the body text\n- A row of four buttons, all identical: brand blue fill, white text, same size: \"Start free trial\", \"Book a demo\", \"See docs\", \"Contact sales\"\n- Three plan cards of equal size, no plan marked as recommended",
+      "checks": [
+        {
+          "pattern": "hierarch|primary|secondary|competing|equal weight|Hick|emphasis|focal",
+          "name": "no single primary action or focal point"
+        }
+      ],
+      "why": "Four identical CTAs and a body-sized headline flatten the hierarchy."
+    },
+    {
+      "id": "design-lane",
+      "agent": "ndv-design",
+      "kind": "lane",
+      "input": "Assess the layout of this modal. Users: admins on desktop. Already decided: 8px spacing scale, our button components.\n\n- Title \"Delete project?\" left-aligned, 18px bold\n- Body copy in #A0A0A0 on #FFFFFF at 12px\n- Top right: a close button that is only an \"x\" icon, with no text and no aria-label\n- Footer: \"Cancel\" and \"Delete\" side by side, both the same grey secondary style",
+      "checks": [
+        {
+          "handoff": "ndv-accessibility"
+        }
+      ],
+      "why": "Contrast ratio and the unlabelled icon button are WCAG findings for ndv-accessibility; the equal-weight destructive button is the design finding."
+    },
+    {
+      "id": "design-brief",
+      "agent": "ndv-design",
+      "kind": "brief",
+      "input": "Brief from ndv-flow:\n- Surface: the checkout page\n- What is already decided: our design tokens and component library\n\nMake it better.",
+      "checks": [
+        {
+          "rejected": true
+        }
+      ],
+      "why": "The user and context are missing, and so is the concern."
+    },
+    {
+      "id": "diagnose-finds",
+      "agent": "ndv-diagnose",
+      "kind": "finds",
+      "input": "This test fails: `assert.equal(avg([1, 2, 3]), 2)` → actual: NaN.\nReproduce: `node --test test/avg.test.js`. Observed in CI and locally. Changed recently: someone \"simplified\" the loop last week.\n\n```js\nexport function avg(xs) {\n  let sum = 0\n  for (let i = 0; i <= xs.length; i++) sum += xs[i]\n  return sum / xs.length\n}\n```",
+      "checks": [
+        {
+          "pattern": "<=|off.by.one|xs\\[xs\\.length\\]|undefined|one past|bound",
+          "name": "loop reads one past the end"
+        }
+      ],
+      "why": "i <= length adds undefined, so the sum is NaN."
+    },
+    {
+      "id": "diagnose-lane",
+      "agent": "ndv-diagnose",
+      "kind": "lane",
+      "input": "Symptom: searching for customers named \"O'Brien\" returns HTTP 500 with \"syntax error at or near Brien\". Every other name works.\nReproduce: GET /customers?name=O'Brien. Observed in production. Changed recently: nothing in this file for months.\n\n```js\napp.get('/customers', async (req, res) => {\n  const rows = await db.query(\"SELECT * FROM customers WHERE name = '\" + req.query.name + \"'\")\n  res.json(rows)\n})\n```",
+      "checks": [
+        {
+          "pattern": "concatenat|quote|apostrophe|escap|parameter",
+          "name": "root cause: unescaped string building"
+        },
+        {
+          "handoff": "ndv-secure"
+        }
+      ],
+      "why": "The root cause is SQL injection. Pierce names it and hands it to ndv-secure without writing the patch."
+    },
+    {
+      "id": "diagnose-brief",
+      "agent": "ndv-diagnose",
+      "kind": "brief",
+      "input": "Brief from ndv-flow:\n- Symptom: checkout sometimes fails\n- Where it was observed: production\n- What changed recently: a deploy on Tuesday\n\nFind the root cause.",
+      "checks": [
+        {
+          "rejected": true
+        }
+      ],
+      "why": "No reproduction steps, and \"sometimes fails\" is not a specific symptom."
+    },
+    {
+      "id": "explain-finds",
+      "agent": "ndv-explain",
+      "kind": "finds",
+      "input": "Write the API reference entry for this function. Audience: developers on other teams who will call it.\n\n```js\n/** internal */\nexport async function retry(fn, { attempts = 3, delayMs = 100 } = {}) {\n  let lastErr\n  for (let i = 0; i < attempts; i++) {\n    try { return await fn() } catch (e) { lastErr = e }\n    await new Promise(r => setTimeout(r, delayMs * 2 ** i))\n  }\n  throw lastErr\n}\n```",
+      "checks": [
+        {
+          "pattern": "attempts",
+          "name": "documents the attempts option"
+        },
+        {
+          "pattern": "backoff|doubl|exponential|2 \\*\\*|2\\^",
+          "name": "documents the growing delay"
+        },
+        {
+          "pattern": "throw|rethrow|last error|rejects",
+          "name": "documents what happens when every attempt fails"
+        }
+      ],
+      "why": "A complete entry covers options, backoff, and failure behaviour."
+    },
+    {
+      "id": "explain-lane",
+      "agent": "ndv-explain",
+      "kind": "lane",
+      "input": "Write the API reference entry for this function. Audience: developers on other teams.\n\n```js\nexport function isLastAttempt(attempt, attempts) {\n  if (attempt = attempts) return true\n  return false\n}\n```",
+      "checks": [
+        {
+          "handoff": "ndv-diagnose"
+        }
+      ],
+      "why": "The condition assigns instead of comparing. Patient documents what exists and hands the bug to ndv-diagnose."
+    },
+    {
+      "id": "flow-finds",
+      "agent": "ndv-flow",
+      "kind": "finds",
+      "input": "Here is this sprint's workload. Plan the dispatch; do not execute anything yet.\n\n1. Audit the password-reset flow in src/auth/reset.ts for vulnerabilities. We suspect tokens never expire.\n2. Implement CSV export of invoices. Acceptance criteria: one row per invoice, header row, UTF-8, columns id,date,total. Target file: src/invoices/export.ts. Architecture is settled: reuse InvoiceRepo.list().\n3. The dashboard endpoint GET /api/dashboard is slow: p95 is 3.1s, target is under 500ms.",
+      "checks": [
+        {
+          "pattern": "ndv-secure",
+          "name": "item 1 → ndv-secure"
+        },
+        {
+          "pattern": "ndv-build",
+          "name": "item 2 → ndv-build"
+        },
+        {
+          "pattern": "ndv-optimize",
+          "name": "item 3 → ndv-optimize"
+        }
+      ],
+      "why": "Each item matches one routing row; the plan must name all three agents."
+    },
+    {
+      "id": "flow-lane",
+      "agent": "ndv-flow",
+      "kind": "lane",
+      "input": "Plan the dispatch for this workload; do not execute anything yet.\n\n1. Add a \"last login\" column to the admin users table. Acceptance criteria: shows the date in the user's locale, \"never\" when null. Target file: src/admin/UsersTable.tsx. Architecture settled.\n2. Since yesterday's deploy, checkout crashes with:\n   TypeError: Cannot read properties of undefined (reading 'total')\n       at applyDiscount (src/checkout/discount.js:42:18)\n   Nobody knows why yet.",
+      "checks": [
+        {
+          "pattern": "ndv-build",
+          "name": "item 1 → ndv-build"
+        },
+        {
+          "handoff": "ndv-diagnose"
+        }
+      ],
+      "why": "A crash with an unknown cause goes to ndv-diagnose, never straight to build."
+    },
+    {
+      "id": "forecast-finds",
+      "agent": "ndv-forecast",
+      "kind": "finds",
+      "input": "Sanity-check this estimate before we commit to it in planning.\n\nTicket: rewrite the auth module (session handling, password reset, remember-me).\nEstimate: 5 days, single number, from the engineer who will do it.\nHistory: the last 6 tickets this engineer estimated at 3-5 days took 6, 9, 7, 5, 11 and 8 days.",
+      "checks": [
+        {
+          "pattern": "range|interval|confidence|P\\d\\d|percentile|planning fallacy|histor|optimis",
+          "name": "replaces the point estimate with a range grounded in history"
+        }
+      ],
+      "why": "History says the estimate is optimistic; a calibrated answer gives a range from the record."
+    },
+    {
+      "id": "forecast-lane",
+      "agent": "ndv-forecast",
+      "kind": "lane",
+      "input": "Is 1 week realistic for this ticket?\n\nTicket: \"Settings revamp. Redesign the settings page, migrate all user preferences to the new schema, add SSO login, and while we're at it rebuild notification preferences from scratch.\"",
+      "checks": [
+        {
+          "handoff": "ndv-scope"
+        }
+      ],
+      "why": "Four projects in one ticket is a scope problem first; Datum hands it to ndv-scope."
+    },
+    {
+      "id": "honest-finds",
+      "agent": "ndv-honest",
+      "kind": "finds",
+      "input": "We're writing a new 200-line internal CLI that renames files in our monorepo. Everything else we have is Node, and nobody on the team knows Rust, but one engineer wants to use it as a learning project. Rust or Node?",
+      "checks": [
+        {
+          "pattern": "node",
+          "name": "answers Node, early",
+          "within": 400
+        }
+      ],
+      "why": "The direct answer is Node, and it comes first, before any hedging."
+    },
+    {
+      "id": "optimize-finds",
+      "agent": "ndv-optimize",
+      "kind": "finds",
+      "input": "Baseline: GET /orders takes 1.2s for 500 orders (measured, p50). Target: under 150ms. Hot path: the loop below. Constraint: the response shape must not change.\n\n```js\nasync function listOrders() {\n  const orders = await db.orders.findAll()\n  for (const o of orders) {\n    o.user = await db.users.findById(o.userId)\n  }\n  return orders\n}\n```",
+      "checks": [
+        {
+          "pattern": "N\\+1|batch|IN \\(|\\bin\\b.*ids|single query|join|preload|findAll\\(.*where|bulk",
+          "name": "collapses the per-row query"
+        }
+      ],
+      "why": "A classic N+1: 501 queries where 2 would do."
+    },
+    {
+      "id": "optimize-lane",
+      "agent": "ndv-optimize",
+      "kind": "lane",
+      "input": "Baseline: login takes 400ms p95. Target: under 100ms. Hot path: createSession below. Constraint: session format unchanged.\n\n```js\nasync function createSession(user) {\n  const token = Math.random().toString(36).slice(2)\n  const all = await db.sessions.findAll()\n  if (all.some(s => s.token === token)) return createSession(user)\n  await db.sessions.insert({ token, userId: user.id })\n  return token\n}\n```",
+      "checks": [
+        {
+          "handoff": "ndv-secure"
+        }
+      ],
+      "why": "Math.random session tokens are a security finding for ndv-secure; the full-table scan is the in-lane one."
+    },
+    {
+      "id": "optimize-brief",
+      "agent": "ndv-optimize",
+      "kind": "brief",
+      "input": "Brief from ndv-flow:\n- Target: under 100ms p95\n- Hot path: GET /search\n- Behavioral constraints: same results, same order\n\nMake it faster.",
+      "checks": [
+        {
+          "rejected": true
+        }
+      ],
+      "why": "No measured baseline."
+    },
+    {
+      "id": "refactor-finds",
+      "agent": "ndv-refactor",
+      "kind": "finds",
+      "input": "What to transform: the duplicated discount calculation in both branches. Extract it.\nWhat must not change: the public signature of price() and every return value.\nScope: this function only.\nWhy: duplicated logic (DRY); the two copies already drifted once.\n\n```js\nexport function price(user, amount) {\n  if (user.isAdmin) {\n    const d = amount > 100 ? amount * 0.1 : 0\n    return Math.round((amount - d) * 100) / 100\n  } else {\n    const d = amount > 100 ? amount * 0.1 : 0\n    return Math.round((amount - d) * 100) / 100 + 2\n  }\n}\n```",
+      "checks": [
+        {
+          "pattern": "function\\s+\\w+\\s*\\(|const\\s+\\w+\\s*=\\s*\\(",
+          "name": "introduces an extracted function"
+        },
+        {
+          "pattern": "export function price\\(user, amount\\)",
+          "name": "keeps the public signature"
+        }
+      ],
+      "why": "A single extract-function transformation with the signature preserved."
+    },
+    {
+      "id": "refactor-lane",
+      "agent": "ndv-refactor",
+      "kind": "lane",
+      "input": "What to transform: rename the cryptic variables to descriptive names.\nWhat must not change: behavior and the exported name.\nScope: this function.\nWhy: naming. The product rule is \"customers aged 18 and over are eligible\".\n\n```js\nexport function elig(u) {\n  const a = u.age\n  const r = a > 18\n  return r\n}\n```",
+      "checks": [
+        {
+          "handoff": "ndv-diagnose"
+        }
+      ],
+      "why": "> 18 excludes 18-year-olds, which breaks the stated rule. Renaming must not fix it; it goes to ndv-diagnose."
+    },
+    {
+      "id": "refactor-brief",
+      "agent": "ndv-refactor",
+      "kind": "brief",
+      "input": "Brief from ndv-flow:\n- What to transform: extract the validation logic into its own module\n- Scope boundary: src/signup/\n- Why the current form is wrong: the controller does too much (SRP)\n\nGo ahead.",
+      "checks": [
+        {
+          "rejected": true
+        }
+      ],
+      "why": "What must not change is missing."
+    },
+    {
+      "id": "research-finds",
+      "agent": "ndv-research",
+      "kind": "finds",
+      "input": "Where is the invoice email sent, and what triggers it? The relevant files are pasted below in full.\n\nsrc/routes/orders.js\n```js\nrouter.post('/orders/:id/complete', completeOrder)\nrouter.get('/orders/:id', getOrder)\n```\nsrc/controllers/orders.js\n```js\nexport async function completeOrder(req, res) {\n  const order = await orders.markComplete(req.params.id)\n  await billing.issueInvoice(order)\n  res.json(order)\n}\n```\nsrc/services/billing.js\n```js\nimport { send } from './mailer.js'\nexport async function issueInvoice(order) {\n  const pdf = await renderInvoice(order)\n  await send(order.email, 'Your invoice', pdf)\n}\n```\nsrc/services/mailer.js\n```js\nexport async function send(to, subject, attachment) { await smtp.sendMail({ to, subject, attachments: [attachment] }) }\n```",
+      "checks": [
+        {
+          "pattern": "mailer",
+          "name": "locates the send in mailer.js"
+        },
+        {
+          "pattern": "/orders/:id/complete|completeOrder",
+          "name": "names the trigger"
+        }
+      ],
+      "why": "The full trace: POST /orders/:id/complete → completeOrder → issueInvoice → mailer.send."
+    },
+    {
+      "id": "research-lane",
+      "agent": "ndv-research",
+      "kind": "lane",
+      "input": "How does a card payment get recorded? Files pasted in full.\n\nsrc/services/payments.js\n```js\nexport async function recordPayment(order, card) {\n  logger.info('payment received', { orderId: order.id, cardNumber: card.number, cvv: card.cvv })\n  await db.payments.insert({ orderId: order.id, last4: card.number.slice(-4) })\n}\n```",
+      "checks": [
+        {
+          "handoff": "ndv-secure"
+        }
+      ],
+      "why": "Logging the full card number and CVV is a security finding; Scout traces and hands it off."
+    },
+    {
+      "id": "review-finds",
+      "agent": "ndv-review",
+      "kind": "finds",
+      "input": "Review this diff from ndv-build. Priority: correctness. Constraints: async/await everywhere. Out of scope: naming.\n\n```diff\n+export async function updateProfile(repo, profile) {\n+  try {\n+    repo.save(profile)\n+  } catch (e) {\n+    logger.error(e)\n+  }\n+  return { ok: true }\n+}\n```",
+      "checks": [
+        {
+          "pattern": "await|unawaited|floating|unhandled|promise",
+          "name": "save() is not awaited, so the catch never fires"
+        }
+      ],
+      "why": "Missing await: errors become unhandled rejections and the function always reports ok."
+    },
+    {
+      "id": "review-lane",
+      "agent": "ndv-review",
+      "kind": "lane",
+      "input": "Review this diff from ndv-build. Priority: correctness. Constraints: Express. Out of scope: naming.\n\n```diff\n+router.get('/thumb', (req, res) => {\n+  exec('convert ' + req.query.file + ' -resize 64x64 out.png', () => res.sendFile('out.png'))\n+})\n```",
+      "checks": [
+        {
+          "handoff": "ndv-secure"
+        }
+      ],
+      "why": "Command injection through req.query.file: flagged Critical and handed to ndv-secure, not patched."
+    },
+    {
+      "id": "review-brief",
+      "agent": "ndv-review",
+      "kind": "brief",
+      "input": "Brief from ndv-flow:\n- Defect classes to prioritize: correctness\n- Constraints: project uses the repository pattern\n- Out of scope for this pass: style\n\nReview it.",
+      "checks": [
+        {
+          "rejected": true
+        }
+      ],
+      "why": "What was produced, and by whom, is missing."
+    },
+    {
+      "id": "scope-finds",
+      "agent": "ndv-scope",
+      "kind": "finds",
+      "input": "Review this ticket before it goes into the sprint.\n\n\"Add a password-reset email. While we're at it, rebuild the email template system so marketing can edit templates, and add SMS reset as an option.\"",
+      "checks": [
+        {
+          "pattern": "out of scope|cut|defer|separate|split|creep|while we.re at it|own ticket",
+          "name": "separates the core ask from the add-ons"
+        }
+      ],
+      "why": "One ask plus two \"while we're at it\" projects."
+    },
+    {
+      "id": "scope-lane",
+      "agent": "ndv-scope",
+      "kind": "lane",
+      "input": "Check this ticket's boundaries. Its acceptance criteria are clear and nothing extra is bundled.\n\n\"Export invoices as CSV: one row per invoice, header row, columns id,date,total. Estimate: 13 points, but the team's last three CSV exports took 2 points each and nobody can say where the other 11 come from.\"",
+      "checks": [
+        {
+          "handoff": "ndv-forecast"
+        }
+      ],
+      "why": "The boundaries are fine; the estimate is the question, and that belongs to ndv-forecast."
+    },
+    {
+      "id": "secure-finds",
+      "agent": "ndv-secure",
+      "kind": "finds",
+      "input": "Surface: the file download route below. Threat model: unauthenticated external user who controls the query string. Trust boundary: req.query.\n\n```js\napp.get('/download', (req, res) => {\n  res.sendFile(path.join(__dirname, 'public', req.query.name))\n})\n```",
+      "checks": [
+        {
+          "pattern": "path traversal|directory traversal|\\.\\./",
+          "name": "path traversal"
+        }
+      ],
+      "why": "req.query.name=../../etc/passwd escapes public/."
+    },
+    {
+      "id": "secure-lane",
+      "agent": "ndv-secure",
+      "kind": "lane",
+      "input": "Surface: the invoice label helper below. Threat model: authenticated user. Trust boundary: none of this takes user input; it is server-generated.\n\n```js\nexport function invoiceLabel(date = new Date()) {\n  // Business rule: label is \"INV-<year>-<month 01-12>\"\n  const month = String(date.getMonth()).padStart(2, '0')\n  return `INV-${date.getFullYear()}-${month}`\n}\n```",
+      "checks": [
+        {
+          "handoff": "ndv-diagnose"
+        }
+      ],
+      "why": "getMonth() is 0-based, so January prints 00: a non-security bug for ndv-diagnose."
+    },
+    {
+      "id": "secure-brief",
+      "agent": "ndv-secure",
+      "kind": "brief",
+      "input": "Brief from ndv-flow:\n- Threat model: external attacker\n\nAudit the app for security.",
+      "checks": [
+        {
+          "rejected": true
+        }
+      ],
+      "why": "The surface is the whole app: too broad to audit."
+    },
+    {
+      "id": "signal-finds",
+      "agent": "ndv-signal",
+      "kind": "finds",
+      "input": "Audit our engineering KPI. Engineers' quarterly bonus is tied to the number of PRs they merge per week. This quarter PR count is up 40% and median PR size dropped from 180 to 35 lines. Leadership calls it a productivity win.",
+      "checks": [
+        {
+          "pattern": "Goodhart|gam|incentiv|proxy|target",
+          "name": "the measure became the target"
+        }
+      ],
+      "why": "A bonus-linked count that rose while PR size collapsed is Goodhart's law in action."
+    },
+    {
+      "id": "signal-lane",
+      "agent": "ndv-signal",
+      "kind": "lane",
+      "input": "We want to report DORA lead time for changes next quarter. Problem: our deploy pipeline doesn't emit any event when a deploy finishes, so we only know commit times. Is lead time the right metric for us, and what do we need?",
+      "checks": [
+        {
+          "handoff": "ndv-telemetry"
+        }
+      ],
+      "why": "The missing deploy events are a telemetry gap; Signal judges the metric and hands the instrumentation off."
+    },
+    {
+      "id": "telemetry-finds",
+      "agent": "ndv-telemetry",
+      "kind": "finds",
+      "input": "What to observe: the charge() path. We need per-call duration and error rate. What not to touch: the return value and the retry behaviour. Destination: our existing pino logger and the prom-client registry. Granularity: per call.\n\nYou have no tools in this session: show the instrumented code in your answer.\n\n```js\nexport async function charge(order) {\n  const res = await stripe.charges.create({ amount: order.total, source: order.token })\n  return res.id\n}\n```",
+      "checks": [
+        {
+          "pattern": "duration|timing|latency|histogram|elapsed|startTimer|hrtime|performance\\.now",
+          "name": "records duration"
+        },
+        {
+          "pattern": "error|fail",
+          "name": "records failures"
+        }
+      ],
+      "why": "Instrumentation for both requested signals without changing behaviour."
+    },
+    {
+      "id": "telemetry-lane",
+      "agent": "ndv-telemetry",
+      "kind": "lane",
+      "input": "What to observe: the refund() path, with timing and error rate. What not to touch: behaviour. Destination: pino. Granularity: per call.\n\n```js\nconst stripe = new Stripe('live-secret-pasted-from-the-dashboard')\nexport async function refund(chargeId) {\n  return stripe.refunds.create({ charge: chargeId })\n}\n```",
+      "checks": [
+        {
+          "handoff": "ndv-secure"
+        }
+      ],
+      "why": "A live secret key hardcoded in source is a security finding, handed off and not patched."
+    },
+    {
+      "id": "telemetry-brief",
+      "agent": "ndv-telemetry",
+      "kind": "brief",
+      "input": "Brief from ndv-flow:\n- Output destination: pino\n- Granularity: per request\n\nAdd observability to the service.",
+      "checks": [
+        {
+          "rejected": true
+        }
+      ],
+      "why": "\"Add observability\" names nothing specific to observe."
+    },
+    {
+      "id": "tester-finds",
+      "agent": "ndv-tester",
+      "kind": "finds",
+      "input": "What to test: parseAge in src/age.js. Correctness: returns an integer age 0-150 for valid numeric strings and throws RangeError for anything else. Framework: node:test.\n\n```js\nexport function parseAge(s) {\n  const n = parseInt(s, 10)\n  if (n < 0 || n > 150) throw new RangeError('age out of range')\n  return n\n}\n```",
+      "checks": [
+        {
+          "pattern": "NaN|non-numeric|['\"]abc['\"]|empty string|['\"]{2}|12abc|letters",
+          "name": "probes non-numeric input"
+        }
+      ],
+      "why": "parseInt(\"abc\") is NaN and slips past both comparisons: the adversarial case Edge must probe."
+    },
+    {
+      "id": "tester-lane",
+      "agent": "ndv-tester",
+      "kind": "lane",
+      "input": "What to test: isAdult in src/age.js. Correctness: \"a person aged 18 or over is an adult\". Framework: node:test.\n\n```js\nexport function isAdult(age) {\n  return age > 18\n}\n```",
+      "checks": [
+        {
+          "handoff": "ndv-diagnose"
+        }
+      ],
+      "why": "The boundary test fails at 18 because the source is wrong. Edge writes the test and hands the source bug to ndv-diagnose."
+    },
+    {
+      "id": "tester-brief",
+      "agent": "ndv-tester",
+      "kind": "brief",
+      "input": "Brief from ndv-flow:\n- What to test: src/discount.ts\n- What can fail: negative totals\n- Test framework: node:test\n\nWrite the tests.",
+      "checks": [
+        {
+          "rejected": true
+        }
+      ],
+      "why": "What correctness means is missing."
+    }
+  ]
+}

@@ -30,6 +30,12 @@
 
 import { readFileSync } from 'node:fs'
 
+// System prompt: the routing instruction, or the file named by
+// NDV_EVAL_SYSTEM_FILE (the behavior eval passes an agent's model file).
+const SYSTEM = process.env.NDV_EVAL_SYSTEM_FILE
+  ? readFileSync(process.env.NDV_EVAL_SYSTEM_FILE, 'utf8')
+  : 'You are a task router. Follow the routing instructions in the user message exactly and reply with only the requested agent slug.'
+
 const model = process.env.NDV_EVAL_MODEL
 if (!model) {
   console.error('NDV_EVAL_MODEL is required for the anthropic provider')
@@ -67,8 +73,8 @@ const payload = JSON.stringify({
   // The answer is one slug, but gateways may enable extended thinking by
   // default and the thinking block counts against this cap. 256 truncated a
   // contested case mid-thought and the reply had no text block at all.
-  max_tokens: 4096,
-  system: 'You are a task router. Follow the routing instructions in the user message exactly and reply with only the requested agent slug.',
+  max_tokens: Number(process.env.NDV_EVAL_MAX_TOKENS) || 4096,
+  system: SYSTEM,
   messages: [{ role: 'user', content: readFileSync(0, 'utf8') }],
 })
 
