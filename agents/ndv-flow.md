@@ -89,6 +89,8 @@ A verification level bounds what Flow's brief may demand **beyond the agent's ow
 | Slow code, N+1, bundle, latency | `ndv-optimize` (Lean) |
 | WCAG auditing, ARIA violations, contrast ratios, keyboard nav, screen reader compatibility, a11y, accessibility audit, accessible | `ndv-accessibility` (Lux) |
 | Logging, metrics, tracing, health checks | `ndv-telemetry` (Pulse) |
+| Schema migration, backfill, ALTER TABLE, column rename on live data, zero-downtime data change | `ndv-migrate` (Keel) |
+| Framework or library upgrade, version bump, breaking changes in a dependency, codemods, deprecated API removal | `ndv-upgrade` (Delta) |
 | Scope creep, overloaded tickets, PRD boundary | `ndv-scope` (Bound) |
 | Technical docs, API docs, session notes | `ndv-explain` (Patient) |
 | Estimate review, sprint plan, roadmap sizing | `ndv-forecast` (Datum) |

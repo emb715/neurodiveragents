@@ -319,6 +319,96 @@
       "why": "The direct answer is Node, and it comes first, before any hedging."
     },
     {
+      "id": "migrate-finds",
+      "agent": "ndv-migrate",
+      "kind": "finds",
+      "input": "Plan this change.\n- Target shape: rename `users.fullname` to `users.display_name`. Nothing else changes.\n- Engine: PostgreSQL 15\n- Data size: users has 40M rows, about 9 GB\n- Downtime tolerance: none. The API runs 6 instances and deploys are rolling.\n- Rollback: must be reversible until the old name is removed; data written after the change must survive a rollback.\n\nThe developer's draft:\n```sql\nALTER TABLE users RENAME COLUMN fullname TO display_name;\n```",
+      "checks": [
+        {
+          "pattern": "expand|dual.?write|add (a |the )?(new )?column|both columns|contract",
+          "name": "replaces the in-place rename with expand and contract"
+        },
+        {
+          "pattern": "rolling|old (code|version)|deployed (code|instances)|previous version|still (read|reference)",
+          "name": "sees the old code still reading the old name"
+        }
+      ],
+      "why": "An in-place rename breaks every instance still running the old code during a rolling deploy."
+    },
+    {
+      "id": "migrate-lane",
+      "agent": "ndv-migrate",
+      "kind": "lane",
+      "input": "Plan this change.\n- Target shape: `orders.customer_id` becomes NOT NULL.\n- Engine: PostgreSQL 16\n- Data size: orders has 12M rows. 3,112 of them have customer_id NULL, all created by the 2023 CSV import, which had a bug that dropped the customer column.\n- Downtime tolerance: none\n- Rollback: the constraint must be removable without data loss.",
+      "checks": [
+        {
+          "pattern": "NOT VALID|validate",
+          "name": "adds the constraint without a long lock"
+        },
+        {
+          "handoff": "ndv-diagnose"
+        }
+      ],
+      "why": "The NULL rows are bad data from a known bug. Keel plans around them and hands the data fix to ndv-diagnose instead of deleting or defaulting them."
+    },
+    {
+      "id": "migrate-brief",
+      "agent": "ndv-migrate",
+      "kind": "brief",
+      "input": "Brief from ndv-flow:\n- Target shape: add a NOT NULL `region` column with default 'eu' to the events table\n- Engine: PostgreSQL 14\n- Downtime tolerance: none\n- Rollback requirement: reversible\n\nPlan the migration.",
+      "checks": [
+        {
+          "rejected": true
+        }
+      ],
+      "why": "No data size for the events table."
+    },
+    {
+      "id": "upgrade-finds",
+      "agent": "ndv-upgrade",
+      "kind": "finds",
+      "input": "Upgrade Express from 4.18.2 to 5.1.0. Test command: `npm test`. Step policy: direct jump. Runtime: Node 20.\n\nAll the Express usage in the app, pasted in full:\n```js\napp.get('/users/:id', (req, res) => {\n  const id = req.param('id')\n  res.json(users.get(id))\n})\napp.del('/users/:id', (req, res) => {\n  users.delete(req.params.id)\n  res.sendStatus(204)\n})\n```",
+      "checks": [
+        {
+          "pattern": "req\\.param\\(",
+          "name": "flags the removed req.param()"
+        },
+        {
+          "pattern": "app\\.del\\b",
+          "name": "flags the removed app.del"
+        },
+        {
+          "pattern": "searched|not used|no (call sites|usages|matches)|none found|→ none|not present|doesn.t use",
+          "name": "closes the changes that do not apply"
+        }
+      ],
+      "why": "Two removed APIs are in use. The mark of the agent is a ledger that also closes the breaking changes this code never touches."
+    },
+    {
+      "id": "upgrade-lane",
+      "agent": "ndv-upgrade",
+      "kind": "lane",
+      "input": "Upgrade lodash from 4.17.15 to 4.17.21, the first release that fixes the zipObjectDeep prototype-pollution advisory. Test command: `npm test`. Step policy: direct. Runtime: Node 20.\n\nOur only use of the affected function:\n```js\napp.post('/prefs', (req, res) => {\n  const prefs = _.zipObjectDeep(Object.keys(req.body), Object.values(req.body))\n  store.save(req.user.id, prefs)\n  res.sendStatus(204)\n})\n```\nAlso tell us how exposed we were before the fix.",
+      "checks": [
+        {
+          "handoff": "ndv-secure"
+        }
+      ],
+      "why": "The upgrade is in lane. Judging how exploitable the advisory was against request-body keys is Ward's call."
+    },
+    {
+      "id": "upgrade-brief",
+      "agent": "ndv-upgrade",
+      "kind": "brief",
+      "input": "Brief from ndv-flow:\n- Package: next, 13.5.6 → 15.0.3\n- Step policy: one major at a time\n- Runtime constraints: Node 18 and 20\n\nDo the upgrade.",
+      "checks": [
+        {
+          "rejected": true
+        }
+      ],
+      "why": "No test command, so there is no before-and-after comparison."
+    },
+    {
       "id": "optimize-finds",
       "agent": "ndv-optimize",
       "kind": "finds",

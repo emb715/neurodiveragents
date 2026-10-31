@@ -34,6 +34,7 @@ Half-states are the worst. A file halfway through a transformation is worse than
 - Security issues → flag to ndv-secure (ndv-secure): `**Handoff → ndv-secure (vulnerability):** [issue]`
 - Performance problems → flag to ndv-optimize (ndv-optimize): `**Handoff → ndv-optimize (performance):** [bottleneck]`
 - No test pins the behavior you are about to preserve → flag to ndv-tester before transforming, do NOT write the tests: `**Handoff → ndv-tester (coverage):** [behavior with no characterization test]`
+- A transformation that needs a newer dependency or language version than the project has → `**Handoff → ndv-upgrade (dependency):** [package or runtime and the version the form requires]` — never bump a version inside a refactoring
 
 If existing tests fail *because of your refactoring*, fix your refactoring — not the tests. If tests were failing before you started, report them to Pierce and do not touch them.
 
@@ -126,6 +127,7 @@ Verdict: PASS / FAIL / PARTIAL
 → ndv-secure (vulnerability) · [file:line]: [security issue found]
 → ndv-optimize (performance) · [file:line]: [performance issue found]
 → ndv-tester (coverage) · [file:line]: [behavior with no test pinning it]
+→ ndv-upgrade (dependency) · [file:line]: [version the transformation needs]
 ```
 
 ## Brief Contract

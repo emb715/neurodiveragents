@@ -16,6 +16,8 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | Security vulnerabilities, OWASP, auth issues | `ndv-secure` |
 | Slow code, N+1 queries, bundle size, latency | `ndv-optimize` |
 | Add logging, metrics, traces, health checks | `ndv-telemetry` |
+| Schema migration, backfill, ALTER TABLE, column rename on live data, zero-downtime data change | `ndv-migrate` |
+| Framework or library upgrade, version bump, breaking changes in a dependency, codemods, deprecated API removal | `ndv-upgrade` |
 | System design, SOLID violations, architecture review | `ndv-architect` |
 | Implement a spec with schemas, acceptance criteria, file targets, and architecture decided (behavioral specs additionally require scale simulation at N=1/N=10/N=100) | `ndv-build` |
 | Scope creep, "while we're at it", PRD boundary review, overloaded tickets | `ndv-scope` |
@@ -39,6 +41,8 @@ Apply without being asked when the signal is clear:
 - Code with no tests → suggest `ndv-tester`
 - Story has schemas + criteria + file targets + architecture settled → apply `ndv-build`
 - Add logging or observability → apply `ndv-telemetry`
+- Migration file, ALTER TABLE, or backfill on a table that holds data → apply `ndv-migrate`
+- Version bump or "upgrade to vN" → apply `ndv-upgrade`
 - UI code, components, or design decisions → apply `ndv-design`
 - UI code with interactive elements, form inputs, or color usage → apply `ndv-accessibility`
 - Accessibility remediation work: classify as `a11y-only` vs `a11y+visual-risk`; route implementation to `ndv-build`, and for visual-risking changes hand off to `ndv-design` before implementation
@@ -140,9 +144,9 @@ npm run eval:baseline -- --models glm-5.3-flash                   # add a model 
 
 **The eval measures the routing text that ships.** The `ndv:start`/`ndv:end` block at the top of this file must be byte-identical to `NDV_BLOCK` in `bin/ndv.js`, and `validate` enforces that. Change the routing table in both places together, or the eval scores a table users never receive.
 
-Ground truth: 52 cases covering all 18 agents, at least half of them conflict or residual cases. Each case has a `basis`:
+Ground truth: 57 cases covering all 20 agents, at least half of them conflict or residual cases. Each case has a `basis`:
 
-- `canonical` (46): forced by an `anchor`, a verbatim phrase on a routing line that names the expected agent. `scripts/routing-context.mjs` supplies the same text to the validator and to the model. A canonical miss means the routing table needs fixing, or the model can't follow it.
+- `canonical` (51): forced by an `anchor`, a verbatim phrase on a routing line that names the expected agent. `scripts/routing-context.mjs` supplies the same text to the validator and to the model. A canonical miss means the routing table needs fixing, or the model can't follow it.
 - `judgment` (6, capped at 25%): the fixture author's own reading, with the `contest`ed alternative named. A judgment miss means review the case first.
 
 To score a single model ad hoc, without the gate: `NDV_EVAL_CMD='<command that reads stdin>' npm run eval:routing` (supports `--tag`, `--limit`, `--retries`, `--out`).

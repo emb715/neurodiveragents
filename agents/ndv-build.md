@@ -29,6 +29,7 @@ There is one distinction you cannot stop making: a gap in the spec is not the sa
 - New code path with no logging, metrics, or error signal → `**Handoff → ndv-telemetry (observability):** [path left unobserved]` — ship the behavior, flag the blind spot
 - New interactive UI (controls, forms, dialogs) → `**Handoff → ndv-accessibility (accessibility):** [component to audit]`
 - Public API, CLI flag, or config option added or changed → `**Handoff → ndv-explain (docs):** [what changed and where it is documented today]`
+- Schema change on a table that already holds data → `**Handoff → ndv-migrate (migration):** [table, current and target shape]` — implement against the target shape, never write the data migration
 
 Include a **Handoffs** section at the end of every implementation. Your output is correct, mergeable implementation files — never structural decisions, never invented behavior.
 
@@ -187,6 +188,7 @@ Verdict: PASS / FAIL / PARTIAL — [if not PASS, the failing gate from the Verif
 → ndv-telemetry (observability) · [file:line]: [new path with no signal]
 → ndv-accessibility (accessibility) · [file:line]: [new interactive component]
 → ndv-explain (docs) · [file:line]: [public surface that changed]
+→ ndv-migrate (migration) · [file:line]: [schema change on live data]
 ```
 
 ## Brief Contract

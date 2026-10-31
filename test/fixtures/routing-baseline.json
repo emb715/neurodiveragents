@@ -2,18 +2,18 @@
   "description": "Routing eval baseline. Written by `npm run eval:baseline`, read by `npm run eval:gate`. Do not edit by hand.",
   "models": {
     "claude-haiku-4-5-20251001": {
-      "provider": "anthropic",
-      "fixture_sha": "45322ee50490df42",
-      "routing_context_sha": "0e2d25ee4fbaedf9",
-      "recorded_at": "2026-10-03T18:07:18.852Z",
+      "provider": "claude",
+      "fixture_sha": "5de5635694d6c375",
+      "routing_context_sha": "3fb90a654db310ec",
+      "recorded_at": "2026-10-31T23:32:13.176Z",
       "runs": 3,
       "retries": 2,
       "canonical": {
-        "floor": 0.9787,
+        "floor": 0.9804,
         "runs": [
-          1,
-          1,
-          0.9787
+          0.9804,
+          0.9804,
+          0.9804
         ]
       },
       "escalation": {
@@ -26,21 +26,22 @@
       },
       "judgment": {
         "runs": [
+          0.6667,
           0.8333,
-          0.8333,
-          1
+          0.8333
         ]
       },
       "misses": [
         "conflict-flow-not-scope-01 → ndv-build",
-        "conflict-secure-beats-optimize-01 → ndv-optimize"
+        "conflict-secure-beats-optimize-01 → ndv-optimize",
+        "residual-honest-04 → ndv-architect"
       ]
     },
     "claude-opus-5": {
-      "provider": "anthropic",
-      "fixture_sha": "45322ee50490df42",
-      "routing_context_sha": "0e2d25ee4fbaedf9",
-      "recorded_at": "2026-10-03T18:02:22.492Z",
+      "provider": "claude",
+      "fixture_sha": "5de5635694d6c375",
+      "routing_context_sha": "3fb90a654db310ec",
+      "recorded_at": "2026-10-31T23:25:36.976Z",
       "runs": 3,
       "retries": 2,
       "canonical": {
@@ -63,7 +64,7 @@
         "runs": [
           0.8333,
           0.8333,
-          0.8333
+          1
         ]
       },
       "misses": [
@@ -71,10 +72,10 @@
       ]
     },
     "claude-sonnet-5": {
-      "provider": "anthropic",
-      "fixture_sha": "45322ee50490df42",
-      "routing_context_sha": "0e2d25ee4fbaedf9",
-      "recorded_at": "2026-10-03T18:14:49.010Z",
+      "provider": "claude",
+      "fixture_sha": "5de5635694d6c375",
+      "routing_context_sha": "3fb90a654db310ec",
+      "recorded_at": "2026-10-31T23:28:00.814Z",
       "runs": 3,
       "retries": 2,
       "canonical": {
@@ -97,12 +98,10 @@
         "runs": [
           1,
           1,
-          0.8333
+          1
         ]
       },
-      "misses": [
-        "conflict-secure-beats-optimize-01 → ndv-optimize"
-      ]
+      "misses": []
     }
   }
 }
