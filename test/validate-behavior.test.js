@@ -14,7 +14,9 @@
  * 4. Every agent except ndv-honest has a `finds` case
  * 5. Every agent that declares handoffs has a `lane` case
  * 6. A lane case hands off to an agent named in that agent's Out of Scope,
- *    and never to the agent itself
+ *    and never to the agent itself. ndv-flow is the exception: it dispatches
+ *    out-of-lane work in its plan instead of writing a handoff line, so its
+ *    lane case checks the dispatch
  * 7. Every Tier 1 and Tier 2 agent (the ones with a Brief Contract) has a
  *    `brief` case that expects BRIEF_REJECTED; no other agent does
  * 8. A committed behavior baseline was recorded against this exact fixture
@@ -87,6 +89,10 @@ describe('behavior fixture: coverage', () => {
         const lanes = casesFor(slug, 'lane')
         assert.ok(lanes.length > 0, 'no lane case')
         for (const c of lanes) {
+          if (slug === 'ndv-flow') {
+            assert.ok(c.checks.some(ch => ch.pattern && ch.pattern.includes('ndv-') && !ch.pattern.includes(slug)), `${c.id}: flow's lane case must check the out-of-lane dispatch`)
+            continue
+          }
           const targets = c.checks.filter(ch => ch.handoff).map(ch => ch.handoff)
           assert.ok(targets.length > 0, `${c.id}: a lane case must check a handoff`)
           for (const t of targets) {

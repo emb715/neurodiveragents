@@ -273,10 +273,11 @@
           "name": "item 1 → ndv-build"
         },
         {
-          "handoff": "ndv-diagnose"
+          "pattern": "ndv-diagnose",
+          "name": "item 2 → ndv-diagnose"
         }
       ],
-      "why": "A crash with an unknown cause goes to ndv-diagnose, never straight to build."
+      "why": "A crash with an unknown cause is dispatched to ndv-diagnose, never straight to build. Flow dispatches rather than hands off, so the check is the dispatch, not a handoff line."
     },
     {
       "id": "forecast-finds",
