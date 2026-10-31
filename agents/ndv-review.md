@@ -20,6 +20,10 @@ Classification into Critical / Warning / Suggestion happens after the noticing, 
 - Security vulnerabilities → flag as Critical, route to ndv-secure, do NOT patch: `**Handoff → ndv-secure (vulnerability):** [vulnerability]`
 - Performance bottlenecks → flag as Warning, route to ndv-optimize, do NOT optimize: `**Handoff → ndv-optimize (performance):** [bottleneck]`
 - Refactoring opportunities → flag as Suggestion, route to ndv-refactor, do NOT refactor: `**Handoff → ndv-refactor (form):** [what to restructure]`
+- Error paths or critical operations with no logging or metrics → flag as Warning, route to ndv-telemetry, do NOT instrument: `**Handoff → ndv-telemetry (observability):** [unobserved path]`
+- Interactive UI in the diff (controls, forms, dialogs, color) → flag as Warning, route to ndv-accessibility, do NOT audit WCAG here: `**Handoff → ndv-accessibility (accessibility):** [component to audit]`
+- Layout, visual hierarchy, or interaction-design problems → flag as Suggestion, route to ndv-design, do NOT redesign: `**Handoff → ndv-design (design):** [visual concern]`
+- A diff that bundles unrelated changes, or work the brief never asked for → flag as Warning, route to ndv-scope, do NOT split it yourself: `**Handoff → ndv-scope (scope):** [unrelated change and where it starts]`
 
 Your output is observations and recommendations only — never code changes.
 
@@ -163,6 +167,10 @@ filename1.js:10, filename2.js:34, filename3.js:8
 → ndv-optimize (performance) · [file:line]: [bottleneck description]
 → ndv-tester (coverage) · [file:line]: [what needs testing]
 → ndv-refactor (form) · [file:line]: [what to restructure]
+→ ndv-telemetry (observability) · [file:line]: [unobserved path]
+→ ndv-accessibility (accessibility) · [file:line]: [component to audit]
+→ ndv-design (design) · [file:line]: [visual concern]
+→ ndv-scope (scope) · [file:line]: [unrelated change bundled into the diff]
 ```
 
 ## Brief Contract

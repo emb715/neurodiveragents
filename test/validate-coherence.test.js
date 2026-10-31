@@ -26,6 +26,9 @@
  *     drift class caught in ndv-tester.md by human review)
  * 13. Brief-cannot-override clause heads are not byte-identical boilerplate
  *     across 3+ agent files (boilerplate drift: 7 identical Tier 2 heads)
+ * 14. The Out of Scope handoff graph reaches every specialist: each one is
+ *     named by at least two other agents, and ndv-diagnose hands confirmed
+ *     fixes to ndv-build
  */
 
 import { test, describe } from 'node:test'
@@ -614,5 +617,52 @@ describe('coherence: brief-cannot-override clause is not byte-identical boilerpl
       '(boilerplate drift — each agent\'s clause must speak its own domain contract):\n' +
       duplicated.map(([head, files]) => `  ${files.length}x "${head}" — ${files.join(', ')}`).join('\n')
     )
+  })
+})
+
+// ─── 14. Every specialist is reachable through Out of Scope handoffs ─────────
+//
+// A specialist no other agent hands work to only runs when a human names it
+// or the router picks it first. Findings in its domain that surface during
+// someone else's task have nowhere to go. Counted from Out of Scope sections
+// only: that is the boundary an agent enforces mid-task.
+//
+// Exempt: ndv-honest (residual), ndv-flow (orchestrator, dispatched from the
+// top), ndv-research (a lookup service every agent can already do for itself).
+// ndv-diagnose → ndv-build is pinned on its own: it is the split the routing
+// table is built on ("root cause unknown" vs "root cause confirmed, fix known").
+
+const HANDOFF_ENTRY_EXEMPT = new Set(['ndv-honest', 'ndv-flow', 'ndv-research'])
+const MIN_INBOUND_HANDOFFS = 2
+
+function outOfScopeTargets(agent) {
+  const { body } = parseFrontmatter(agent.content, agent.file)
+  const section = extractSection(body, 'Out of Scope')
+  const targets = [...section.matchAll(/Handoff → (ndv-[a-z]+)/g)].map(m => m[1])
+  return new Set(targets.filter(t => t !== agent.name))
+}
+
+describe('coherence: every specialist is reachable through Out of Scope handoffs', () => {
+  const inbound = new Map([...ALL_SLUGS].map(s => [s, new Set()]))
+  for (const agent of agentFiles()) {
+    for (const t of outOfScopeTargets(agent)) inbound.get(t)?.add(agent.name)
+  }
+
+  for (const slug of [...ALL_SLUGS].sort()) {
+    if (HANDOFF_ENTRY_EXEMPT.has(slug)) continue
+    test(`${slug} — named by at least ${MIN_INBOUND_HANDOFFS} other agents' Out of Scope`, () => {
+      const from = [...inbound.get(slug)].sort()
+      assert.ok(
+        from.length >= MIN_INBOUND_HANDOFFS,
+        `${slug} is handed work by ${from.length} agent(s) (${from.join(', ') || 'none'}). ` +
+        'Findings in its domain that surface during other tasks have nowhere to go — add the boundary to the agents that meet them.'
+      )
+    })
+  }
+
+  test('ndv-diagnose hands a confirmed fix to ndv-build', () => {
+    const diagnose = agentFiles().find(a => a.name === 'ndv-diagnose')
+    assert.ok(outOfScopeTargets(diagnose).has('ndv-build'),
+      'ndv-diagnose finds and proposes; ndv-build applies. Without this handoff the routing split has no edge in the agent text.')
   })
 })
