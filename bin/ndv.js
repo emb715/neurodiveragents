@@ -42,11 +42,30 @@ function deriveOpenCodePermissions(tools) {
   return `permission:\n${lines.join('\n')}`
 }
 
+// Derive the Claude Code disallowedTools value from the same tools list, so the
+// OpenCode install output also registers in Claude Code (the global install
+// symlinks these files into ~/.claude/agents/). Mirrors deriveOpenCodePermissions:
+//   edit: deny → Edit, Write, MultiEdit, NotebookEdit
+//   bash: deny → Bash
+// Returns null when nothing is denied (no disallowedTools line at all).
+function deriveClaudeDisallowedTools(tools) {
+  const hasEdit = tools.includes('Write') || tools.includes('Edit')
+  const hasBash = tools.includes('Bash')
+  const denied = []
+  if (!hasEdit) denied.push('Edit', 'Write', 'MultiEdit', 'NotebookEdit')
+  if (!hasBash) denied.push('Bash')
+  return denied.length > 0 ? denied.join(', ') : null
+}
+
 // Rewrite frontmatter for OpenCode native agents:
 // - Strip tools: list (Claude Code only, causes OpenCode validation error)
 // - Strip effort: (Claude Code only, unknown key in OpenCode)
 // - Normalize mode: preserve mode: all, coerce mode: agent → subagent, inject subagent when absent
 // - Inject permission: block derived from tools
+// - Keep Claude Code fields alongside: name: (first line, equal to the file stem)
+//   and disallowedTools: (after description), so the same file registers in
+//   Claude Code through the ~/.claude/agents/ symlinks. Claude Code skips agent
+//   files with no name:, and OpenCode ignores keys it does not know.
 function transformForOpenCode(content, isGlobal, agentFilename) {
   const tools = parseAgentTools(content)
 
@@ -59,10 +78,14 @@ function transformForOpenCode(content, isGlobal, agentFilename) {
 
   // Strip tools: block
   fm = fm.replace(/^tools:\s*\n((?:  - .+\n?)+)/m, '')
-  // Strip Claude Code-only keys: name (filename is the agent ID in OpenCode),
-  // effort (not a valid OpenCode key), model (Claude Code format; provider prefix
-  // unknown at install time — subagents inherit from the invoking primary agent)
+  // Strip Claude Code-only keys: effort (not a valid OpenCode key), model
+  // (Claude Code format; provider prefix unknown at install time, so subagents
+  // inherit from the invoking primary agent). name: is kept (re-emitted as the
+  // first line below): OpenCode uses the filename as the agent ID and ignores
+  // it, Claude Code requires it.
+  const sourceName = (fm.match(/^name:\s*(.+)$/m) ?? [])[1]?.trim()
   fm = fm.replace(/^name:.*\n/m, '')
+  fm = fm.replace(/^disallowedTools:.*\n/m, '')
   fm = fm.replace(/^effort:.*\n/m, '')
   fm = fm.replace(/^model:.*\n/m, '')
   // Normalize mode for OpenCode:
@@ -73,7 +96,13 @@ function transformForOpenCode(content, isGlobal, agentFilename) {
   fm = fm.replace(/^mode:.*\n/m, '')
   const resolvedMode = sourceMode === 'all' ? 'all' : 'subagent'
   const permissions = deriveOpenCodePermissions(tools)
-  fm = fm.trimEnd() + `\nmode: ${resolvedMode}\n${permissions}\n`
+  const disallowed = deriveClaudeDisallowedTools(tools)
+  const name = sourceName || (agentFilename ? agentFilename.replace(/\.md$/, '') : null)
+  // Remaining keys end with description:, so disallowedTools lands right after it.
+  fm = (name ? `name: ${name}\n` : '') +
+    fm.trimEnd() +
+    (disallowed ? `\ndisallowedTools: ${disallowed}` : '') +
+    `\nmode: ${resolvedMode}\n${permissions}\n`
 
   // Body transform: inject the canonical opencode agents path into ndv-flow's
   // "Read the target agent's full file before authoring anything" instruction.
@@ -1299,7 +1328,7 @@ function help() {
 // test/transform-skill.test.js). The transform is a pure function; buildSkillGroups
 // reads the filesystem (agents/ + skills/) but is deterministic for a given repo
 // state and is exercised by the interactive-path coverage tests.
-export { transformAgentToSkill, buildSkillGroups, transformForOpenCode, NDV_BLOCK }
+export { transformAgentToSkill, buildSkillGroups, transformForOpenCode, deriveClaudeDisallowedTools, NDV_BLOCK }
 
 const TOOL_OPTIONS = [
   { value: 'claude',   label: 'Claude Code',    hint: '.claude/agents/',                    signals: ['.claude', 'CLAUDE.md'] },
