@@ -361,39 +361,3 @@ test('transformForOpenCode: agentFilename === "ndv-flow.md" but the literal inst
     'unrelated body text must be preserved verbatim when the literal does not match'
   )
 })
-
-// ─── Dual-format frontmatter: OpenCode output still registers in Claude Code ──
-//
-// The global OpenCode install symlinks its output into ~/.claude/agents/.
-// Claude Code skips agent files with no name:, so the transform must keep
-// name: (equal to the file stem, first line) and add disallowedTools: derived
-// from the same tools list as the OpenCode permission: block.
-
-test('transformForOpenCode: every agent keeps name (file stem, first line), mode and permission, and disallowedTools mirrors permission', async () => {
-  const { readdirSync } = await import('node:fs')
-  const agentsDir = join(ROOT, 'agents')
-  const expectEditDenied = new Set(['ndv-research', 'ndv-review', 'ndv-architect', 'ndv-diagnose', 'ndv-design', 'ndv-secure', 'ndv-scope', 'ndv-signal', 'ndv-forecast', 'ndv-accessibility', 'ndv-flow'])
-  const expectBashDenied = new Set(['ndv-flow'])
-  for (const file of readdirSync(agentsDir).filter(f => /^ndv-.*\.md$/.test(f))) {
-    const stem = file.replace(/\.md$/, '')
-    const out = transformForOpenCode(readFileSync(join(agentsDir, file), 'utf8'), true, file)
-    const fm = out.match(/^---\n([\s\S]*?)^---\n/m)[1]
-    assert.equal(fm.split('\n')[0], `name: ${stem}`, `${file}: name must be the first frontmatter line and equal the file stem`)
-    assert.match(fm, /^mode: (all|subagent)$/m, `${file}: mode missing`)
-    assert.match(fm, /^permission:\n {2}edit: (allow|deny)\n {2}bash: (allow|deny)/m, `${file}: permission block missing`)
-    const denied = (fm.match(/^disallowedTools: (.+)$/m) ?? [])[1]
-    const expected = [
-      ...(expectEditDenied.has(stem) ? ['Edit', 'Write', 'MultiEdit', 'NotebookEdit'] : []),
-      ...(expectBashDenied.has(stem) ? ['Bash'] : []),
-    ]
-    assert.equal(denied ?? null, expected.length ? expected.join(', ') : null, `${file}: disallowedTools mismatch`)
-    assert.equal(/edit: deny/.test(fm), expectEditDenied.has(stem), `${file}: edit permission disagrees with disallowedTools`)
-    assert.equal(/bash: deny/.test(fm), expectBashDenied.has(stem), `${file}: bash permission disagrees with disallowedTools`)
-  }
-})
-
-test('transformForOpenCode: source with no name: gets name: injected from the file stem', () => {
-  const input = '---\ndescription: x\ntools:\n  - Read\n---\nbody\n'
-  const out = transformForOpenCode(input, true, 'ndv-sample.md')
-  assert.ok(out.startsWith('---\nname: ndv-sample\ndescription: x\ndisallowedTools: Edit, Write, MultiEdit, NotebookEdit, Bash\nmode: subagent\n'), out)
-})

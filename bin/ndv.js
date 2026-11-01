@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, readdirSync, copyFileSync, symlinkSync, lstatSync, unlinkSync, readlinkSync, realpathSync, chmodSync } from 'fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync, readdirSync, copyFileSync, lstatSync, unlinkSync, realpathSync, chmodSync } from 'fs'
 import { join, dirname, resolve } from 'path'
 import { homedir } from 'os'
 import { fileURLToPath } from 'url'
@@ -42,30 +42,11 @@ function deriveOpenCodePermissions(tools) {
   return `permission:\n${lines.join('\n')}`
 }
 
-// Derive the Claude Code disallowedTools value from the same tools list, so the
-// OpenCode install output also registers in Claude Code (the global install
-// symlinks these files into ~/.claude/agents/). Mirrors deriveOpenCodePermissions:
-//   edit: deny → Edit, Write, MultiEdit, NotebookEdit
-//   bash: deny → Bash
-// Returns null when nothing is denied (no disallowedTools line at all).
-function deriveClaudeDisallowedTools(tools) {
-  const hasEdit = tools.includes('Write') || tools.includes('Edit')
-  const hasBash = tools.includes('Bash')
-  const denied = []
-  if (!hasEdit) denied.push('Edit', 'Write', 'MultiEdit', 'NotebookEdit')
-  if (!hasBash) denied.push('Bash')
-  return denied.length > 0 ? denied.join(', ') : null
-}
-
 // Rewrite frontmatter for OpenCode native agents:
 // - Strip tools: list (Claude Code only, causes OpenCode validation error)
 // - Strip effort: (Claude Code only, unknown key in OpenCode)
 // - Normalize mode: preserve mode: all, coerce mode: agent → subagent, inject subagent when absent
 // - Inject permission: block derived from tools
-// - Keep Claude Code fields alongside: name: (first line, equal to the file stem)
-//   and disallowedTools: (after description), so the same file registers in
-//   Claude Code through the ~/.claude/agents/ symlinks. Claude Code skips agent
-//   files with no name:, and OpenCode ignores keys it does not know.
 function transformForOpenCode(content, isGlobal, agentFilename) {
   const tools = parseAgentTools(content)
 
@@ -78,14 +59,10 @@ function transformForOpenCode(content, isGlobal, agentFilename) {
 
   // Strip tools: block
   fm = fm.replace(/^tools:\s*\n((?:  - .+\n?)+)/m, '')
-  // Strip Claude Code-only keys: effort (not a valid OpenCode key), model
-  // (Claude Code format; provider prefix unknown at install time, so subagents
-  // inherit from the invoking primary agent). name: is kept (re-emitted as the
-  // first line below): OpenCode uses the filename as the agent ID and ignores
-  // it, Claude Code requires it.
-  const sourceName = (fm.match(/^name:\s*(.+)$/m) ?? [])[1]?.trim()
+  // Strip Claude Code-only keys: name (filename is the agent ID in OpenCode),
+  // effort (not a valid OpenCode key), model (Claude Code format; provider prefix
+  // unknown at install time — subagents inherit from the invoking primary agent)
   fm = fm.replace(/^name:.*\n/m, '')
-  fm = fm.replace(/^disallowedTools:.*\n/m, '')
   fm = fm.replace(/^effort:.*\n/m, '')
   fm = fm.replace(/^model:.*\n/m, '')
   // Normalize mode for OpenCode:
@@ -96,13 +73,7 @@ function transformForOpenCode(content, isGlobal, agentFilename) {
   fm = fm.replace(/^mode:.*\n/m, '')
   const resolvedMode = sourceMode === 'all' ? 'all' : 'subagent'
   const permissions = deriveOpenCodePermissions(tools)
-  const disallowed = deriveClaudeDisallowedTools(tools)
-  const name = sourceName || (agentFilename ? agentFilename.replace(/\.md$/, '') : null)
-  // Remaining keys end with description:, so disallowedTools lands right after it.
-  fm = (name ? `name: ${name}\n` : '') +
-    fm.trimEnd() +
-    (disallowed ? `\ndisallowedTools: ${disallowed}` : '') +
-    `\nmode: ${resolvedMode}\n${permissions}\n`
+  fm = fm.trimEnd() + `\nmode: ${resolvedMode}\n${permissions}\n`
 
   // Body transform: inject the canonical opencode agents path into ndv-flow's
   // "Read the target agent's full file before authoring anything" instruction.
@@ -518,8 +489,8 @@ function writeRoutingGlobalOpenCode(jsonPath) {
   // agents into both:
   //   ~/.config/opencode/agents/**  — canonical opencode global install target
   //   ~/.claude/agents/**           — Claude Code compat shim created by the
-  //                                   opencode global install (symlinks to the
-  //                                   canonical dir). Without this rule, any
+  //                                   opencode global install (Claude Code format
+  //                                   copies of agents/). Without this rule, any
   //                                   subagent that resolves an agent file to
   //                                   the shim path triggers a permission
   //                                   prompt in every other repo. The installer
@@ -591,7 +562,10 @@ function installAgents(toolName, target, isGlobal, s = null) {
 
     const destName = agent.replace('.md', target.ext)
     const destContent = toolName === 'opencode' ? transformForOpenCode(content, isGlobal, agent) : content
-    writeFileSync(join(target.dest, destName), destContent)
+    const destPath = join(target.dest, destName)
+    // Never write through a symlink: it would overwrite the other tool's file.
+    try { if (lstatSync(destPath).isSymbolicLink()) unlinkSync(destPath) } catch { /* absent */ }
+    writeFileSync(destPath, destContent)
   }
 
   // OpenCode: install slash commands
@@ -669,58 +643,23 @@ function installAgents(toolName, target, isGlobal, s = null) {
   }
   // cursor and claude global: agents dir is enough, no routing file needed
 
-  // For global opencode installs: mirror agents into ~/.claude/agents/ via symlinks
+  // For global opencode installs: also install the Claude Code agent files into
+  // ~/.claude/agents/. Each tool gets its own file in its own format:
+  //   ~/.config/opencode/agents/  OpenCode format (mode, permission), from transformForOpenCode()
+  //   ~/.claude/agents/           Claude Code format (name, tools), the agents/ source verbatim
+  // These used to be symlinks to the OpenCode files. Claude Code skips agent
+  // files with no name:, so none of them registered. The fix is not to put
+  // Claude Code keys in the OpenCode files: OpenCode passes unknown frontmatter
+  // keys through to the provider as model options.
   if (toolName === 'opencode' && isGlobal) {
     const claudeAgentsDir = join(HOME, '.claude', 'agents')
-    mkdirSync(claudeAgentsDir, { recursive: true })
-    const installedAgents = readdirSync(target.dest).filter(f => f.endsWith('.md'))
-    let linked = 0
-    let current = 0
-    const keptFiles = []
-    const keptDangling = []
-    for (const agent of installedAgents) {
-      const linkPath = join(claudeAgentsDir, agent)
-      const targetPath = join(target.dest, agent)
-      // Use lstatSync (not existsSync) — correctly detects dangling symlinks
-      let skip = false
-      try {
-        const stat = lstatSync(linkPath)
-        if (stat.isSymbolicLink()) {
-          // Symlink exists — check if it points to the right place
-          const linkTarget = readlinkSync(linkPath)
-          if (resolve(dirname(linkPath), linkTarget) === resolve(targetPath)) {
-            skip = true // already correct — leave it
-            current++
-          } else {
-            // Symlink points somewhere else. Only replace if it's a VALID (non-dangling) link.
-            // A dangling symlink (target doesn't exist) may be the user's intentional pointer
-            // to a not-yet-created file — preserve it, same policy as regular files below.
-            if (existsSync(linkPath)) {
-              unlinkSync(linkPath) // valid link, wrong target — remove and recreate below
-            } else {
-              skip = true // dangling — preserve, do not clobber
-              keptDangling.push(agent)
-            }
-          }
-        } else {
-          skip = true // regular file — do not clobber, but say so below
-          keptFiles.push(agent)
-        }
-      } catch {
-        // lstatSync threw — path does not exist, proceed to create
-      }
-      if (skip) continue
-      symlinkSync(targetPath, linkPath)
-      linked++
-    }
-    // Report what actually happened. "Symlinked agents" after skipping every
-    // one of them is how a stale ~/.claude/agents goes unnoticed for months:
-    // a regular file there never updates with this install.
-    console.log(`  Symlinked ${linked} agent(s) to ${claudeAgentsDir}/` + (current ? ` (${current} already linked)` : ''))
+    const { written, replacedLinks, keptFiles, keptDangling } = writeClaudeAgentFiles(claudeAgentsDir, agents)
+    console.log(`  Wrote ${written} Claude Code agent(s) to ${claudeAgentsDir}/` +
+      (replacedLinks ? ` (replaced ${replacedLinks} old symlink(s) to the OpenCode files)` : ''))
     if (keptFiles.length > 0) {
-      console.warn(`  ⚠ ${keptFiles.length} regular file(s) left in place in ${claudeAgentsDir} — not symlinked, will not update with this install:`)
+      console.warn(`  ⚠ ${keptFiles.length} file(s) in ${claudeAgentsDir} are not fleet agents and were left in place:`)
       console.warn(`    ${keptFiles.join(', ')}`)
-      console.warn(`    If these are old ndv copies, move them out of the directory and re-run.`)
+      console.warn(`    Move them out of the directory and re-run to install the fleet versions.`)
     }
     if (keptDangling.length > 0) {
       console.warn(`  ⚠ ${keptDangling.length} dangling symlink(s) left in place in ${claudeAgentsDir}: ${keptDangling.join(', ')}`)
@@ -737,6 +676,38 @@ function installAgents(toolName, target, isGlobal, s = null) {
   }
 
   return { skipped, commandFallbacks }
+}
+
+// Write the Claude Code agent files (agents/ source, verbatim) into dir.
+// A symlink at the destination is removed first, so the write never follows it
+// into another tool's file (the old opencode shim linked ~/.claude/agents/ to
+// ~/.config/opencode/agents/). A dangling symlink is left alone: it may be the
+// user's own pointer to a file not created yet. A regular file is overwritten
+// only when it is a fleet file (its frontmatter name: equals the file stem);
+// anything else is the user's and is kept.
+function writeClaudeAgentFiles(dir, agentFiles) {
+  mkdirSync(dir, { recursive: true })
+  let written = 0
+  let replacedLinks = 0
+  const keptFiles = []
+  const keptDangling = []
+  for (const agent of agentFiles) {
+    const dest = join(dir, agent)
+    let stat = null
+    try { stat = lstatSync(dest) } catch { /* absent */ }
+    if (stat?.isSymbolicLink()) {
+      if (!existsSync(dest)) { keptDangling.push(agent); continue }
+      unlinkSync(dest)
+      replacedLinks++
+    } else if (stat) {
+      const fm = extractFrontmatter(readFileSync(dest, 'utf8'))?.fm ?? ''
+      const existingName = (fm.match(/^name:\s*(.+)$/m) ?? [])[1]?.trim()
+      if (existingName !== agent.replace(/\.md$/, '')) { keptFiles.push(agent); continue }
+    }
+    writeFileSync(dest, readFileSync(join(AGENTS_DIR, agent), 'utf8'))
+    written++
+  }
+  return { written, replacedLinks, keptFiles, keptDangling }
 }
 
 async function install(toolName, isGlobal = false, interactive = false) {
@@ -1328,7 +1299,7 @@ function help() {
 // test/transform-skill.test.js). The transform is a pure function; buildSkillGroups
 // reads the filesystem (agents/ + skills/) but is deterministic for a given repo
 // state and is exercised by the interactive-path coverage tests.
-export { transformAgentToSkill, buildSkillGroups, transformForOpenCode, deriveClaudeDisallowedTools, NDV_BLOCK }
+export { transformAgentToSkill, buildSkillGroups, transformForOpenCode, NDV_BLOCK }
 
 const TOOL_OPTIONS = [
   { value: 'claude',   label: 'Claude Code',    hint: '.claude/agents/',                    signals: ['.claude', 'CLAUDE.md'] },

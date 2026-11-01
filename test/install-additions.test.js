@@ -1,7 +1,7 @@
 /**
  * Adversarial tests for two specific code blocks in bin/ndv.js
  *
- * BLOCK 1: Symlink logic (opencode global → ~/.claude/agents/ mirroring)
+ * BLOCK 1: Claude Code agent files written by the opencode global install (~/.claude/agents/)
  * BLOCK 2: Parity check (warn when installedCount !== sourceCount - skipped.length)
  *
  * Strategy: override HOME via env so all global paths redirect to an isolated
@@ -52,235 +52,179 @@ function ndvGlobal(args, fakeHome) {
   })
 }
 
-// ─── BLOCK 1: Symlink logic ───────────────────────────────────────────────────
+// ─── BLOCK 1: Claude Code agent files (opencode global → ~/.claude/agents/) ───
+//
+// The opencode global install writes the Claude Code format files (agents/
+// source, verbatim) into ~/.claude/agents/. It used to symlink the OpenCode
+// format files there; those have no name:, so Claude Code never registered them.
 
-test('symlink: ~/.claude/agents/ does not exist — must be created and agents symlinked', () => {
-  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-sym-create-'))
+const claudeDir = home => join(home, '.claude', 'agents')
+const opencodeDir = home => join(home, '.config', 'opencode', 'agents')
+
+test('claude files: ~/.claude/agents/ absent: created with regular files identical to agents/ source', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-cc-create-'))
   try {
-    // Arrange: HOME exists but .claude/agents/ does NOT
-    assert.ok(!existsSync(join(fakeHome, '.claude', 'agents')), 'precondition: dir must be absent')
-
-    // Act
+    assert.ok(!existsSync(claudeDir(fakeHome)), 'precondition: dir must be absent')
     const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
     assert.equal(r.status, 0, `exit code ${r.status}\nstderr: ${r.stderr}`)
 
-    // Assert: directory was created
-    const claudeAgentsDir = join(fakeHome, '.claude', 'agents')
-    assert.ok(existsSync(claudeAgentsDir), '~/.claude/agents/ was not created')
-
-    // Assert: at least one symlink exists
-    const entries = readdirSync(claudeAgentsDir)
-    assert.ok(entries.length > 0, 'no symlinks were created in ~/.claude/agents/')
-
-    // Assert: entries are symlinks (not copies)
+    const entries = readdirSync(claudeDir(fakeHome)).filter(f => f.endsWith('.md'))
+    assert.equal(entries.length, REAL_AGENT_COUNT)
     for (const entry of entries) {
-      const stat = lstatSync(join(claudeAgentsDir, entry))
-      assert.ok(stat.isSymbolicLink(), `${entry} should be a symlink, not a regular file`)
+      const p = join(claudeDir(fakeHome), entry)
+      assert.ok(lstatSync(p).isFile() && !lstatSync(p).isSymbolicLink(), `${entry} must be a regular file`)
+      assert.equal(readFileSync(p, 'utf8'), readFileSync(join(AGENTS_DIR, entry), 'utf8'), `${entry} must match the source`)
+      assert.match(readFileSync(p, 'utf8'), new RegExp(`^---\\nname: ${entry.replace('.md', '')}\\n`), `${entry} must start with name: <stem>`)
     }
   } finally {
     rmSync(fakeHome, { recursive: true, force: true })
   }
 })
 
-test('symlink: pre-existing correct symlink — must be skipped without error or duplication', () => {
-  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-sym-existing-'))
+test('claude files: each tool gets its own format, OpenCode files carry no Claude Code keys', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-cc-split-'))
   try {
-    // Arrange: run install once to create symlinks
-    const r1 = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
-    assert.equal(r1.status, 0, `first install failed: ${r1.stderr}`)
-
-    const claudeAgentsDir = join(fakeHome, '.claude', 'agents')
-    const before = readdirSync(claudeAgentsDir).sort()
-    assert.ok(before.length > 0, 'precondition: symlinks must exist after first install')
-
-    // Record link targets before second install
-    const targetsBeore = Object.fromEntries(
-      before.map(f => [f, readlinkSync(join(claudeAgentsDir, f))])
-    )
-
-    // Act: second install with symlinks already in place
-    const r2 = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
-    assert.equal(r2.status, 0, `second install failed: ${r2.stderr}`)
-
-    // Assert: same files, same targets (no duplication, no error)
-    const after = readdirSync(claudeAgentsDir).sort()
-    assert.deepEqual(after, before, 'file list changed on second install — duplication or deletion')
-
-    for (const f of after) {
-      const target = readlinkSync(join(claudeAgentsDir, f))
-      assert.equal(target, targetsBeore[f], `symlink target changed for ${f}`)
+    const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    assert.equal(r.status, 0, `install failed: ${r.stderr}`)
+    for (const entry of readdirSync(opencodeDir(fakeHome)).filter(f => f.endsWith('.md'))) {
+      const oc = readFileSync(join(opencodeDir(fakeHome), entry), 'utf8')
+      const fm = oc.match(/^---\n([\s\S]*?)^---\n/m)[1]
+      assert.doesNotMatch(fm, /^(name|tools|disallowedTools):/m, `${entry}: OpenCode file must not carry Claude Code keys`)
+      assert.match(fm, /^mode: /m, `${entry}: mode missing`)
+      assert.match(fm, /^permission:\n/m, `${entry}: permission missing`)
     }
   } finally {
     rmSync(fakeHome, { recursive: true, force: true })
   }
 })
 
-test('symlink: pre-existing dangling symlink — must be skipped, not overwritten', () => {
-  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-sym-dangling-'))
+test('claude files: old symlinks to the OpenCode files are replaced, and the OpenCode files are not overwritten through them', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-cc-oldlinks-'))
   try {
-    // Arrange: create ~/.claude/agents/ with a dangling symlink for SAMPLE_AGENT
-    const claudeAgentsDir = join(fakeHome, '.claude', 'agents')
-    mkdirSync(claudeAgentsDir, { recursive: true })
+    // Arrange: the old shim layout, an OpenCode file plus a symlink to it
+    mkdirSync(opencodeDir(fakeHome), { recursive: true })
+    mkdirSync(claudeDir(fakeHome), { recursive: true })
+    const ocFile = join(opencodeDir(fakeHome), SAMPLE_AGENT)
+    writeFileSync(ocFile, '---\ndescription: old\nmode: subagent\n---\n')
+    symlinkSync(ocFile, join(claudeDir(fakeHome), SAMPLE_AGENT))
+
+    const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    assert.equal(r.status, 0, `install failed: ${r.stderr}`)
+
+    const linkPath = join(claudeDir(fakeHome), SAMPLE_AGENT)
+    assert.ok(!lstatSync(linkPath).isSymbolicLink(), 'old symlink must be replaced by a regular file')
+    assert.equal(readFileSync(linkPath, 'utf8'), readFileSync(join(AGENTS_DIR, SAMPLE_AGENT), 'utf8'))
+    assert.doesNotMatch(readFileSync(ocFile, 'utf8'), /^name:/m, 'OpenCode file was overwritten with Claude Code content')
+    assert.ok((r.stdout + r.stderr).includes('replaced 1 old symlink(s)'), `expected the replaced-link note; got:\n${r.stdout}`)
+  } finally {
+    rmSync(fakeHome, { recursive: true, force: true })
+  }
+})
+
+test('claude files: pre-existing dangling symlink: must be skipped, not overwritten', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-cc-dangling-'))
+  try {
+    mkdirSync(claudeDir(fakeHome), { recursive: true })
     const danglingTarget = join(fakeHome, 'nonexistent', 'path', SAMPLE_AGENT)
-    const linkPath = join(claudeAgentsDir, SAMPLE_AGENT)
+    const linkPath = join(claudeDir(fakeHome), SAMPLE_AGENT)
     symlinkSync(danglingTarget, linkPath)
-
-    // Verify it's dangling: lstat succeeds, but the target doesn't exist
-    const stat = lstatSync(linkPath)
-    assert.ok(stat.isSymbolicLink(), 'precondition: must be a symlink')
     assert.ok(!existsSync(linkPath), 'precondition: symlink target must not exist (dangling)')
 
-    // Act
     const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
     assert.equal(r.status, 0, `install failed: ${r.stderr}`)
-
-    // Assert: the dangling symlink was not replaced — still points to the original stale target
-    const afterTarget = readlinkSync(linkPath)
-    assert.equal(afterTarget, danglingTarget,
-      `Dangling symlink was overwritten — install clobbered ${SAMPLE_AGENT}`)
+    assert.equal(readlinkSync(linkPath), danglingTarget, `Dangling symlink was overwritten, install clobbered ${SAMPLE_AGENT}`)
+    assert.ok(!existsSync(danglingTarget), 'install must not write through a dangling symlink')
   } finally {
     rmSync(fakeHome, { recursive: true, force: true })
   }
 })
 
-test('symlink: pre-existing valid symlink pointing to a real but wrong target — must be replaced with correct target', () => {
-  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-sym-wrongtarget-'))
+test('claude files: valid symlink to some other real file: replaced, and the other file is untouched', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-cc-wrongtarget-'))
   try {
-    // Arrange: create ~/.claude/agents/ with a valid (non-dangling) symlink for
-    // SAMPLE_AGENT that points to a REAL file — but NOT to the expected opencode
-    // agents path. The installer must unlink it and recreate it pointing at the
-    // correct target.
-    const claudeAgentsDir = join(fakeHome, '.claude', 'agents')
-    mkdirSync(claudeAgentsDir, { recursive: true })
+    mkdirSync(claudeDir(fakeHome), { recursive: true })
+    const otherFile = join(fakeHome, 'some-other-real.md')
+    writeFileSync(otherFile, '# I am a real file, but the wrong target')
+    const linkPath = join(claudeDir(fakeHome), SAMPLE_AGENT)
+    symlinkSync(otherFile, linkPath)
 
-    // Create a real file the symlink will point to (so the link is valid, not dangling)
-    const wrongTargetFile = join(claudeAgentsDir, 'some-other-real.md')
-    writeFileSync(wrongTargetFile, '# I am a real file, but the wrong target')
-
-    // Create the symlink for SAMPLE_AGENT → wrongTargetFile (valid, but wrong)
-    const linkPath = join(claudeAgentsDir, SAMPLE_AGENT)
-    symlinkSync(wrongTargetFile, linkPath)
-
-    // Preconditions: it's a symlink, AND it's valid (target exists — not dangling)
-    const statBefore = lstatSync(linkPath)
-    assert.ok(statBefore.isSymbolicLink(), 'precondition: must be a symlink')
-    assert.ok(existsSync(linkPath), 'precondition: symlink target must exist (valid, non-dangling)')
-    assert.notEqual(
-      resolve(dirname(linkPath), readlinkSync(linkPath)),
-      join(fakeHome, '.config', 'opencode', 'agents', SAMPLE_AGENT),
-      'precondition: symlink must NOT already point to the opencode agents path'
-    )
-
-    // Act
     const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
     assert.equal(r.status, 0, `install failed: ${r.stderr}`)
-
-    // Assert: the symlink was replaced — it now points to the opencode agents dir
-    const statAfter = lstatSync(linkPath)
-    assert.ok(statAfter.isSymbolicLink(), `${SAMPLE_AGENT} is no longer a symlink after install`)
-
-    const expectedTarget = join(fakeHome, '.config', 'opencode', 'agents', SAMPLE_AGENT)
-    const actualResolved = resolve(dirname(linkPath), readlinkSync(linkPath))
-    assert.equal(actualResolved, resolve(expectedTarget),
-      `Symlink was not repointed to the opencode agents path — still points to ${readlinkSync(linkPath)}`)
-
-    // Assert: the original wrong-target real file is untouched (no data loss)
-    assert.ok(existsSync(wrongTargetFile),
-      'the real file the symlink pointed to was destroyed — data loss')
-    assert.equal(
-      readFileSync(wrongTargetFile, 'utf8'),
-      '# I am a real file, but the wrong target',
-      'wrong-target file content was modified — data loss'
-    )
+    assert.ok(!lstatSync(linkPath).isSymbolicLink(), 'symlink must be replaced by a regular file')
+    assert.equal(readFileSync(otherFile, 'utf8'), '# I am a real file, but the wrong target', 'wrong-target file content was modified (data loss)')
   } finally {
     rmSync(fakeHome, { recursive: true, force: true })
   }
 })
 
-test('symlink: pre-existing regular file (non-ndv agent) — must NOT be clobbered', () => {
-  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-sym-regular-'))
+test('claude files: regular file that is not a fleet agent: must NOT be clobbered, and is reported by name', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-cc-regular-'))
   try {
-    // Arrange: ~/.claude/agents/ contains a regular file named the same as SAMPLE_AGENT
-    const claudeAgentsDir = join(fakeHome, '.claude', 'agents')
-    mkdirSync(claudeAgentsDir, { recursive: true })
-    const filePath = join(claudeAgentsDir, SAMPLE_AGENT)
+    mkdirSync(claudeDir(fakeHome), { recursive: true })
+    const filePath = join(claudeDir(fakeHome), SAMPLE_AGENT)
     const originalContent = '# This is a pre-existing non-ndv file — do not clobber me'
     writeFileSync(filePath, originalContent)
 
-    // Verify it's a regular file
-    assert.ok(lstatSync(filePath).isFile(), 'precondition: must be a regular file')
-
-    // Act
     const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
     assert.equal(r.status, 0, `install failed: ${r.stderr}`)
-
-    // Assert: file is still a regular file (not replaced with a symlink)
-    const statAfter = lstatSync(filePath)
-    assert.ok(statAfter.isFile(), `${SAMPLE_AGENT} was converted from regular file to symlink — content clobbered`)
-
-    // Assert: content is unchanged
-    const contentAfter = readFileSync(filePath, 'utf8')
-    assert.equal(contentAfter, originalContent, 'file content was overwritten')
-
-    // Assert: the skip is reported by name, with a count, and the summary line
-    // does not claim every agent was symlinked. A regular file in
-    // ~/.claude/agents never updates with this install; the user has to be
-    // told, or a stale copy sits there indefinitely (real case: eighteen
-    // fleet copies two months behind the installed fleet).
+    assert.equal(readFileSync(filePath, 'utf8'), originalContent, 'file content was overwritten')
     const out = r.stdout + r.stderr
-    assert.ok(out.includes('1 regular file(s) left in place'), `expected the kept-file warning with a count; got:\n${out}`)
+    assert.ok(out.includes('1 file(s) in'), `expected the kept-file warning with a count; got:\n${out}`)
     assert.ok(out.includes(SAMPLE_AGENT), 'kept file must be named in the warning')
-    assert.ok(out.includes(`Symlinked ${REAL_AGENT_COUNT - 1} agent(s)`), `summary must count only what was actually linked; got:\n${out}`)
+    assert.ok(out.includes(`Wrote ${REAL_AGENT_COUNT - 1} Claude Code agent(s)`), `summary must count only what was written; got:\n${out}`)
   } finally {
     rmSync(fakeHome, { recursive: true, force: true })
   }
 })
 
-test('symlink: fresh install reports the full count and no kept files', () => {
-  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-sym-report-'))
+test('claude files: stale fleet copy (name: matches the stem) is refreshed', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-cc-stale-'))
   try {
+    mkdirSync(claudeDir(fakeHome), { recursive: true })
+    const stem = SAMPLE_AGENT.replace('.md', '')
+    const filePath = join(claudeDir(fakeHome), SAMPLE_AGENT)
+    writeFileSync(filePath, `---\nname: ${stem}\ndescription: stale\n---\nold body\n`)
+
     const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
     assert.equal(r.status, 0, `install failed: ${r.stderr}`)
-    const out = r.stdout + r.stderr
-    assert.ok(out.includes(`Symlinked ${REAL_AGENT_COUNT} agent(s)`), `expected full count on a fresh install; got:\n${out}`)
-    assert.ok(!out.includes('left in place'), 'fresh install must not warn about kept files')
+    assert.equal(readFileSync(filePath, 'utf8'), readFileSync(join(AGENTS_DIR, SAMPLE_AGENT), 'utf8'))
+  } finally {
+    rmSync(fakeHome, { recursive: true, force: true })
+  }
+})
 
-    // Second run: everything is already linked; nothing new, nothing kept.
+test('claude files: second install is idempotent: same files, full count, no warnings', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-cc-repeat-'))
+  try {
+    const r1 = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    assert.equal(r1.status, 0, `first install failed: ${r1.stderr}`)
+    const before = readdirSync(claudeDir(fakeHome)).sort()
     const r2 = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
-    const out2 = r2.stdout + r2.stderr
-    assert.ok(out2.includes(`Symlinked 0 agent(s)`) && out2.includes(`(${REAL_AGENT_COUNT} already linked)`), `second run must report already-linked count; got:\n${out2}`)
+    assert.equal(r2.status, 0, `second install failed: ${r2.stderr}`)
+    assert.deepEqual(readdirSync(claudeDir(fakeHome)).sort(), before)
+    const out = r2.stdout + r2.stderr
+    assert.ok(out.includes(`Wrote ${REAL_AGENT_COUNT} Claude Code agent(s)`), `expected full count; got:\n${out}`)
+    assert.ok(!out.includes('left in place'), 'repeat install must not warn about kept files')
   } finally {
     rmSync(fakeHome, { recursive: true, force: true })
   }
 })
 
-test('symlink: target.dest is empty (no agents installed) — loop runs zero times, no error', () => {
-  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-sym-empty-'))
+test('claude install: writes never follow a symlink into the OpenCode files', () => {
+  const fakeHome = mkdtempSync(join(tmpdir(), 'ndv-cc-claudeinstall-'))
   try {
-    // Arrange: create the opencode agents dest dir but leave it empty
-    // We do this by running a normal install then emptying the dest dir
-    // Actually: we need to simulate what happens when the dest dir ends up empty.
-    // The easiest way is to install normally and verify the zero-agent scenario
-    // is covered by the fact that the symlink block filters .md files.
-    // 
-    // Adversarial approach: pre-create an empty opencode agents dir and confirm
-    // the install succeeds (opencode won't write anything invalid).
-    // 
-    // The code reads: readdirSync(target.dest).filter(f => f.endsWith('.md'))
-    // If the real install writes agents, this test would be misleading.
-    // Instead: test that the claudeAgentsDir is still created even if no agents end up there.
-    // We do this by checking the install exits 0 and no error thrown.
-    const r = ndvGlobal(['install', 'opencode', '--global'], fakeHome)
+    // Arrange: old shim layout, then a Claude Code global install on top
+    mkdirSync(opencodeDir(fakeHome), { recursive: true })
+    mkdirSync(claudeDir(fakeHome), { recursive: true })
+    const ocFile = join(opencodeDir(fakeHome), SAMPLE_AGENT)
+    const ocContent = '---\ndescription: oc\nmode: subagent\n---\n'
+    writeFileSync(ocFile, ocContent)
+    symlinkSync(ocFile, join(claudeDir(fakeHome), SAMPLE_AGENT))
+
+    const r = ndvGlobal(['install', 'claude', '--global'], fakeHome)
     assert.equal(r.status, 0, `install failed: ${r.stderr}`)
-
-    // The claudeAgentsDir should exist (created by mkdirSync) even if no symlinks
-    const claudeAgentsDir = join(fakeHome, '.claude', 'agents')
-    assert.ok(existsSync(claudeAgentsDir), '~/.claude/agents/ must be created regardless of installed agent count')
-
-    // The opencode agents dir should have agents (real install works)
-    const opencodeAgentsDir = join(fakeHome, '.config', 'opencode', 'agents')
-    const installedAgents = readdirSync(opencodeAgentsDir).filter(f => f.endsWith('.md'))
-    assert.ok(installedAgents.length > 0, 'Expected agents to be installed in opencode dest')
+    assert.equal(readFileSync(ocFile, 'utf8'), ocContent, 'claude install wrote through the symlink into the OpenCode file')
+    assert.ok(!lstatSync(join(claudeDir(fakeHome), SAMPLE_AGENT)).isSymbolicLink())
   } finally {
     rmSync(fakeHome, { recursive: true, force: true })
   }
