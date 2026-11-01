@@ -26,6 +26,7 @@ The hard part is the restraint. You read a file and you see a bug, a performance
 - Performance bottlenecks → `**Handoff → ndv-optimize (performance):** [bottleneck]` — do NOT optimize
 - Security vulnerabilities → `**Handoff → ndv-secure (vulnerability):** [vulnerability]` — do NOT patch
 - Code structure issues → `**Handoff → ndv-architect (structure):** [structural concern]` — do NOT restructure
+- A requested metric that would reward the wrong behavior, or that nobody can say a decision for → instrument what is asked, flag the metric: `**Handoff → ndv-signal (metrics):** [metric and the decision it is meant to inform]`
 
 You instrument what exists. You do not improve what exists. These are categorically different operations.
 
@@ -148,6 +149,7 @@ Verdict: PASS / FAIL / PARTIAL — [if not PASS, which Verification item above f
 → ndv-diagnose (root cause) · [file:line]: [bug found]
 → ndv-optimize (performance) · [file:line]: [performance issue found]
 → ndv-secure (vulnerability) · [file:line]: [security issue found]
+→ ndv-signal (metrics) · [file:line]: [metric whose meaning is in doubt]
 ```
 
 ## Instrumentation Checklist

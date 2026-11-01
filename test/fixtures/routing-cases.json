@@ -599,6 +599,50 @@
       "why": "Judgment — unscoped opinion with no bounded artifact, but \"this codebase\" invites a quality review.",
       "basis": "judgment",
       "contest": "ndv-review"
+    },
+    {
+      "id": "direct-migrate-01",
+      "task": "We need to backfill the new status column on the 40-million-row orders table without taking checkout down.",
+      "expect": "ndv-migrate",
+      "tags": [
+        "direct"
+      ],
+      "why": "A backfill on live data with a downtime constraint.",
+      "basis": "canonical",
+      "anchor": "zero-downtime data change"
+    },
+    {
+      "id": "direct-upgrade-01",
+      "task": "Bump our ORM from v5 to v6. The release notes list breaking changes in the query builder.",
+      "expect": "ndv-upgrade",
+      "tags": [
+        "direct"
+      ],
+      "why": "A version bump with breaking changes in a dependency.",
+      "basis": "canonical",
+      "anchor": "breaking changes in a dependency"
+    },
+    {
+      "id": "conflict-diagnose-not-migrate-01",
+      "task": "Last night's migration that adds a NOT NULL constraint to orders.customer_id failed halfway with: ERROR: column \"customer_id\" contains null values. Why?",
+      "expect": "ndv-diagnose",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Rule 1 — an error from a failed migration is a debugging task first; the replanned migration comes after the cause is known.",
+      "basis": "canonical",
+      "anchor": "Stack trace / exception / failing test / \"debug\" language"
+    },
+    {
+      "id": "conflict-honest-not-upgrade-01",
+      "task": "Should we replace moment.js with date-fns across the app, or just keep moment? Give me a straight answer.",
+      "expect": "ndv-honest",
+      "tags": [
+        "conflict"
+      ],
+      "why": "Adopt-or-drop is a tradeoff, not an upgrade; ndv-upgrade moves a decided dependency between versions.",
+      "basis": "canonical",
+      "anchor": "tradeoffs"
     }
   ],
   "basis_vocabulary": [

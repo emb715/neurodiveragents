@@ -16,6 +16,8 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | Security vulnerabilities, OWASP, auth issues | `ndv-secure` |
 | Slow code, N+1 queries, bundle size, latency | `ndv-optimize` |
 | Add logging, metrics, traces, health checks | `ndv-telemetry` |
+| Schema migration, backfill, ALTER TABLE, column rename on live data, zero-downtime data change | `ndv-migrate` |
+| Framework or library upgrade, version bump, breaking changes in a dependency, codemods, deprecated API removal | `ndv-upgrade` |
 | System design, SOLID violations, architecture review | `ndv-architect` |
 | Implement a spec with schemas, acceptance criteria, file targets, and architecture decided (behavioral specs additionally require scale simulation at N=1/N=10/N=100) | `ndv-build` |
 | Scope creep, "while we're at it", PRD boundary review, overloaded tickets | `ndv-scope` |
@@ -39,6 +41,8 @@ Apply without being asked when the signal is clear:
 - Code with no tests → suggest `ndv-tester`
 - Story has schemas + criteria + file targets + architecture settled → apply `ndv-build`
 - Add logging or observability → apply `ndv-telemetry`
+- Migration file, ALTER TABLE, or backfill on a table that holds data → apply `ndv-migrate`
+- Version bump or "upgrade to vN" → apply `ndv-upgrade`
 - UI code, components, or design decisions → apply `ndv-design`
 - UI code with interactive elements, form inputs, or color usage → apply `ndv-accessibility`
 - Accessibility remediation work: classify as `a11y-only` vs `a11y+visual-risk`; route implementation to `ndv-build`, and for visual-risking changes hand off to `ndv-design` before implementation
@@ -140,12 +144,31 @@ npm run eval:baseline -- --models glm-5.3-flash                   # add a model 
 
 **The eval measures the routing text that ships.** The `ndv:start`/`ndv:end` block at the top of this file must be byte-identical to `NDV_BLOCK` in `bin/ndv.js`, and `validate` enforces that. Change the routing table in both places together, or the eval scores a table users never receive.
 
-Ground truth: 52 cases covering all 18 agents, at least half of them conflict or residual cases. Each case has a `basis`:
+Ground truth: 57 cases covering all 20 agents, at least half of them conflict or residual cases. Each case has a `basis`:
 
-- `canonical` (46): forced by an `anchor`, a verbatim phrase on a routing line that names the expected agent. `scripts/routing-context.mjs` supplies the same text to the validator and to the model. A canonical miss means the routing table needs fixing, or the model can't follow it.
+- `canonical` (51): forced by an `anchor`, a verbatim phrase on a routing line that names the expected agent. `scripts/routing-context.mjs` supplies the same text to the validator and to the model. A canonical miss means the routing table needs fixing, or the model can't follow it.
 - `judgment` (6, capped at 25%): the fixture author's own reading, with the `contest`ed alternative named. A judgment miss means review the case first.
 
 To score a single model ad hoc, without the gate: `NDV_EVAL_CMD='<command that reads stdin>' npm run eval:routing` (supports `--tag`, `--limit`, `--retries`, `--out`).
+
+### Behavior eval (local, before a release that changes agent text)
+
+The routing eval proves a task reaches the right agent. The behavior eval checks that the agent does the job once it's there. It also calls models, costs tokens, and is **not** part of `validate`:
+
+```bash
+npm run eval:behavior                                    # one run, Sonnet 5 via claude.sh
+npm run eval:behavior -- --agent ndv-secure --kind lane  # narrow it while iterating
+npm run eval:behavior:baseline                           # record floors: 3 runs each, same models as the routing gate
+npm run eval:behavior:gate                               # PASS / DEGRADED / INCONCLUSIVE, same exit codes as eval:gate
+```
+
+Each case in `test/fixtures/behavior-cases.json` runs with the agent's own model file as the system prompt, and has one of three kinds:
+
+- `finds`: a defect planted inside the agent's domain. Pass means the output names it.
+- `lane`: a defect planted outside the domain. Pass means the output hands it to the agent named in the case, which must be one the agent's Out of Scope declares.
+- `brief`: a Flow brief with one Brief Contract field missing. Pass means `BRIEF_REJECTED`. Only Tier 1 and Tier 2 agents get one.
+
+Scoring is deterministic: every check is a pattern on the output (`scripts/behavior-checks.mjs`, shared with the static test), with no model judge, so any score can be argued with line by line from the saved report (`--out`). The gate fails on a run below the baseline floor, and names each case that passed in every baseline run and now fails. Editing the fixture makes the baseline stale, and `validate` fails until it is re-recorded. Providers read the agent prompt from `NDV_EVAL_SYSTEM_FILE`; without it they keep the routing instruction.
 
 ### Test files
 
@@ -157,6 +180,7 @@ To score a single model ad hoc, without the gate: `NDV_EVAL_CMD='<command that r
 | `test/validate-coherence.test.js` | Semantic coherence across agent sections — handoff targets, Mandatory Pipeline, Brief Contract all resolve to real slugs; no agent instructs reacting to elapsed wall-clock time, asking the user what to do next, or sizing work in calendar units; static, no LLM calls |
 | `test/validate-routing.test.js` | Integrity of the behavioral routing fixture — every `expect` resolves, every agent is covered, the case mix stays hard enough to discriminate, canonical anchors exist in the routing text, and the committed eval baseline was recorded against this exact fixture; static, no LLM calls |
 | `test/validate-flow-protocol.test.js` | Structural gates on the orchestration protocol in `ndv-flow.md` — routing-table coverage, sentinel token consistency, handoff emit/parse grammar agreement, ledger status vocabulary, bounded BRIEF_REJECTED retry, router parity with every `CLAUDE.md` routing table (agent coverage + a declared signal list), and shipped-text parity (`CLAUDE.md`'s ndv block byte-identical to `NDV_BLOCK`; Copilot header has the same routing rows); static, no LLM calls |
+| `test/validate-behavior.test.js` | Integrity of the behavioral output fixture — every case names a real agent and kind, every check compiles through the scorer's own helper, every agent but `ndv-honest` has a `finds` case, every agent with handoffs has a `lane` case whose target its Out of Scope declares, Tier 1/2 agents have a `brief` case, and a committed behavior baseline matches the fixture; static, no LLM calls |
 | `test/install.test.js` | `bin/ndv.js` install commands — simulates claude/opencode/cursor installs in a temp dir |
 | `test/install-router-skills.test.js` | Acceptance tests for router-skill auto-install behavior in `bin/ndv.js` (claude auto-install, opencode skip, cursor/copilot no skills dir) |
 | `test/transform-skill.test.js` | Adversarial unit tests for `transformAgentToSkill()` purity, determinism, boundary, and degradation behavior |

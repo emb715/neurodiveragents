@@ -87,7 +87,7 @@ Every agent belongs to exactly one tier. The tier determines which sections are 
 
 **The classification test:** can an underspecified brief cause this agent to produce output that is *wrong* — not just shallow, but actively incorrect in a way that corrupts downstream work? If yes: Tier 1 or Tier 2. Does this agent's output change the codebase? If yes: Tier 1.
 
-Current Tier 1: `ndv-build`, `ndv-refactor`, `ndv-optimize`, `ndv-telemetry`
+Current Tier 1: `ndv-build`, `ndv-refactor`, `ndv-optimize`, `ndv-telemetry`, `ndv-migrate`, `ndv-upgrade`
 Current Tier 2: `ndv-review`, `ndv-architect`, `ndv-secure`, `ndv-tester`, `ndv-diagnose`, `ndv-accessibility`, `ndv-design`
 Current Tier 3: `ndv-research`, `ndv-explain`, `ndv-scope`, `ndv-forecast`, `ndv-signal`, `ndv-flow`, `ndv-honest`
 
