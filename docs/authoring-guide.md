@@ -87,7 +87,7 @@ Every agent belongs to exactly one tier. The tier determines which sections are 
 
 **The classification test:** can an underspecified brief cause this agent to produce output that is *wrong* — not just shallow, but actively incorrect in a way that corrupts downstream work? If yes: Tier 1 or Tier 2. Does this agent's output change the codebase? If yes: Tier 1.
 
-Current Tier 1: `ndv-build`, `ndv-refactor`, `ndv-optimize`, `ndv-telemetry`, `ndv-migrate`, `ndv-upgrade`
+Current Tier 1: `ndv-build`, `ndv-refactor`, `ndv-optimize`, `ndv-telemetry`, `ndv-upgrade`
 Current Tier 2: `ndv-review`, `ndv-architect`, `ndv-secure`, `ndv-tester`, `ndv-diagnose`, `ndv-accessibility`, `ndv-design`
 Current Tier 3: `ndv-research`, `ndv-explain`, `ndv-scope`, `ndv-forecast`, `ndv-signal`, `ndv-flow`, `ndv-honest`
 
@@ -131,6 +131,17 @@ Required sections:
 - **Invocation** — three concrete examples
 
 Never in human files: behavioral rules, output format specs, checklist items, handoff routing instructions.
+
+### 7. Prove it earns its place (do not skip)
+
+An agent is a claim that its file makes a model do the job better than the model does on its own. The claim is tested before the agent ships, and an agent that fails the test is not merged. It is fixed, or its domain goes to an existing agent.
+
+1. **Routing.** Add at least one `direct` case and one `conflict` case to `test/fixtures/routing-cases.json`, with the conflict naming the neighbour the new agent is most likely confused with. Re-record with `npm run eval:baseline`, then `npm run eval:gate` must PASS on every baselined model.
+2. **Output.** Add cases to `test/fixtures/behavior-cases.json`: at least 3 `finds` cases with defects a careful generalist would plausibly miss, 1 `lane` case per neighbour you expect findings to leak to, and a `brief` case for Tier 1 and 2 agents.
+3. **Against the plain model.** Run `npm run eval:behavior:compare -- --agent ndv-[name] --record` once per model, on at least two models (`NDV_EVAL_MODEL`), 3 runs each. The control arm gets the same cases with the agent file replaced by a plain prompt that still knows the agent's lane, the routing table, the handoff format and `BRIEF_REJECTED`. What it lacks is exactly what the agent file adds.
+4. **Verdict.** `EARNS` on every model means the agent passed more checks than its control and passed at least as many `finds` checks. An agent that wins only on `lane` and `brief` while losing on `finds` is `NO GAIN`: the control already knows the protocol, so a lead built on protocol alone is not domain value. `NO GAIN` or `WORSE` on any model means the file is not doing measurable work: read the per-case lines, fix the agent (usually the move is not load-bearing; see Q3), and re-run. Do not weaken the cases to get a pass.
+
+`validate` enforces this for every agent added after the original 18: at least 3 `finds` cases, and evidence in `test/fixtures/agent-evidence.json` that is current for the agent file and its cases, with `EARNS` on at least two models. Editing the agent file or its cases makes the evidence stale, so re-run step 3 after any change.
 
 ---
 
@@ -236,6 +247,11 @@ Before marking an agent complete:
 - [ ] `humans/ndv-agents.md` fleet table and doctrine section added
 - [ ] `bin/ndv.js` NDV_BLOCK and `installCopilot()` header updated
 - [ ] All four routing targets use the same `ndv-[command]` and character name
+
+**Evidence (step 7)**
+- [ ] Routing: a direct and a conflict case added, baseline re-recorded, `eval:gate` PASS
+- [ ] Output: 3+ finds cases, a lane case per likely neighbour, a brief case for Tier 1/2
+- [ ] `eval:behavior:compare --record` run on 2+ models: `EARNS` on every one
 
 **Human file**
 - [ ] Human file written after model file is stable

@@ -192,7 +192,6 @@ heavily on brief quality. Non-trivial output from these agents must always trigg
 | `ndv-refactor` | Refactoring scope must be explicit — what to transform, what invariants to preserve, what must not change. An underspecified brief produces over-reach. | `ndv-review` (blocking, all non-trivial output) |
 | `ndv-optimize` | Optimization requires a baseline measurement and a target. A brief without both produces unmeasured changes that may introduce regressions. | `ndv-review` (blocking, all non-trivial output) → `ndv-tester` (blocking, when behavior could change) |
 | `ndv-telemetry` | Instrumentation must name what to observe and what not to touch. An underspecified brief risks behavioral changes disguised as observability additions. | `ndv-review` (blocking, all non-trivial output) |
-| `ndv-migrate` | A migration needs the target shape, the data size, the downtime tolerance and the rollback requirement. Without them a step's lock and its way back cannot be planned. | `ndv-review` (blocking, any step changing columns, constraints or rows) → `ndv-tester` (blocking, any step that moves data; forward and back) |
 | `ndv-upgrade` | An upgrade needs both exact versions and the test command. Without them the release range cannot be read and the before-and-after comparison cannot run. | `ndv-tester` (blocking, any source edit) → `ndv-review` (blocking, any edit beyond manifest and lockfile) |
 
 #### Tier 2 — Brief Contract only (no Mandatory Pipeline)

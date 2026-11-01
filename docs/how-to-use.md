@@ -65,7 +65,6 @@ Each agent owns exactly one domain and hands off anything outside it. The key is
 | "is this secure / audit the auth" | `ndv-secure` | Assumes breach, trusts nothing, every input is an attack vector |
 | "it's slow / this query is expensive" | `ndv-optimize` | Measures before touching anything, every unnecessary cycle is an offense |
 | "add logging / we have no visibility" | `ndv-telemetry` | Instruments without intervening — observation must not change behavior |
-| "rename this column in prod / backfill this table" | `ndv-migrate` | Traces every row through every step, and writes the way back with each one |
 | "upgrade to v6 / bump this dependency" | `ndv-upgrade` | Reads every release in the range and closes every breaking change, even the ones that do not apply |
 | "document this / write the API reference" | `ndv-explain` | Models the reader's knowledge gap deliberately, bridges it |
 | "implement this spec / story is ready" | `ndv-build` | Spec is the authority, gaps get flagged not invented |

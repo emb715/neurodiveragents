@@ -20,6 +20,10 @@
  * 7. Every Tier 1 and Tier 2 agent (the ones with a Brief Contract) has a
  *    `brief` case that expects BRIEF_REJECTED; no other agent does
  * 8. A committed behavior baseline was recorded against this exact fixture
+ * 9. Every agent added after the original 18 proves it earns its place: at
+ *    least 3 finds cases, and committed agent-vs-control evidence that is
+ *    current for its agent file and its cases, on at least 2 models, with
+ *    the verdict EARNS on every one
  */
 
 import { test, describe } from 'node:test'
@@ -28,7 +32,7 @@ import { readdirSync, readFileSync, existsSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 import { AGENTS_DIR, ROOT, TIER1, TIER2 } from './helpers.js'
-import { checkRegex } from '../scripts/behavior-checks.mjs'
+import { checkRegex, evidenceCasesSha } from '../scripts/behavior-checks.mjs'
 
 const FIXTURE_PATH = join(ROOT, 'test', 'fixtures', 'behavior-cases.json')
 const BASELINE_PATH = join(ROOT, 'test', 'fixtures', 'behavior-baseline.json')
@@ -126,4 +130,53 @@ describe('behavior fixture: baseline', () => {
     assert.equal(baseline.fixture_sha, sha, 'the fixture changed after the baseline was recorded: re-run npm run eval:behavior:baseline')
     assert.equal(baseline.total, cases.length)
   })
+})
+
+// ─── 9. New agents carry evidence that they beat the plain model ─────────────
+//
+// An agent that a plain model, told its lane and the fleet protocol, matches
+// on its own cases is cost without benefit: more routing surface, more text to
+// maintain, no better output. The original 18 predate this gate and are listed
+// by name; every agent added after them must ship with evidence.
+
+const PREDATES_EVIDENCE_GATE = new Set([
+  'ndv-accessibility', 'ndv-architect', 'ndv-build', 'ndv-design', 'ndv-diagnose', 'ndv-explain',
+  'ndv-flow', 'ndv-forecast', 'ndv-honest', 'ndv-optimize', 'ndv-refactor', 'ndv-research',
+  'ndv-review', 'ndv-scope', 'ndv-secure', 'ndv-signal', 'ndv-telemetry', 'ndv-tester',
+])
+const EVIDENCE_PATH = join(ROOT, 'test', 'fixtures', 'agent-evidence.json')
+const MIN_EVIDENCE_MODELS = 2
+const MIN_FINDS_CASES = 3
+
+describe('behavior evidence: agents added after the original 18 earn their place', () => {
+  const evidence = existsSync(EVIDENCE_PATH) ? JSON.parse(readFileSync(EVIDENCE_PATH, 'utf8')).agents : {}
+  for (const slug of SLUGS.filter(s => !PREDATES_EVIDENCE_GATE.has(s))) {
+    test(`${slug} has at least ${MIN_FINDS_CASES} finds cases`, () => {
+      assert.ok(casesFor(slug, 'finds').length >= MIN_FINDS_CASES,
+        `${slug} has ${casesFor(slug, 'finds').length} finds case(s); one case cannot tell an agent from a lucky prompt`)
+    })
+
+    test(`${slug} has current agent-vs-control evidence: EARNS on ${MIN_EVIDENCE_MODELS}+ models`, () => {
+      const e = evidence[slug]
+      const run = `npm run eval:behavior:compare -- --agent ${slug} --record (per model, with NDV_EVAL_MODEL)`
+      assert.ok(e, `no evidence for ${slug}. Run: ${run}`)
+      const agentSha = createHash('sha256').update(agentText(slug)).digest('hex').slice(0, 16)
+      assert.equal(e.agent_sha, agentSha, `${slug}.md changed after its evidence was recorded. Re-run: ${run}`)
+      assert.equal(e.cases_sha, evidenceCasesSha(cases, slug), `${slug}'s cases changed after its evidence was recorded. Re-run: ${run}`)
+      const models = Object.entries(e.models ?? {})
+      assert.ok(models.length >= MIN_EVIDENCE_MODELS, `${slug} has evidence on ${models.length} model(s); need ${MIN_EVIDENCE_MODELS}`)
+      // The verdict string is re-derived from the recorded counts, so an
+      // evidence row written under an older, looser rule cannot pass.
+      const frac = t => (t ?? '').split(/\s+vs\s+|\//).map(Number)
+      for (const [name, m] of models) {
+        const [ap, , cp] = [...frac(m.agent), ...frac(m.control)]
+        const [fa, , fc] = frac(m.finds)
+        assert.ok(m.finds, `${slug} evidence on ${name} has no finds counts. Re-run: ${run}`)
+        const derived = ap < cp ? 'WORSE' : ap > cp && fa >= fc ? 'EARNS' : 'NO GAIN'
+        assert.equal(m.verdict, derived, `${slug} evidence on ${name} says ${m.verdict} but its counts give ${derived}. Re-run: ${run}`)
+      }
+      const losing = models.filter(([, m]) => m.verdict !== 'EARNS').map(([name, m]) => `${name}: ${m.verdict} (${m.agent} vs ${m.control}, finds ${m.finds})`)
+      assert.deepEqual(losing, [], `${slug} does not beat the plain model on: ${losing.join('; ')}. Fix the agent or drop it.`)
+    })
+  }
 })

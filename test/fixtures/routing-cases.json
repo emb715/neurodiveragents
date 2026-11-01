@@ -601,17 +601,6 @@
       "contest": "ndv-review"
     },
     {
-      "id": "direct-migrate-01",
-      "task": "We need to backfill the new status column on the 40-million-row orders table without taking checkout down.",
-      "expect": "ndv-migrate",
-      "tags": [
-        "direct"
-      ],
-      "why": "A backfill on live data with a downtime constraint.",
-      "basis": "canonical",
-      "anchor": "zero-downtime data change"
-    },
-    {
       "id": "direct-upgrade-01",
       "task": "Bump our ORM from v5 to v6. The release notes list breaking changes in the query builder.",
       "expect": "ndv-upgrade",

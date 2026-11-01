@@ -1,13 +1,13 @@
 # neurodiveragents
 
 
-20 specialist AI agents for your coding assistant — each with a fixed cognitive operating principle.
+19 specialist AI agents for your coding assistant — each with a fixed cognitive operating principle.
 
 ![neurodiveragents fleet](assets/readme-banner.png)
 
 ## What is this
 
-A fleet of 20 AI agents that plug into Claude Code, OpenCode, Cursor, and GitHub Copilot. Each agent is a domain specialist — code review, debugging, security, testing, and more — that hands off anything outside its lane. Install once and routing is automatic: your tool picks the right agent from the task signal, or you invoke one by name.
+A fleet of 19 AI agents that plug into Claude Code, OpenCode, Cursor, and GitHub Copilot. Each agent is a domain specialist — code review, debugging, security, testing, and more — that hands off anything outside its lane. Install once and routing is automatic: your tool picks the right agent from the task signal, or you invoke one by name.
 
 ## Install
 
@@ -44,7 +44,6 @@ Each agent runs on a neurotype — a fixed cognitive operating principle, not a 
 | `ndv-secure` | Vulnerabilities, OWASP, auth — hypervigilance, trust no input | [Ward](humans/ndv-secure.human.md) |
 | `ndv-optimize` | Slow code, N+1, bundle size — efficiency OCD | [Lean](humans/ndv-optimize.human.md) |
 | `ndv-telemetry` | Logging, metrics, traces — detached observation | [Pulse](humans/ndv-telemetry.human.md) |
-| `ndv-migrate` | Schema changes, backfills, zero-downtime data changes — monotropic attention on the rows | [Keel](humans/ndv-migrate.human.md) |
 | `ndv-upgrade` | Version bumps, breaking changes, codemods — completionist systemizing | [Delta](humans/ndv-upgrade.human.md) |
 | `ndv-architect` | Design, SOLID, scalability — autistic systems thinking | [Arc](humans/ndv-architect.human.md) |
 | `ndv-explain` | Docs, API references — explicit theory of mind | [Patient](humans/ndv-explain.human.md) |

@@ -37,7 +37,7 @@ Before editing anything:
 3. **Open a ledger entry per breaking change** — removed or renamed APIs, changed defaults, changed peer requirements, dropped runtime versions, changed config keys.
 4. **Close each entry** — either the call sites it affects (file:line, found by search) and the edit made, or the exact search that returned nothing.
 5. **Resolve the dependency graph** — peer requirements and transitive conflicts the new version introduces. A conflict is an entry like any other.
-6. **Run the suite before and after** — the same command, on the same machine, before the version changes and after. A failure that existed before is recorded, not attributed to the upgrade.
+6. **Run the suite before and after** — the same command, on the same machine, before the version changes and after. A failure that existed before is recorded, not attributed to the upgrade. When the suite cannot be run where you are, the ledger and the edits still ship: the Suite section says "not run — [why]" and the verdict is PARTIAL. A missing tool never makes a complete brief incomplete, and is never a BRIEF_REJECTED.
 
 ## Upgrade Rules
 
@@ -59,6 +59,8 @@ Before editing anything:
 ## Output Format
 
 Output budget: one package or one peer group per report. One ledger row per breaking change, no cap — the cap is the release range. Every other field is a single line.
+
+The ledger is never only the rows that hit. Every breaking change the range carries gets its row, read from the release notes provided or from your knowledge of the release when none are pasted, and the ones that miss this codebase are closed with the search that proved it. A ledger for a major bump with no "searched → none" row means the range was not read; it is rarely what a real range looks like.
 
 ```
 ## Upgrade: [package] [from] → [to]

@@ -12,6 +12,15 @@
  *   { rejected: true }           the output carries BRIEF_REJECTED
  */
 
+import { createHash } from 'node:crypto'
+
+// The evidence pin for one agent: a hash of that agent's cases only, so a
+// case added for another agent does not invalidate it.
+export function evidenceCasesSha(cases, slug) {
+  const mine = JSON.stringify(cases.filter(c => c.agent === slug))
+  return createHash('sha256').update(mine).digest('hex').slice(0, 16)
+}
+
 export function checkRegex(check) {
   if (check.rejected) return /BRIEF_REJECTED/
   if (check.handoff) return new RegExp(`(→|->)\\s*\\**\\s*\`?${check.handoff}\\b`, 'i')
