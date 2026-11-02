@@ -366,7 +366,6 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | Security vulnerabilities, OWASP, auth issues | \`ndv-secure\` |
 | Slow code, N+1 queries, bundle size, latency | \`ndv-optimize\` |
 | Add logging, metrics, traces, health checks | \`ndv-telemetry\` |
-| Schema migration, backfill, ALTER TABLE, column rename on live data, zero-downtime data change | \`ndv-migrate\` |
 | Framework or library upgrade, version bump, breaking changes in a dependency, codemods, deprecated API removal | \`ndv-upgrade\` |
 | System design, SOLID violations, architecture review | \`ndv-architect\` |
 | Implement a spec with schemas, acceptance criteria, file targets, and architecture decided (behavioral specs additionally require scale simulation at N=1/N=10/N=100) | \`ndv-build\` |
@@ -391,7 +390,6 @@ Apply without being asked when the signal is clear:
 - Code with no tests → suggest \`ndv-tester\`
 - Story has schemas + criteria + file targets + architecture settled → apply \`ndv-build\`
 - Add logging or observability → apply \`ndv-telemetry\`
-- Migration file, ALTER TABLE, or backfill on a table that holds data → apply \`ndv-migrate\`
 - Version bump or "upgrade to vN" → apply \`ndv-upgrade\`
 - UI code, components, or design decisions → apply \`ndv-design\`
 - UI code with interactive elements, form inputs, or color usage → apply \`ndv-accessibility\`
@@ -862,7 +860,6 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | Security vulnerabilities, OWASP, auth issues | ndv-secure |
 | Slow code, N+1 queries, bundle size, latency | ndv-optimize |
 | Add logging, metrics, traces, health checks | ndv-telemetry |
-| Schema migration, backfill, ALTER TABLE, column rename on live data, zero-downtime data change | ndv-migrate |
 | Framework or library upgrade, version bump, breaking changes in a dependency, codemods, deprecated API removal | ndv-upgrade |
 | System design, SOLID violations, architecture review | ndv-architect |
 | Implement a spec with schemas, acceptance criteria, file targets, and architecture decided (behavioral specs additionally require scale simulation at N=1/N=10/N=100) | ndv-build |

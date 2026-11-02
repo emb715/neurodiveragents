@@ -16,7 +16,6 @@ This project uses the neurodiveragents fleet. When a task matches an agent domai
 | Security vulnerabilities, OWASP, auth issues | `ndv-secure` |
 | Slow code, N+1 queries, bundle size, latency | `ndv-optimize` |
 | Add logging, metrics, traces, health checks | `ndv-telemetry` |
-| Schema migration, backfill, ALTER TABLE, column rename on live data, zero-downtime data change | `ndv-migrate` |
 | Framework or library upgrade, version bump, breaking changes in a dependency, codemods, deprecated API removal | `ndv-upgrade` |
 | System design, SOLID violations, architecture review | `ndv-architect` |
 | Implement a spec with schemas, acceptance criteria, file targets, and architecture decided (behavioral specs additionally require scale simulation at N=1/N=10/N=100) | `ndv-build` |
@@ -41,7 +40,6 @@ Apply without being asked when the signal is clear:
 - Code with no tests → suggest `ndv-tester`
 - Story has schemas + criteria + file targets + architecture settled → apply `ndv-build`
 - Add logging or observability → apply `ndv-telemetry`
-- Migration file, ALTER TABLE, or backfill on a table that holds data → apply `ndv-migrate`
 - Version bump or "upgrade to vN" → apply `ndv-upgrade`
 - UI code, components, or design decisions → apply `ndv-design`
 - UI code with interactive elements, form inputs, or color usage → apply `ndv-accessibility`
@@ -144,9 +142,9 @@ npm run eval:baseline -- --models glm-5.3-flash                   # add a model 
 
 **The eval measures the routing text that ships.** The `ndv:start`/`ndv:end` block at the top of this file must be byte-identical to `NDV_BLOCK` in `bin/ndv.js`, and `validate` enforces that. Change the routing table in both places together, or the eval scores a table users never receive.
 
-Ground truth: 57 cases covering all 20 agents, at least half of them conflict or residual cases. Each case has a `basis`:
+Ground truth: 56 cases covering all 19 agents, at least half of them conflict or residual cases. Each case has a `basis`:
 
-- `canonical` (51): forced by an `anchor`, a verbatim phrase on a routing line that names the expected agent. `scripts/routing-context.mjs` supplies the same text to the validator and to the model. A canonical miss means the routing table needs fixing, or the model can't follow it.
+- `canonical` (50): forced by an `anchor`, a verbatim phrase on a routing line that names the expected agent. `scripts/routing-context.mjs` supplies the same text to the validator and to the model. A canonical miss means the routing table needs fixing, or the model can't follow it.
 - `judgment` (6, capped at 25%): the fixture author's own reading, with the `contest`ed alternative named. A judgment miss means review the case first.
 
 To score a single model ad hoc, without the gate: `NDV_EVAL_CMD='<command that reads stdin>' npm run eval:routing` (supports `--tag`, `--limit`, `--retries`, `--out`).
@@ -160,6 +158,7 @@ npm run eval:behavior                                    # one run, Sonnet 5 via
 npm run eval:behavior -- --agent ndv-secure --kind lane  # narrow it while iterating
 npm run eval:behavior:baseline                           # record floors: 3 runs each, same models as the routing gate
 npm run eval:behavior:gate                               # PASS / DEGRADED / INCONCLUSIVE, same exit codes as eval:gate
+npm run eval:behavior:compare -- --agent ndv-x --record  # agent file vs a plain model on the same cases
 ```
 
 Each case in `test/fixtures/behavior-cases.json` runs with the agent's own model file as the system prompt, and has one of three kinds:
@@ -169,6 +168,8 @@ Each case in `test/fixtures/behavior-cases.json` runs with the agent's own model
 - `brief`: a Flow brief with one Brief Contract field missing. Pass means `BRIEF_REJECTED`. Only Tier 1 and Tier 2 agents get one.
 
 Scoring is deterministic: every check is a pattern on the output (`scripts/behavior-checks.mjs`, shared with the static test), with no model judge, so any score can be argued with line by line from the saved report (`--out`). The gate fails on a run below the baseline floor, and names each case that passed in every baseline run and now fails. Editing the fixture makes the baseline stale, and `validate` fails until it is re-recorded. Providers read the agent prompt from `NDV_EVAL_SYSTEM_FILE`; without it they keep the routing instruction.
+
+**Every new agent must beat the plain model.** `--compare` runs each case twice: once with the agent file, once with a control prompt that knows the agent's lane, the routing table, the handoff format and `BRIEF_REJECTED`, but not the neurotype, primordial rule or domain protocols. The verdict per agent is `EARNS` (more checks passed than the control, and no fewer `finds`), `NO GAIN` or `WORSE`. `--record` writes it to `test/fixtures/agent-evidence.json`, pinned to the agent file and its cases. `validate` fails for any agent added after the original 18 without current `EARNS` evidence on at least two models (authoring guide, step 7).
 
 ### Test files
 
@@ -194,6 +195,7 @@ Scoring is deterministic: every check is a pattern on the output (`scripts/behav
 3. Edit `humans/ndv-[name].human.md` (human file — written after model file is stable)
 4. Run `npm run validate`. The pre-commit hook and CI (Node 20, ubuntu-latest) run the same command.
 5. If routing changed, run `npm run eval:gate` before the next release.
+6. For a new agent, or an edit to one added after the original 18: re-run `npm run eval:behavior:compare -- --agent ndv-[name] --record` on two models. It must say `EARNS` on both.
 
 ### Pre-commit hook
 

@@ -17,7 +17,7 @@ export const VALID_TOOLS = new Set(['Read', 'Write', 'Edit', 'Grep', 'Glob', 'Ba
 export const MIN_DESCRIPTION_LENGTH = 50
 export const MIN_BODY_LINES = 5
 
-export const TIER1 = ['ndv-build', 'ndv-refactor', 'ndv-optimize', 'ndv-telemetry', 'ndv-migrate', 'ndv-upgrade']
+export const TIER1 = ['ndv-build', 'ndv-refactor', 'ndv-optimize', 'ndv-telemetry', 'ndv-upgrade']
 export const TIER2 = ['ndv-review', 'ndv-architect', 'ndv-secure', 'ndv-tester', 'ndv-diagnose', 'ndv-accessibility', 'ndv-design']
 export const TIER3 = ['ndv-research', 'ndv-explain', 'ndv-scope', 'ndv-forecast', 'ndv-signal', 'ndv-flow', 'ndv-honest']
 

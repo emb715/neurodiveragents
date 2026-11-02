@@ -47,6 +47,7 @@
     "eval:behavior": "node scripts/eval-behavior.mjs",
     "eval:behavior:baseline": "node scripts/eval-behavior.mjs --baseline",
     "eval:behavior:gate": "node scripts/eval-behavior.mjs --gate",
+    "eval:behavior:compare": "node scripts/eval-behavior.mjs --compare",
     "css:build": "npx @tailwindcss/cli -i ./src/input.css -o ./assets/styles.css --minify",
     "css:watch": "npx @tailwindcss/cli -i ./src/input.css -o ./assets/styles.css --watch",
     "build": "npm run css:build",

@@ -8,9 +8,20 @@
  *
  * A check is one of:
  *   { pattern, name?, within? }  case-insensitive regex; `within` = first N chars only
+ *   { pattern, absent: true }    passes when the pattern does NOT match: for what
+ *                                the output must leave out
  *   { handoff: slug }            a handoff line to slug: "→ ndv-x", "-> ndv-x", "**Handoff → ndv-x"
  *   { rejected: true }           the output carries BRIEF_REJECTED
  */
+
+import { createHash } from 'node:crypto'
+
+// The evidence pin for one agent: a hash of that agent's cases only, so a
+// case added for another agent does not invalidate it.
+export function evidenceCasesSha(cases, slug) {
+  const mine = JSON.stringify(cases.filter(c => c.agent === slug))
+  return createHash('sha256').update(mine).digest('hex').slice(0, 16)
+}
 
 export function checkRegex(check) {
   if (check.rejected) return /BRIEF_REJECTED/
@@ -21,12 +32,12 @@ export function checkRegex(check) {
 export function checkName(check) {
   if (check.rejected) return 'BRIEF_REJECTED'
   if (check.handoff) return `handoff → ${check.handoff}`
-  return check.name ?? check.pattern
+  return check.name ?? (check.absent ? `absent: ${check.pattern}` : check.pattern)
 }
 
 export function scoreOutput(checks, text) {
   const missed = checks
-    .filter(ch => !checkRegex(ch).test(ch.within ? text.slice(0, ch.within) : text))
+    .filter(ch => checkRegex(ch).test(ch.within ? text.slice(0, ch.within) : text) === Boolean(ch.absent))
     .map(checkName)
   return { pass: missed.length === 0, missed }
 }

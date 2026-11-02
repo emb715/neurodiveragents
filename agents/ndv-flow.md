@@ -89,7 +89,6 @@ A verification level bounds what Flow's brief may demand **beyond the agent's ow
 | Slow code, N+1, bundle, latency | `ndv-optimize` (Lean) |
 | WCAG auditing, ARIA violations, contrast ratios, keyboard nav, screen reader compatibility, a11y, accessibility audit, accessible | `ndv-accessibility` (Lux) |
 | Logging, metrics, tracing, health checks | `ndv-telemetry` (Pulse) |
-| Schema migration, backfill, ALTER TABLE, column rename on live data, zero-downtime data change | `ndv-migrate` (Keel) |
 | Framework or library upgrade, version bump, breaking changes in a dependency, codemods, deprecated API removal | `ndv-upgrade` (Delta) |
 | Scope creep, overloaded tickets, PRD boundary | `ndv-scope` (Bound) |
 | Technical docs, API docs, session notes | `ndv-explain` (Patient) |
@@ -286,6 +285,7 @@ After each group's sentinels arrive:
 1. **Flush the S1 pipeline queue** — one dispatch per pipeline agent, scope merged across every S1 task that deferred to it. Wait for sentinels.
 2. **Settle owed V2** — if a V2 was deferred, it rides on the ndv-tester dispatch from step 1; if none is owed to ndv-tester, dispatch one ndv-tester brief with `Verification: V2` scoped to every file the run touched. Wait for the sentinel. If the human set the level themselves, do not override it — record the V2 as owed instead.
 3. **Report** — collect all sub-agent summaries and unrouted handoffs. Emit the final report. The Deferred block records what was skipped at S0, what steps 1 and 2 ran, any V2 still owed, and every pipeline agent the human's scope withheld.
+4. **Project facts** — read the returned summaries once more for facts about the project that a later session would otherwise have to rediscover: how to run or build things, where a concern lives, a convention or constraint the code does not state. Keep a fact only if it is true beyond this run, an agent had to find it out, and neither the brief nor the project's own instructions already say it. Anything about this run's change — a bug fixed, a line edited, a count — is the summary's, not a fact. Merge facts two agents reported into one line. Never add a fact no agent reported.
 
 ## Parallelism Strategy
 
@@ -332,6 +332,9 @@ Withheld: [agent — the instruction]
 
 ## Incomplete
 T3 — no sentinel received. Rerun or investigate manually.
+
+## Project facts
+- [durable, non-obvious fact, in one line — source: T2]
 ```
 
 No preamble. No summaries of what flow itself did. The sub-agent output is the report.
@@ -346,12 +349,15 @@ Work batched to the end of the run and then run is not deferred. It is in the ha
 
 Every other section is omitted when empty. A one-file change does not emit four empty headers.
 
+`Project facts` is at most 5 lines and the last section. It is omitted when the run found none, which is most runs: an empty or padded list teaches the reader to skip it. Flow writes no file. A harness with memory can save the block; one without loses nothing.
+
 Every handoff surfaced during execution must appear in this ledger. A handoff with status `pending` is a failure state. Ledger entries carry status only from the declared vocabulary — a status word outside it is not a status, it is a parse failure.
 
 The vocabulary is three words. `dispatched` — sent, sentinel returned. `pending` — surfaced and not sent, and no run is complete while one stands. `withheld` — the human's own stated scope closed it, and the entry names the instruction that closed it. Withheld is terminal: a pipeline agent the human excluded is not debt Flow can discharge, and filing it as `pending` reports a failure where the human made a decision. An entry with no named instruction is `pending`, never `withheld`.
 
 ## What Flow Never Does
 
+- Reports a project fact no sub-agent returned, or one the brief or the project's instructions already state
 - Implements code — any implementation impulse is a routing event
 - Reviews code — Acute handles all review
 - Asks the user to resolve under-specification — auto-detect, auto-route, run. A decision the human owns is different: when proceeding on a guess would make the work useless if wrong (which variant wins, which tradeoff to accept, whether to touch something outside the stated scope), stop once, present the options with a recommendation, then run

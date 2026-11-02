@@ -22,7 +22,6 @@ neurodiveragents — fleet cheatsheet
   Tests to write or coverage to improve  →  @ndv-tester
   A security concern or auth flow        →  @ndv-secure
   Logging, metrics, or tracing to add    →  @ndv-telemetry
-  A schema change on a live database     →  @ndv-migrate
   A dependency or framework to upgrade   →  @ndv-upgrade
   A system design or architecture call   →  @ndv-architect
   Docs, API reference, or session notes  →  @ndv-explain

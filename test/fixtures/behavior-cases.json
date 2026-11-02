@@ -263,6 +263,68 @@
       "why": "Each item matches one routing row; the plan must name all three agents."
     },
     {
+      "id": "flow-facts",
+      "agent": "ndv-flow",
+      "kind": "finds",
+      "input": "Every dispatch in this run has returned its sentinel. Emit the final report.\n\nOriginal request: \"Add CSV export of invoices (T1) and cover it with tests (T2).\"\n\nT1 (ndv-build) returned:\nImplemented src/invoices/export.ts. Fixed an off-by-one at export.ts:42 where the last invoice was dropped. Note: invoice totals are stored as integer cents everywhere (src/invoices/money.ts); formatting to decimals happens only at the edge, so the export converts with formatCents(). Type check and unit tests pass.\n[NDV:DONE]\n\nT2 (ndv-tester) returned:\nAdded test/invoices/export.test.ts, 6 cases, all green. `npm test` here runs the e2e suite against a live Postgres and fails without one; unit tests run with `pnpm test:unit`, which is what I used.\n[NDV:DONE]",
+      "checks": [
+        {
+          "pattern": "#+\\s*Project facts",
+          "name": "ends with a Project facts section"
+        },
+        {
+          "pattern": "Project facts[\\s\\S]{0,700}pnpm test:unit",
+          "name": "keeps the test-command fact"
+        },
+        {
+          "pattern": "Project facts[\\s\\S]{0,700}cents",
+          "name": "keeps the money-in-cents fact"
+        },
+        {
+          "pattern": "Project facts[\\s\\S]{0,700}(off-by-one|:42)",
+          "absent": true,
+          "name": "leaves out the bug fixed in this run"
+        }
+      ],
+      "why": "Two durable, non-obvious facts surfaced inside the agents' summaries, next to one fact about this run only. Written before Flow changed."
+    },
+    {
+      "id": "flow-facts-none",
+      "agent": "ndv-flow",
+      "kind": "finds",
+      "input": "Every dispatch in this run has returned its sentinel. Emit the final report.\n\nOriginal request: \"Rename getUsr to getUser across src/ (T1).\"\n\nT1 (ndv-refactor) returned:\nRenamed getUsr → getUser in 14 call sites across 6 files. Behaviour unchanged; type check and tests pass.\n[NDV:DONE]",
+      "checks": [
+        {
+          "pattern": "Project facts",
+          "absent": true,
+          "name": "no Project facts section when nothing was discovered"
+        },
+        {
+          "pattern": "getUser",
+          "name": "still reports the work"
+        }
+      ],
+      "why": "A run that discovered nothing durable must not grow an empty or padded facts block. Written before Flow changed."
+    },
+    {
+      "id": "flow-facts-known",
+      "agent": "ndv-flow",
+      "kind": "finds",
+      "input": "Every dispatch in this run has returned its sentinel. Emit the final report.\n\nOriginal request: \"Speed up GET /api/dashboard (T1) and add a latency metric for it (T2).\" The project's CLAUDE.md, which every agent was given, says: \"Migrations live in db/migrations. Use pnpm.\"\n\nT1 (ndv-optimize) returned:\np95 3.1s → 410ms. Cause: N+1 over widgets; batched into one query in src/dashboard/load.ts. Migrations are in db/migrations as usual; I added none. The read replica lags up to 30s behind the primary, so anything that must read its own write has to use db.primary, not db.replica — the dashboard is fine on the replica.\n[NDV:DONE]\n\nT2 (ndv-telemetry) returned:\nAdded histogram dashboard_load_ms in src/dashboard/load.ts. Heads up: the replica lag is real, up to 30s; reads after writes need db.primary.\n[NDV:DONE]",
+      "checks": [
+        {
+          "pattern": "Project facts[\\s\\S]{0,700}(replica|primary)",
+          "name": "keeps the replica-lag fact"
+        },
+        {
+          "pattern": "Project facts[\\s\\S]{0,700}db/migrations",
+          "absent": true,
+          "name": "leaves out what CLAUDE.md already says"
+        }
+      ],
+      "why": "A fact two agents reported, and one the project already records. Written before Flow changed."
+    },
+    {
       "id": "flow-lane",
       "agent": "ndv-flow",
       "kind": "lane",
@@ -319,49 +381,46 @@
       "why": "The direct answer is Node, and it comes first, before any hedging."
     },
     {
-      "id": "migrate-finds",
-      "agent": "ndv-migrate",
+      "id": "upgrade-finds-defaults",
+      "agent": "ndv-upgrade",
       "kind": "finds",
-      "input": "Plan this change.\n- Target shape: rename `users.fullname` to `users.display_name`. Nothing else changes.\n- Engine: PostgreSQL 15\n- Data size: users has 40M rows, about 9 GB\n- Downtime tolerance: none. The API runs 6 instances and deploys are rolling.\n- Rollback: must be reversible until the old name is removed; data written after the change must survive a rollback.\n\nThe developer's draft:\n```sql\nALTER TABLE users RENAME COLUMN fullname TO display_name;\n```",
+      "input": "Upgrade fetchkit from 2.4.0 to 3.1.0. Test command: `npm test`. Step policy: one major at a time. Runtime: Node 20.\n\nThe release notes, pasted in full:\n- 3.0.0 (breaking): the `retry` option is removed; use `retries`.\n- 3.0.0 (breaking): the callback form `fk.get(url, cb)` is removed; use the promise form.\n- 3.0.0 (breaking): requests now time out after 10 seconds by default (previously no timeout).\n- 3.1.0 (breaking): `response.json()` now throws on an empty body (previously returned null).\n\nAll fetchkit usage in the app, pasted in full:\n```js\nexport const getUser = id => fk.get(`/users/${id}`).then(r => r.json())\nexport const archive = id => fk.post(`/users/${id}/archive`).then(r => r.json()) // API answers 204 No Content\nexport const uploadVideo = file => fk.put('/videos', { body: file })            // uploads take 1-5 minutes\n```\nThe test suite mocks fetchkit and never exercises timeouts or empty bodies.",
       "checks": [
         {
-          "pattern": "expand|dual.?write|add (a |the )?(new )?column|both columns|contract",
-          "name": "replaces the in-place rename with expand and contract"
+          "pattern": "timeout|10 ?s|10 seconds",
+          "name": "flags the new default timeout against the long upload"
         },
         {
-          "pattern": "rolling|old (code|version)|deployed (code|instances)|previous version|still (read|reference)",
-          "name": "sees the old code still reading the old name"
-        }
-      ],
-      "why": "An in-place rename breaks every instance still running the old code during a rolling deploy."
-    },
-    {
-      "id": "migrate-lane",
-      "agent": "ndv-migrate",
-      "kind": "lane",
-      "input": "Plan this change.\n- Target shape: `orders.customer_id` becomes NOT NULL.\n- Engine: PostgreSQL 16\n- Data size: orders has 12M rows. 3,112 of them have customer_id NULL, all created by the 2023 CSV import, which had a bug that dropped the customer column.\n- Downtime tolerance: none\n- Rollback: the constraint must be removable without data loss.",
-      "checks": [
-        {
-          "pattern": "NOT VALID|validate",
-          "name": "adds the constraint without a long lock"
+          "pattern": "204|empty body|throws",
+          "name": "flags json() on the 204 endpoint"
         },
         {
-          "handoff": "ndv-diagnose"
+          "pattern": "searched|not used|no (call sites|usages|matches)|none found|→ none|not present|doesn.t use|unused|n/a|does not apply",
+          "name": "closes the changes that do not apply"
         }
       ],
-      "why": "The NULL rows are bad data from a known bug. Keel plans around them and hands the data fix to ndv-diagnose instead of deleting or defaulting them."
+      "why": "Two behavior changes hit code no test exercises, and two removals do not apply at all. The ledger must close all four."
     },
     {
-      "id": "migrate-brief",
-      "agent": "ndv-migrate",
-      "kind": "brief",
-      "input": "Brief from ndv-flow:\n- Target shape: add a NOT NULL `region` column with default 'eu' to the events table\n- Engine: PostgreSQL 14\n- Downtime tolerance: none\n- Rollback requirement: reversible\n\nPlan the migration.",
+      "id": "upgrade-finds-peer",
+      "agent": "ndv-upgrade",
+      "kind": "finds",
+      "input": "Upgrade ui-kit from 5.8.0 to 6.0.0. Test command: `npm test`. Step policy: direct. Runtime: Node 20, browsers per our browserslist.\n\nThe release notes, pasted in full:\n- 6.0.0 (breaking): peer dependency is now `react >=19` (was `>=17`).\n- 6.0.0 (breaking): `<Modal visible>` is renamed to `<Modal open>`.\n- 6.0.0 (breaking): the `theme.spacing()` helper returns rem instead of px.\n\npackage.json (relevant part): `\"react\": \"18.3.1\", \"react-dom\": \"18.3.1\", \"ui-kit\": \"5.8.0\"`\nUpgrading React as well is approved if ui-kit requires it; include it in the plan.\n\nAll ui-kit usage, pasted in full:\n```jsx\n<Modal visible={isOpen} onClose={close}>{children}</Modal>\nconst gap = theme.spacing(2) // used as `${gap}px` in a styled component\n```",
       "checks": [
         {
-          "rejected": true
+          "pattern": "peer|react (19|>=19|@19)|react 18",
+          "name": "flags the React peer requirement"
+        },
+        {
+          "pattern": "visible|open",
+          "name": "renames the Modal prop"
+        },
+        {
+          "pattern": "rem|px|\\$\\{gap\\}px|double unit|unit",
+          "name": "flags the px suffix on a value that is now rem"
         }
       ],
-      "why": "No data size for the events table."
+      "why": "The peer bump forces a React upgrade first, and the spacing change silently breaks a hand-added px suffix."
     },
     {
       "id": "upgrade-finds",
@@ -383,6 +442,48 @@
         }
       ],
       "why": "Two removed APIs are in use. The mark of the agent is a ledger that also closes the breaking changes this code never touches."
+    },
+    {
+      "id": "upgrade-finds-datefmt",
+      "agent": "ndv-upgrade",
+      "kind": "finds",
+      "input": "Upgrade datefmt from 1.9.0 to 2.0.0. Test command: `npm test`. Step policy: direct. Runtime: Node 20.\n\nThe release notes, pasted in full:\n- 2.0.0 (breaking): the `YYYY` token now means ISO week-year; calendar year is `yyyy`.\n- 2.0.0 (breaking): `parse()` returns an Invalid Date instead of throwing on bad input.\n- 2.0.0 (breaking): the `locale` option is removed; use `locales` (an array).\n- 2.0.0 (breaking): `formatRelative()` is moved to `datefmt/relative`.\n\nAll datefmt usage, pasted in full:\n```js\nexport const stamp = d => format(d, 'YYYY-MM-DD')\nexport function readDate(input) {\n  try { return parse(input, 'yyyy-MM-dd') } catch { return null }\n}\n```",
+      "checks": [
+        {
+          "pattern": "week.?year|yyyy",
+          "name": "flags the YYYY token change"
+        },
+        {
+          "pattern": "Invalid Date|isNaN|no longer throws|does not throw|catch",
+          "name": "flags that the catch no longer fires"
+        },
+        {
+          "pattern": "searched|not used|no (call sites|usages|matches)|none found|→ none|not present|doesn.t use|unused|n/a|does not apply",
+          "name": "closes the changes that do not apply"
+        }
+      ],
+      "why": "Two silent behavior changes hit this code, and two removals do not apply. Held out: written after the agent fixes, before the evidence run."
+    },
+    {
+      "id": "upgrade-finds-cli",
+      "agent": "ndv-upgrade",
+      "kind": "finds",
+      "input": "Upgrade lintkit from 7.2.0 to 8.0.0. Test command: `npm run lint && npm test`. Step policy: direct. Runtime: Node 20.\n\nThe release notes, pasted in full:\n- 8.0.0 (breaking): the config file `.lintkitrc` is no longer read; use `lintkit.config.js`.\n- 8.0.0 (breaking): `--fix-dry-run` is removed.\n- 8.0.0 (breaking): the `no-unused` rule now also reports unused function arguments by default.\n- 8.0.0 (breaking): Node 16 is no longer supported.\n\nThe project: a `.lintkitrc` at the root; CI runs `lintkit --max-warnings 0 src`; 140 functions in src have unused arguments today.",
+      "checks": [
+        {
+          "pattern": "lintkit\\.config|\\.lintkitrc",
+          "name": "moves the config file"
+        },
+        {
+          "pattern": "unused (function )?arg|max-warnings|warnings 0|args",
+          "name": "sees the new default break CI under --max-warnings 0"
+        },
+        {
+          "pattern": "searched|not used|no (call sites|usages|matches)|none found|→ none|not present|doesn.t use|unused flag|n/a|does not apply",
+          "name": "closes the changes that do not apply"
+        }
+      ],
+      "why": "A config move, a default change that turns 140 silent cases into a CI failure, and two changes that do not apply. Second held-out case, written before the third run."
     },
     {
       "id": "upgrade-lane",

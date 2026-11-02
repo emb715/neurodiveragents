@@ -3,17 +3,17 @@
   "models": {
     "claude-haiku-4-5-20251001": {
       "provider": "claude",
-      "fixture_sha": "5de5635694d6c375",
-      "routing_context_sha": "3fb90a654db310ec",
-      "recorded_at": "2026-10-31T23:32:13.176Z",
+      "fixture_sha": "5c0d6cb8d8b1a369",
+      "routing_context_sha": "f632f0f84210d20e",
+      "recorded_at": "2026-11-01T19:22:47.641Z",
       "runs": 3,
       "retries": 2,
       "canonical": {
-        "floor": 0.9804,
+        "floor": 0.98,
         "runs": [
-          0.9804,
-          0.9804,
-          0.9804
+          0.98,
+          0.98,
+          1
         ]
       },
       "escalation": {
@@ -26,22 +26,21 @@
       },
       "judgment": {
         "runs": [
-          0.6667,
-          0.8333,
+          1,
+          1,
           0.8333
         ]
       },
       "misses": [
         "conflict-flow-not-scope-01 → ndv-build",
-        "conflict-secure-beats-optimize-01 → ndv-optimize",
-        "residual-honest-04 → ndv-architect"
+        "conflict-secure-beats-optimize-01 → ndv-optimize"
       ]
     },
     "claude-opus-5": {
       "provider": "claude",
-      "fixture_sha": "5de5635694d6c375",
-      "routing_context_sha": "3fb90a654db310ec",
-      "recorded_at": "2026-10-31T23:25:36.976Z",
+      "fixture_sha": "5c0d6cb8d8b1a369",
+      "routing_context_sha": "f632f0f84210d20e",
+      "recorded_at": "2026-11-01T19:13:18.908Z",
       "runs": 3,
       "retries": 2,
       "canonical": {
@@ -63,8 +62,8 @@
       "judgment": {
         "runs": [
           0.8333,
-          0.8333,
-          1
+          1,
+          0.8333
         ]
       },
       "misses": [
@@ -73,9 +72,9 @@
     },
     "claude-sonnet-5": {
       "provider": "claude",
-      "fixture_sha": "5de5635694d6c375",
-      "routing_context_sha": "3fb90a654db310ec",
-      "recorded_at": "2026-10-31T23:28:00.814Z",
+      "fixture_sha": "5c0d6cb8d8b1a369",
+      "routing_context_sha": "f632f0f84210d20e",
+      "recorded_at": "2026-11-01T19:17:06.659Z",
       "runs": 3,
       "retries": 2,
       "canonical": {
