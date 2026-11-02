@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.9.0](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.8.0...neurodiveragents-v1.9.0) (2026-11-02)
+
+
+### Features
+
+* behavioral output eval, handoff fixes, ndv-migrate and ndv-upgrade ([#23](https://github.com/emb715/neurodiveragents/issues/23)) ([1fdd6ef](https://github.com/emb715/neurodiveragents/commit/1fdd6efbc20d19a2102997e4c367f084a8717b19))
+* **eval:** new agents must beat the plain model; drop ndv-migrate; Flow project facts ([#26](https://github.com/emb715/neurodiveragents/issues/26)) ([00074cd](https://github.com/emb715/neurodiveragents/commit/00074cdabd2885041b23ddbb3b2003b29d113c99))
+
+
+### Bug Fixes
+
+* **install:** give OpenCode and Claude Code their own agent files ([#25](https://github.com/emb715/neurodiveragents/issues/25)) ([905eef6](https://github.com/emb715/neurodiveragents/commit/905eef6ca5e155fc49a79e191cc25ad5f2c80339))
+
 ## [1.8.0](https://github.com/emb715/neurodiveragents/compare/neurodiveragents-v1.7.3...neurodiveragents-v1.8.0) (2026-10-04)
 
 
