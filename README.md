@@ -20,6 +20,8 @@ npx neurodiveragents install copilot   # GitHub Copilot
 
 Add `--global` to install once and have the fleet available in every project. All flags and options: [docs/how-to-use.md](docs/how-to-use.md).
 
+OpenCode and Claude Code each get their own agent files. `install opencode --global` writes OpenCode-format files (`mode` plus `permission`) to `~/.config/opencode/agents/` and the Claude Code source files (`name` plus `tools`) to `~/.claude/agents/`, so the fleet works in both. The formats are not mixed because OpenCode passes unknown frontmatter keys to the model provider. `agents/ndv-*.md` is the single source: the OpenCode `permission` block is derived from its `tools:` list by `transformForOpenCode()` in `bin/ndv.js`, so a permission change goes in the source file and in that mapping, never in the installed copies. Claude Code loads agents only at session start, so restart running sessions after an install.
+
 ## Quick start
 
 Run this:
