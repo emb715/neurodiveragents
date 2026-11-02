@@ -263,6 +263,68 @@
       "why": "Each item matches one routing row; the plan must name all three agents."
     },
     {
+      "id": "flow-facts",
+      "agent": "ndv-flow",
+      "kind": "finds",
+      "input": "Every dispatch in this run has returned its sentinel. Emit the final report.\n\nOriginal request: \"Add CSV export of invoices (T1) and cover it with tests (T2).\"\n\nT1 (ndv-build) returned:\nImplemented src/invoices/export.ts. Fixed an off-by-one at export.ts:42 where the last invoice was dropped. Note: invoice totals are stored as integer cents everywhere (src/invoices/money.ts); formatting to decimals happens only at the edge, so the export converts with formatCents(). Type check and unit tests pass.\n[NDV:DONE]\n\nT2 (ndv-tester) returned:\nAdded test/invoices/export.test.ts, 6 cases, all green. `npm test` here runs the e2e suite against a live Postgres and fails without one; unit tests run with `pnpm test:unit`, which is what I used.\n[NDV:DONE]",
+      "checks": [
+        {
+          "pattern": "#+\\s*Project facts",
+          "name": "ends with a Project facts section"
+        },
+        {
+          "pattern": "Project facts[\\s\\S]{0,700}pnpm test:unit",
+          "name": "keeps the test-command fact"
+        },
+        {
+          "pattern": "Project facts[\\s\\S]{0,700}cents",
+          "name": "keeps the money-in-cents fact"
+        },
+        {
+          "pattern": "Project facts[\\s\\S]{0,700}(off-by-one|:42)",
+          "absent": true,
+          "name": "leaves out the bug fixed in this run"
+        }
+      ],
+      "why": "Two durable, non-obvious facts surfaced inside the agents' summaries, next to one fact about this run only. Written before Flow changed."
+    },
+    {
+      "id": "flow-facts-none",
+      "agent": "ndv-flow",
+      "kind": "finds",
+      "input": "Every dispatch in this run has returned its sentinel. Emit the final report.\n\nOriginal request: \"Rename getUsr to getUser across src/ (T1).\"\n\nT1 (ndv-refactor) returned:\nRenamed getUsr → getUser in 14 call sites across 6 files. Behaviour unchanged; type check and tests pass.\n[NDV:DONE]",
+      "checks": [
+        {
+          "pattern": "Project facts",
+          "absent": true,
+          "name": "no Project facts section when nothing was discovered"
+        },
+        {
+          "pattern": "getUser",
+          "name": "still reports the work"
+        }
+      ],
+      "why": "A run that discovered nothing durable must not grow an empty or padded facts block. Written before Flow changed."
+    },
+    {
+      "id": "flow-facts-known",
+      "agent": "ndv-flow",
+      "kind": "finds",
+      "input": "Every dispatch in this run has returned its sentinel. Emit the final report.\n\nOriginal request: \"Speed up GET /api/dashboard (T1) and add a latency metric for it (T2).\" The project's CLAUDE.md, which every agent was given, says: \"Migrations live in db/migrations. Use pnpm.\"\n\nT1 (ndv-optimize) returned:\np95 3.1s → 410ms. Cause: N+1 over widgets; batched into one query in src/dashboard/load.ts. Migrations are in db/migrations as usual; I added none. The read replica lags up to 30s behind the primary, so anything that must read its own write has to use db.primary, not db.replica — the dashboard is fine on the replica.\n[NDV:DONE]\n\nT2 (ndv-telemetry) returned:\nAdded histogram dashboard_load_ms in src/dashboard/load.ts. Heads up: the replica lag is real, up to 30s; reads after writes need db.primary.\n[NDV:DONE]",
+      "checks": [
+        {
+          "pattern": "Project facts[\\s\\S]{0,700}(replica|primary)",
+          "name": "keeps the replica-lag fact"
+        },
+        {
+          "pattern": "Project facts[\\s\\S]{0,700}db/migrations",
+          "absent": true,
+          "name": "leaves out what CLAUDE.md already says"
+        }
+      ],
+      "why": "A fact two agents reported, and one the project already records. Written before Flow changed."
+    },
+    {
       "id": "flow-lane",
       "agent": "ndv-flow",
       "kind": "lane",

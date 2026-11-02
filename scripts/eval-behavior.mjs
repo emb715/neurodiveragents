@@ -69,6 +69,9 @@ if (existsSync(ENV_FILE) && typeof process.loadEnvFile === 'function') process.l
 
 const FIXTURE = process.env.NDV_BEHAVIOR_FIXTURE || join(ROOT, 'test', 'fixtures', 'behavior-cases.json')
 const EVIDENCE = process.env.NDV_AGENT_EVIDENCE || join(ROOT, 'test', 'fixtures', 'agent-evidence.json')
+// Score an agent file from another directory, e.g. the previous version of
+// an edited agent, to compare old and new text on the same cases.
+const AGENTS_DIR = process.env.NDV_AGENTS_DIR || join(ROOT, 'agents')
 const BASELINE = process.env.NDV_BEHAVIOR_BASELINE || join(ROOT, 'test', 'fixtures', 'behavior-baseline.json')
 
 const PROVIDERS = {
@@ -155,7 +158,7 @@ function systemFile(slug, arm = ARM) {
   if (!systemFiles.has(key)) {
     const body = arm === 'control'
       ? controlPrompt(slug)
-      : readFileSync(join(ROOT, 'agents', slug + '.md'), 'utf8').replace(/^---\n[\s\S]*?\n---\n/, '').trim()
+      : readFileSync(join(AGENTS_DIR, slug + '.md'), 'utf8').replace(/^---\n[\s\S]*?\n---\n/, '').trim()
     const path = join(TMP, `${arm}-${slug}.md`)
     writeFileSync(path, body)
     systemFiles.set(key, path)
