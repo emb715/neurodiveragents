@@ -20,6 +20,14 @@
           "control": "11/21",
           "finds": "15/15 vs 7/15",
           "recorded_at": "2026-11-01T18:30:39.694Z"
+        },
+        "claude-opus-5": {
+          "verdict": "EARNS",
+          "runs": 3,
+          "agent": "19/21",
+          "control": "12/21",
+          "finds": "13/15 vs 7/15",
+          "recorded_at": "2026-11-02T13:20:09.683Z"
         }
       }
     }
