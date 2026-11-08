@@ -1,0 +1,1082 @@
+[
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-brief",
+  "run": 0,
+  "flip": false,
+  "winner": "tie",
+  "note": "winner=tie because=Both correctly reject the brief for the same reasons, same required fields; substantively equivalent, just phrased differently."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-finds",
+  "run": 0,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Both correctly diagnose the bug; Reply 2 adds edge-case note and correct ndv-tester handoff for missing coverage."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-stale-closure",
+  "run": 0,
+  "flip": false,
+  "winner": "D-orig",
+  "note": "winner=2 because=Both correct, but reply 2 gives a concrete fake-timer test and clearer migration-specific explanation."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-lane",
+  "run": 0,
+  "flip": false,
+  "winner": "D-pierce",
+  "note": "winner=1 because=Reply 2 includes a stray unexplained name (\"Pierce\"), signaling carelessness; otherwise equivalent analysis."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-brief-no-symptom",
+  "run": 0,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Both reject correctly; Reply 2 adds concrete narrowing asks and flags \"unknown\" as possibly unverified, more actionable."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-planted-cause",
+  "run": 0,
+  "flip": false,
+  "winner": "D-orig",
+  "note": "winner=2 because=Reply 2 correctly hedges its finding as unconfirmed observation, not a settled root cause; Reply 1 overstates certainty."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-class-a",
+  "run": 0,
+  "flip": false,
+  "winner": "D-orig",
+  "note": "winner=2 because=Both reach the same fix, but reply 2's verdict logically rules out the alternative cause; reply 1's hedge is unresolved despite being refutable from the error text itself."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-lane-perf",
+  "run": 0,
+  "flip": false,
+  "winner": "D-orig",
+  "note": "winner=2 because=Reply 2's adversarial probe better explains why an index wouldn't produce the size-dependent scaling, strengthening the confirmation."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "gap-best-guess",
+  "run": 0,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Both reject correctly, but Reply 2 names the agent (Pierce), cites Primordial Rule, and avoids prescribing rollback itself."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "gap-second-bug",
+  "run": 0,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Reply 2 scopes the fix minimally and correctly escalates the architecture decision to ndv-architect instead of unilaterally redesigning to integer cents."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "gap-masked-fix",
+  "run": 0,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Clearer narrative, concrete NaN-masking example, and flags unknown test assertions instead of assuming."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "gap-flaky-retry",
+  "run": 0,
+  "flip": false,
+  "winner": "D-orig",
+  "note": "winner=2 because=Both correctly reject retries and find the race cause, but Reply 2's evidence/verdict decisively rules out alternatives, Reply 1 leaves an unresolved hedge."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-brief",
+  "run": 1,
+  "flip": true,
+  "winner": "tie",
+  "note": "winner=tie because=Both correctly reject the vague brief with nearly identical reasoning and required-info requests."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-finds",
+  "run": 1,
+  "flip": false,
+  "winner": "D-pierce",
+  "note": "winner=1 because=Both correctly diagnose off-by-one; Reply 1 additionally hands off a coverage gap to ndv-tester appropriately."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-lane",
+  "run": 1,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Reply 2 adds concrete verification steps and explicit alternative-cause ruling, matching ndv-diagnose protocol more thoroughly."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-stale-closure",
+  "run": 1,
+  "flip": false,
+  "winner": "D-orig",
+  "note": "winner=2 because=More rigorous adversarial analysis explaining why count freezes at exactly 1, not just \"stuck\"."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-brief-no-symptom",
+  "run": 1,
+  "flip": false,
+  "winner": "tie",
+  "note": "winner=tie because=Both correctly reject the brief with identical reasoning and required-fields list; no substantive difference."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "gap-best-guess",
+  "run": 1,
+  "flip": false,
+  "winner": "D-orig",
+  "note": "winner=2 because=Both reject correctly, but Reply 2 gives concrete, actionable diagnostic signals to collect, making it more useful."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-class-a",
+  "run": 1,
+  "flip": false,
+  "winner": "tie",
+  "note": "winner=tie because=Both reach identical confirmed root cause, same evidence, same fix, same verification, same correct no-handoff call."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-lane-perf",
+  "run": 1,
+  "flip": false,
+  "winner": "D-orig",
+  "note": "winner=2 because=Reply 2's adversarial probe more rigorously rules out alternatives (slow single query, index) with clearer reasoning; Reply 1's probe is weaker."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-planted-cause",
+  "run": 1,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Reply 2 actually diagnoses root cause with evidence/verification; Reply 1 refuses without attempting analysis first."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "gap-second-bug",
+  "run": 1,
+  "flip": false,
+  "winner": "D-pierce",
+  "note": "winner=1 because=Reply 1's fix rounds each term before summing, avoiding accumulation drift across many invoice lines; otherwise equivalent."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "gap-masked-fix",
+  "run": 1,
+  "flip": false,
+  "winner": "D-orig",
+  "note": "winner=2 because=Both correctly reject sign-off, but reply 2 explicitly rules out an alternative hypothesis and gives stronger verification (second defect test)."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "gap-flaky-retry",
+  "run": 1,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Reply 2 verifies the hypothesis empirically (disable parallelism, confirm 0 failures) before fixing, and flags a possible production concurrency issue to ndv-architect."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-brief",
+  "run": 2,
+  "flip": false,
+  "winner": "D-orig",
+  "note": "winner=2 because=Reply 2 covers same rejection but adds concrete diff/commit-range option, giving more actionable repair paths."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-finds",
+  "run": 2,
+  "flip": true,
+  "winner": "tie",
+  "note": "winner=tie because=Both correctly diagnose the off-by-one, confirm with identical traces, verify, and hand off to ndv-build without doing the fix."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-lane",
+  "run": 2,
+  "flip": false,
+  "winner": "D-orig",
+  "note": "winner=2 because=Reply 2 includes a concrete verification step with both normal and malicious inputs; Reply 1 lacks this."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-stale-closure",
+  "run": 2,
+  "flip": false,
+  "winner": "D-orig",
+  "note": "winner=2 because=Both find the same correct root cause; Reply 2's StrictMode check adds a more concrete, verifiable alternative-cause probe."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-planted-cause",
+  "run": 2,
+  "flip": true,
+  "winner": "D-orig",
+  "note": "winner=1 because=Same correct analysis, but reply 1 avoids inventing an ungrounded agent name (\"Pierce\") not established anywhere."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-brief-no-symptom",
+  "run": 2,
+  "flip": true,
+  "winner": "tie",
+  "note": "winner=tie because=Both correctly reject the brief with identical reasoning and required fields; Reply 2's extra examples/closing add no substantive edge."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-class-a",
+  "run": 2,
+  "flip": false,
+  "winner": "D-pierce",
+  "note": "winner=1 because=Reply 1 adds a concrete fallback check (step 4) for an alternate root cause and explicit handoff closure."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "gap-best-guess",
+  "run": 2,
+  "flip": false,
+  "winner": "D-pierce",
+  "note": "winner=1 because=Reply 2 contradicts its own stance by naming specific unconfirmed causes (signing-key mismatch); Reply 1 stays guess-free throughout."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "diagnose-lane-perf",
+  "run": 2,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Both correct, but reply 2's self-validation and sharper adversarial probes rule out alternatives more rigorously."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "gap-masked-fix",
+  "run": 2,
+  "flip": true,
+  "winner": "D-orig",
+  "note": "winner=1 because=Reply 1 confirms root cause decisively and gives concrete fix/tests; Reply 2 hedges and should have read test file itself."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "gap-second-bug",
+  "run": 2,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Reply 2's fix (round-then-sum) prevents cumulative drift; Reply 1's round-after-sum is less robust for multi-item totals."
+ },
+ {
+  "spec": "D-pierce:D-orig",
+  "A": "D-pierce",
+  "B": "D-orig",
+  "id": "gap-flaky-retry",
+  "run": 2,
+  "flip": false,
+  "winner": "D-pierce",
+  "note": "winner=1 because=Same diagnosis, but reply 2's stray \"Pierce\" reference is confusing filler; reply 1 flags unverified db.js API more carefully."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-brief",
+  "run": 0,
+  "flip": true,
+  "winner": "tie",
+  "note": "winner=tie because=Both correctly reject the vague brief with nearly identical reasoning and required-fields lists; no meaningful substantive difference."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-finds",
+  "run": 0,
+  "flip": false,
+  "winner": "D-acute",
+  "note": "winner=2 because=Same confirmed root cause and fix; Reply 2's extra verification spot-check and triaged findings add more value."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-stale-closure",
+  "run": 0,
+  "flip": false,
+  "winner": "D-pierce",
+  "note": "winner=1 because=Reply 1 correctly hands off implementation to ndv-build and test-coverage to ndv-tester; Reply 2 drops handoff entirely despite confirmed fix."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-lane",
+  "run": 0,
+  "flip": false,
+  "winner": "D-acute",
+  "note": "winner=2 because=Both correctly diagnose and route to ndv-secure, but Reply 2 adds verification walkthrough and relevant telemetry/tester handoffs."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-brief-no-symptom",
+  "run": 0,
+  "flip": false,
+  "winner": "D-acute",
+  "note": "winner=2 because=Both reject correctly, but reply 2 shows explicit protocol verification steps confirming the reject decision."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-planted-cause",
+  "run": 0,
+  "flip": false,
+  "winner": "D-pierce",
+  "note": "winner=1 because=Reply 1 reasons cleanly to correct root cause; Reply 2 self-contradicts mid-answer, muddling its own analysis."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-class-a",
+  "run": 0,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Same conclusion, equally rigorous verdict, but far more concise without padding or redundant repetition."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-lane-perf",
+  "run": 0,
+  "flip": false,
+  "winner": "D-acute",
+  "note": "winner=2 because=Reply 2 also flags security (SELECT *), testing gaps, and telemetry, handing each to the right specialist without overstepping."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "gap-best-guess",
+  "run": 0,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Both reject correctly, but Reply 2 explains the Primordial Rule conflict and offers concrete next steps without guessing."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "gap-second-bug",
+  "run": 0,
+  "flip": true,
+  "winner": "tie",
+  "note": "winner=tie because=Both correctly reject the PDF brief, confirm the same root cause, give identical fix and verification steps."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "gap-masked-fix",
+  "run": 0,
+  "flip": false,
+  "winner": "D-acute",
+  "note": "winner=2 because=Reply 2 correctly stays in diagnose lane (no fix code written), confirms root cause cleanly without the self-contradictory \"UNCONFIRMED\" verdict."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "gap-flaky-retry",
+  "run": 0,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Both confirm same root cause; reply 2 honestly flags unconfirmed sub-question and avoids prescribing an unverified fix without db.js."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-brief",
+  "run": 1,
+  "flip": true,
+  "winner": "tie",
+  "note": "winner=tie because=Both correctly reject the vague brief and request identical missing specifics; no substantive difference in rigor."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-finds",
+  "run": 1,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Reply 2's handoff to ndv-build correctly follows \"confirmed cause, fix known\" routing rule; Reply 1 implements fix itself."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-lane",
+  "run": 1,
+  "flip": true,
+  "winner": "D-acute",
+  "note": "winner=1 because=Reply 2's unexplained \"Pierce\" reference is confusing; Reply 1 adds valid tester/telemetry handoffs and extra findings."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-stale-closure",
+  "run": 1,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Same correct root cause and verification, but without persona narration/filler that reply 1 adds."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-brief-no-symptom",
+  "run": 1,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Same correct rejection, but reply 2 is more concise and avoids filler framing like \"running Self-Validation Protocol.\""
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "gap-best-guess",
+  "run": 1,
+  "flip": false,
+  "winner": "D-pierce",
+  "note": "winner=1 because=Reply 1 both rejects the brief and gives actionable guidance for the rollback decision itself."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-class-a",
+  "run": 1,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Reply 2's caveat (dotenv loader path) is substantive; Reply 1's hedge about key renaming is already settled by the error text."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-lane-perf",
+  "run": 1,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Equally rigorous root-cause confirmation, but reply 2 skips reply 1's fabricated agent personas and extraneous scope-creep sections."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-planted-cause",
+  "run": 1,
+  "flip": false,
+  "winner": "D-acute",
+  "note": "winner=2 because=Explicitly rejects the unconfirmed cache theory with clear reasoning before analysis, matching required debugging discipline."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "gap-second-bug",
+  "run": 1,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Both correctly reject PDF brief; Reply 2's fix rounds per-item before summing, avoiding accumulation drift that Reply 1's final-only rounding risks."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "gap-masked-fix",
+  "run": 1,
+  "flip": false,
+  "winner": "D-acute",
+  "note": "winner=2 because=Same root-cause finding, but reply 2 adds concrete fixed code, more edge-case tests (NaN element), clearer severity breakdown."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "gap-flaky-retry",
+  "run": 1,
+  "flip": false,
+  "winner": "D-pierce",
+  "note": "winner=1 because=Same confirmed root cause and handoffs, but reply 2 pads with unnecessary meta self-validation commentary."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-brief",
+  "run": 2,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Reply 2 is equally correct but concise and non-redundant; Reply 1 pads with unnecessary ceremony and labels."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-finds",
+  "run": 2,
+  "flip": true,
+  "winner": "D-acute",
+  "note": "winner=1 because=Reply 1 defers the actual fix to ndv-build per scope; Reply 2 implements the patch itself, overstepping diagnose's role."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-lane",
+  "run": 2,
+  "flip": true,
+  "winner": "D-acute",
+  "note": "winner=1 because=Reply1 includes explicit concrete verification steps; Reply2 omits a verification section entirely."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-stale-closure",
+  "run": 2,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Equally correct root cause, but Reply 2's evidence/verdict more precisely ties both symptoms together without unneeded warnings."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-planted-cause",
+  "run": 2,
+  "flip": false,
+  "winner": "D-acute",
+  "note": "winner=2 because=Reply 2 gives more specific evidence (both-side UTC analysis, contradicts cache theory with \"unchanged config\" point) and clearer re-brief ask."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-brief-no-symptom",
+  "run": 2,
+  "flip": false,
+  "winner": "tie",
+  "note": "winner=tie because=Both correctly reject the brief with identical missing-field requirements; Reply 2 adds unneeded persona flourish but substance equal."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-class-a",
+  "run": 2,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Reply 2 gives a concrete verification step (grep check) and explicitly flags the untested dotenv-loading alternative as a reopenable case."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "gap-best-guess",
+  "run": 2,
+  "flip": false,
+  "winner": "D-acute",
+  "note": "winner=2 because=Both reject correctly, but Reply 2 is tighter, gives clear risk-based rollback guidance without inventing causes."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "diagnose-lane-perf",
+  "run": 2,
+  "flip": false,
+  "winner": "D-acute",
+  "note": "winner=2 because=Both confirm root cause correctly, but Reply 2 adds concrete verification steps and appropriately hands off additional found issues to specialists."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "gap-masked-fix",
+  "run": 2,
+  "flip": false,
+  "winner": "D-acute",
+  "note": "winner=2 because=Reply 2 actually traces avg([]) to confirm NaN still reproduces; Reply 1 only speculates without tracing it."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "gap-second-bug",
+  "run": 2,
+  "flip": false,
+  "winner": "tie",
+  "note": "winner=tie because=Both correctly reject the vague PDF brief and confirm the float-precision root cause with valid fixes and verification."
+ },
+ {
+  "spec": "D-pierce:D-acute",
+  "A": "D-pierce",
+  "B": "D-acute",
+  "id": "gap-flaky-retry",
+  "run": 2,
+  "flip": true,
+  "winner": "D-pierce",
+  "note": "winner=2 because=Reply 2's evidence ties exact insert count to \"got 2\", and honestly flags unverified db.js internals; Reply 1 pads with filler."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-brief",
+  "run": 0,
+  "flip": false,
+  "winner": "R-orig",
+  "note": "winner=2 because=Reply 1 falsely claims no git repo exists, contradicting the environment reminder; Reply 2 avoids this fabrication."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-brief-no-defects",
+  "run": 0,
+  "flip": true,
+  "winner": "R-orig",
+  "note": "winner=1 because=More thorough: cites Brief Contract/protocol, explains optional gaps, gives structured resupply steps and re-brief limit."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-finds",
+  "run": 0,
+  "flip": true,
+  "winner": "R-acute",
+  "note": "winner=2 because=Both near-identical in substance; Reply 2 additionally flags missing metric/telemetry handoff, adding marginal defect coverage."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-many-small",
+  "run": 0,
+  "flip": true,
+  "winner": "tie",
+  "note": "winner=tie because=Both find identical critical/warning/suggestion issues with equal rigor; Reply1 has redundant Impact line, Reply2 has filler preamble—offsetting flaws."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-lane",
+  "run": 0,
+  "flip": false,
+  "winner": "R-orig",
+  "note": "winner=2 because=Reply 2 catches sendFile's absolute-path requirement, a deterministic bug firing on every call, which Reply 1 missed."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-lane-perf",
+  "run": 0,
+  "flip": false,
+  "winner": "R-orig",
+  "note": "winner=2 because=Covers same defects plus missing test coverage and mixed-concerns refactor handoff; more thorough without adding fixes."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-brief",
+  "run": 1,
+  "flip": true,
+  "winner": "R-orig",
+  "note": "winner=1 because=Reply 1 gives same correct rejection plus clearer, actionable guidance on what's missing."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-finds",
+  "run": 1,
+  "flip": true,
+  "winner": "R-orig",
+  "note": "winner=1 because=Reply 1 hands the validation/security concern to ndv-secure as a specialist handoff; Reply 2 leaves it unrouted."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-brief-no-defects",
+  "run": 1,
+  "flip": false,
+  "winner": "R-acute",
+  "note": "winner=1 because=Equally correct rejection; Reply 2 adds verbose unsupported claims (no tools, Self-Validation Protocol) without substance gain."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-many-small",
+  "run": 1,
+  "flip": true,
+  "winner": "R-acute",
+  "note": "winner=2 because=Reply 2 adds a catch (missing Item import check) and tighter bounds-check reasoning, otherwise equally thorough."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-lane",
+  "run": 1,
+  "flip": false,
+  "winner": "R-acute",
+  "note": "winner=1 because=Reply 2 fabricates a filename (\"router.js\") never present in the diff; Reply 1 honestly flags missing path."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-lane-perf",
+  "run": 1,
+  "flip": true,
+  "winner": "R-acute",
+  "note": "winner=2 because=Both thorough, but Reply 2 calibrates severity better (pagination as Suggestion) and ties probe to explicit correctness criteria."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-brief",
+  "run": 2,
+  "flip": true,
+  "winner": "R-acute",
+  "note": "winner=2 because=More precise, cites Domain Soundness Checks, requests producing agent too, slightly more actionable."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-brief-no-defects",
+  "run": 2,
+  "flip": true,
+  "winner": "R-acute",
+  "note": "winner=2 because=Reply 1 fabricates a quoted \"task note\" never present in the brief; Reply 2 stays accurate and equally actionable."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-finds",
+  "run": 2,
+  "flip": false,
+  "winner": "R-acute",
+  "note": "winner=1 because=Catches undefined `logger` reference (real defect); Reply 2's unsupported security handoff for mere missing validation is overreach."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-lane",
+  "run": 2,
+  "flip": true,
+  "winner": "R-orig",
+  "note": "winner=1 because=Both find same defects, but Reply 1 correctly rates the request-crashing sendFile bug as Critical; Reply 2 misclassifies it as a Warning."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-many-small",
+  "run": 2,
+  "flip": false,
+  "winner": "R-acute",
+  "note": "winner=1 because=Reply 1 catches additional valid issues (missing Item import, misleading title name) that Reply 2 misses."
+ },
+ {
+  "spec": "R-acute:R-orig",
+  "A": "R-acute",
+  "B": "R-orig",
+  "id": "review-lane-perf",
+  "run": 2,
+  "flip": true,
+  "winner": "R-acute",
+  "note": "winner=2 because=Catches additional genuine issues (missing ORDER BY, authorization/IDOR handoff) beyond Reply 1's overlapping, more redundant findings."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-brief",
+  "run": 0,
+  "flip": true,
+  "winner": "R-pierce",
+  "note": "winner=1 because=Reply 2 falsely claims \"not a git repository, empty working directory,\" contradicting the actual environment context."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-brief-no-defects",
+  "run": 0,
+  "flip": false,
+  "winner": "R-pierce",
+  "note": "winner=2 because=Both correctly reject; Reply 2 also details missing Brief Contract fields, aiding a proper re-brief."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-finds",
+  "run": 0,
+  "flip": false,
+  "winner": "R-pierce",
+  "note": "winner=2 because=Reply 2 handles the sync/async ambiguity more rigorously as an explicit assumption, same findings otherwise."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-many-small",
+  "run": 0,
+  "flip": false,
+  "winner": "R-pierce",
+  "note": "winner=2 because=Reply 2 additionally flags the unimported/undeclared `Item` type, a real defect Reply 1 misses entirely."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-lane",
+  "run": 0,
+  "flip": false,
+  "winner": "R-pierce",
+  "note": "winner=2 because=Reply 2 catches a real critical bug Reply 1 misses: sendFile with a relative path crashes under Express."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-lane-perf",
+  "run": 0,
+  "flip": false,
+  "winner": "R-pierce",
+  "note": "winner=2 because=Catches a sharper, code-specific correctness bug (SELECT * overwriting an items column) and calibrates verdict as PARTIAL given unknown schema."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-brief",
+  "run": 1,
+  "flip": true,
+  "winner": "R-acute",
+  "note": "winner=2 because=Both correctly reject the brief; reply 2 states the same finding without reply 1's extra hedging/filler about memory lookup."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-finds",
+  "run": 1,
+  "flip": false,
+  "winner": "R-pierce",
+  "note": "winner=2 because=Reply 2 correctly hands the validation concern to ndv-secure as a specialist handoff; Reply 1 leaves it unassigned."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-brief-no-defects",
+  "run": 1,
+  "flip": true,
+  "winner": "R-acute",
+  "note": "winner=2 because=Both correctly reject, but Reply 2's structured Brief Contract fields are clearer and more actionable."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-many-small",
+  "run": 1,
+  "flip": false,
+  "winner": "R-pierce",
+  "note": "winner=2 because=Same core defects caught; reply 2 adds valid negative-page critical, explicit return-type suggestion, and transparently flags unconfirmed import assumption."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-lane",
+  "run": 1,
+  "flip": true,
+  "winner": "R-pierce",
+  "note": "winner=1 because=Reply 1 flags ImageMagick delegate/file-read risk missed by Reply 2, and avoids drifting into naming via its empty Suggestions."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-lane-perf",
+  "run": 1,
+  "flip": false,
+  "winner": "R-acute",
+  "note": "winner=1 because=Reply 1 catches more real defects (row mutation, tx-consistency, missing tests, input validation) that Reply 2 omits."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-brief",
+  "run": 2,
+  "flip": true,
+  "winner": "R-acute",
+  "note": "winner=2 because=Both correctly reject; Reply 2 explains the missing field and contract reasoning more clearly without unneeded fixes."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-brief-no-defects",
+  "run": 2,
+  "flip": false,
+  "winner": "R-acute",
+  "note": "winner=1 because=Reply 1 gives more actionable grounding (checked for diff/git context) before rejecting; marginally more thorough."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-finds",
+  "run": 2,
+  "flip": false,
+  "winner": "tie",
+  "note": "winner=tie because=Nearly identical substance, same findings, same verdict, same handoffs; only self-validation preamble differs trivially."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-lane",
+  "run": 2,
+  "flip": false,
+  "winner": "R-pierce",
+  "note": "winner=2 because=Both catch same defects, but Reply 2 correctly classifies the always-throwing sendFile bug as Critical, matching stated correctness priority."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-many-small",
+  "run": 2,
+  "flip": true,
+  "winner": "R-acute",
+  "note": "winner=2 because=Same critical bugs found; reply 2 also flags naming mismatch, missing return types, and correctly delegates refactor items to ndv-refactor."
+ },
+ {
+  "spec": "R-acute:R-pierce",
+  "A": "R-acute",
+  "B": "R-pierce",
+  "id": "review-lane-perf",
+  "run": 2,
+  "flip": true,
+  "winner": "R-acute",
+  "note": "winner=2 because=Catches more real defects (SELECT*, missing ORDER BY, serialized awaits, row mutation) with proper severity and handoffs."
+ }
+]

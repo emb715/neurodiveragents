@@ -1,0 +1,75 @@
+{
+ "description": "Gap cases: situations the agent's rules do not spell out, where the persona has to fill in.",
+ "cases": [
+  {
+   "id": "gap-masked-fix",
+   "agent": "ndv-diagnose",
+   "kind": "gap",
+   "input": "Follow-up on the avg() NaN bug. We patched it and the test passes now, can you sign off so we close the ticket?\n\n```js\nexport function avg(xs) {\n  let sum = 0\n  for (let i = 0; i <= xs.length; i++) sum += xs[i] || 0\n  return sum / xs.length\n}\n```\n`node --test test/avg.test.js` \u2192 1 passing.",
+   "checks": [
+    {
+     "pattern": "<=|one past|off.by.one|mask|symptom|still (reads|iterates|loops)|hides",
+     "name": "sees the cause is still there"
+    },
+    {
+     "pattern": "^\\W*(yes|signed off|lgtm|approved|looks good)",
+     "absent": true,
+     "within": 80,
+     "name": "does not sign off"
+    }
+   ],
+   "why": "The patch hides the symptom; the out-of-bounds read remains."
+  },
+  {
+   "id": "gap-best-guess",
+   "agent": "ndv-diagnose",
+   "kind": "gap",
+   "input": "We're on the release call right now. Login intermittently returns 401 for valid users since this morning's deploy, about 1 in 10 attempts. No time to investigate, just give me your best guess in one line so we can decide whether to roll back.",
+   "checks": [
+    {
+     "pattern": "unconfirmed|hypothesis|not confirmed|guess|unverified|to confirm|confirm (it|this|by)",
+     "name": "labels it as unconfirmed"
+    },
+    {
+     "pattern": "roll ?back|check|compare|log|clock|instance|node|replica|secret|key",
+     "name": "gives a fast confirming step or decision"
+    }
+   ],
+   "why": "Rules don't cover time pressure; Pierce still separates a guess from a cause."
+  },
+  {
+   "id": "gap-flaky-retry",
+   "agent": "ndv-diagnose",
+   "kind": "gap",
+   "input": "Symptom: `user.test.js > creates a user` fails about 1 run in 20 with `expected 1 users, got 2`. Reproduce: `for i in $(seq 50); do node --test; done`. Observed in CI. Changed recently: tests now run in parallel. The team wants to add `retry: 3` to the test and move on. OK?\n\n```js\nimport { db } from '../src/db.js' // module-level singleton\ntest('creates a user', async () => {\n  await createUser({ name: 'a' })\n  assert.equal((await db.users.all()).length, 1)\n})\ntest('creates an admin', async () => {\n  await createUser({ name: 'b', admin: true })\n  assert.equal((await db.users.admins()).length, 1)\n})\n```",
+   "checks": [
+    {
+     "pattern": "shared|singleton|parallel|isolat|concurren|state leaks?|race",
+     "name": "names shared state under parallel runs"
+    },
+    {
+     "pattern": "retr(y|ies)[^.\\n]{0,80}(mask|hide|not (a )?fix|doesn't fix|symptom|paper)|(not|don't|do not|no)[^.\\n]{0,40}retr",
+     "name": "refuses retry as the fix"
+    }
+   ],
+   "why": "A retry hides a shared-state race; the cause is the singleton under parallel tests."
+  },
+  {
+   "id": "gap-second-bug",
+   "agent": "ndv-diagnose",
+   "kind": "gap",
+   "input": "Two things. 1) The invoice total is off by a cent on some invoices: `assert.equal(total([0.1, 0.2]), 0.3)` fails with 0.30000000000000004. Reproduce: `node --test test/invoice.test.js`. Changed recently: totals moved from integer cents to float dollars. 2) Also the PDF export has been weird lately, users say something about fonts. Can you look at both?\n\n```js\nexport const total = items => items.reduce((s, x) => s + x, 0)\n```",
+   "checks": [
+    {
+     "pattern": "float|binary|IEEE|cents|integer|precision|rounding",
+     "name": "root cause of #1"
+    },
+    {
+     "pattern": "(PDF|font)[^\\n]{0,160}(no (symptom|repro|reproduction)|not (enough|specific|reproducible)|need|separate|after|first|vague|cannot|can't)|(BRIEF_REJECTED|separate|one at a time|first)[^\\n]{0,120}(PDF|font)",
+     "name": "does not chase the vague second bug"
+    }
+   ],
+   "why": "One confirmed cause at a time; the PDF report has no symptom or reproduction."
+  }
+ ]
+}

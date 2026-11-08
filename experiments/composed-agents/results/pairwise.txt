@@ -1,0 +1,28 @@
+
+runtime 24  ·  nopersona 12  ·  tie 0  (n=36)
+  diagnose-brief               A A B
+  diagnose-finds               A A A
+  diagnose-lane                A A A
+  diagnose-planted-cause       B A B
+  diagnose-brief-no-symptom    B B B
+  diagnose-stale-closure       A A B
+  diagnose-class-a             B A B
+  diagnose-lane-perf           B A A
+  gap-best-guess               B A A
+  gap-second-bug               A A A
+  gap-flaky-retry              A A A
+  gap-masked-fix               A B A
+
+runtime 17  ·  original 16  ·  tie 3  (n=36)
+  diagnose-brief               B = B
+  diagnose-finds               A B A
+  diagnose-lane                B = A
+  diagnose-planted-cause       B A B
+  diagnose-brief-no-symptom    B B A
+  diagnose-stale-closure       A A A
+  diagnose-class-a             A A A
+  diagnose-lane-perf           A B B
+  gap-best-guess               B A B
+  gap-second-bug               B A B
+  gap-flaky-retry              A A =
+  gap-masked-fix               B B A

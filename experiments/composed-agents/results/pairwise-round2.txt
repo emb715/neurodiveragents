@@ -1,0 +1,5 @@
+
+D-pierce 16  ·  D-orig 14  ·  tie 6  (n=36)
+D-pierce 17  ·  D-acute 14  ·  tie 5  (n=36)
+R-acute 10  ·  R-orig 7  ·  tie 1  (n=18)
+R-acute 7  ·  R-pierce 10  ·  tie 1  (n=18)

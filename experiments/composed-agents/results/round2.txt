@@ -1,0 +1,14 @@
+
+model claude-sonnet-5, 3 runs
+
+arm        pass     finds    lane     brief    gap      load ok  in tok   out tok  sec
+D-orig     36/36    12/12    6/6      6/6      12/12    -        10801    2497     33
+D-pierce   33/36    9/12     6/6      6/6      12/12    36/36    33869    3667     47
+D-acute    33/36    9/12     6/6      6/6      12/12    36/36    34809    5015     62
+D-none     6/36     0/12     0/6      6/6      0/12     1/36     15234    625      11
+R-orig     18/18    6/6      6/6      6/6      -        -        11209    3998     49
+R-acute    18/18    6/6      6/6      6/6      -        18/18    35947    4035     50
+R-pierce   18/18    6/6      6/6      6/6      -        18/18    34427    4417     55
+R-none     6/18     0/6      0/6      6/6      -        2/18     16922    843      14
+
+report: results/round2.json

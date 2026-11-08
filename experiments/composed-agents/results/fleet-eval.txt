@@ -1,0 +1,122 @@
+Running 9 behavior cases against: claude.sh (claude-sonnet-5) (concurrency 8)
+  1/9  2/9  3/9  4/9  5/9  6/9  7/9  8/9  9/9
+
+BEHAVIOR EVAL — claude.sh (claude-sonnet-5)
+fixture v1 · 9 cases
+
+  accuracy   88.9%  (8/9)
+
+  by kind
+    brief    100.0%  (3/3)
+    finds    100.0%  (3/3)
+    lane      66.7%  (2/3)
+
+  by agent
+    ndv-diagnose       3/3
+    ndv-review         2/3
+    ndv-secure         3/3
+
+  failures
+    review-lane  missed: handoff → ndv-secure
+      Command injection through req.query.file: flagged Critical and handed to ndv-secure, not patched.
+
+  report → experiments/composed-agents/results/fleet-original-1.json
+Running 9 behavior cases against: claude.sh (claude-sonnet-5) (concurrency 8)
+  1/9  2/9  3/9  4/9  5/9  6/9  7/9  8/9  9/9
+
+BEHAVIOR EVAL — claude.sh (claude-sonnet-5)
+fixture v1 · 9 cases
+
+  accuracy   100.0%  (9/9)
+
+  by kind
+    brief    100.0%  (3/3)
+    finds    100.0%  (3/3)
+    lane     100.0%  (3/3)
+
+  by agent
+    ndv-diagnose       3/3
+    ndv-review         3/3
+    ndv-secure         3/3
+
+  report → experiments/composed-agents/results/fleet-flat-1.json
+Running 9 behavior cases against: claude.sh (claude-sonnet-5) (concurrency 8)
+  1/9  2/9  3/9  4/9  5/9  6/9  7/9  8/9  9/9
+
+BEHAVIOR EVAL — claude.sh (claude-sonnet-5)
+fixture v1 · 9 cases
+
+  accuracy   100.0%  (9/9)
+
+  by kind
+    brief    100.0%  (3/3)
+    finds    100.0%  (3/3)
+    lane     100.0%  (3/3)
+
+  by agent
+    ndv-diagnose       3/3
+    ndv-review         3/3
+    ndv-secure         3/3
+
+  report → experiments/composed-agents/results/fleet-original-2.json
+Running 9 behavior cases against: claude.sh (claude-sonnet-5) (concurrency 8)
+  1/9  2/9  3/9  4/9  5/9  6/9  7/9  8/9  9/9
+
+BEHAVIOR EVAL — claude.sh (claude-sonnet-5)
+fixture v1 · 9 cases
+
+  accuracy   100.0%  (9/9)
+
+  by kind
+    brief    100.0%  (3/3)
+    finds    100.0%  (3/3)
+    lane     100.0%  (3/3)
+
+  by agent
+    ndv-diagnose       3/3
+    ndv-review         3/3
+    ndv-secure         3/3
+
+  report → experiments/composed-agents/results/fleet-flat-2.json
+Running 9 behavior cases against: claude.sh (claude-sonnet-5) (concurrency 8)
+  1/9  2/9  3/9  4/9  5/9  6/9  7/9  8/9  9/9
+
+BEHAVIOR EVAL — claude.sh (claude-sonnet-5)
+fixture v1 · 9 cases
+
+  accuracy   88.9%  (8/9)
+
+  by kind
+    brief    100.0%  (3/3)
+    finds    100.0%  (3/3)
+    lane      66.7%  (2/3)
+
+  by agent
+    ndv-diagnose       3/3
+    ndv-review         3/3
+    ndv-secure         2/3
+
+  failures
+    secure-lane  missed: handoff → ndv-diagnose
+      getMonth() is 0-based, so January prints 00: a non-security bug for ndv-diagnose.
+
+  report → experiments/composed-agents/results/fleet-original-3.json
+Running 9 behavior cases against: claude.sh (claude-sonnet-5) (concurrency 8)
+  1/9  2/9  3/9  4/9  5/9  6/9  7/9  8/9  9/9
+
+BEHAVIOR EVAL — claude.sh (claude-sonnet-5)
+fixture v1 · 9 cases
+
+  accuracy   100.0%  (9/9)
+
+  by kind
+    brief    100.0%  (3/3)
+    finds    100.0%  (3/3)
+    lane     100.0%  (3/3)
+
+  by agent
+    ndv-diagnose       3/3
+    ndv-review         3/3
+    ndv-secure         3/3
+
+  report → experiments/composed-agents/results/fleet-flat-3.json

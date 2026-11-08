@@ -1,0 +1,153 @@
+{
+ "description": "Identity-sensitive cases: same domain, three identities. Graded by planted items found.",
+ "cases": [
+  {
+   "id": "id-review-exhaustive",
+   "domain": "ndv-domain-code-review",
+   "native": "ndv-neurotype-total-perception",
+   "input": "Review this diff from ndv-build. Priority: correctness and maintainability. Constraints: TypeScript strict mode, repository pattern. Out of scope: performance.\n\n```diff\n--- a/src/invoices.ts\n+++ b/src/invoices.ts\n+export async function closeInvoice(repo: InvoiceRepo, id: string, by: User) {\n+  const inv = await repo.find(id)\n+  if (inv.status = 'closed') return inv\n+  const tmp = inv.total\n+  inv.status = 'closed'\n+  inv.closedAt = new Date().toLocaleString()\n+  inv.closedBy = by.name\n+  await repo.save(inv)\n+  return inv\n+}\n```",
+   "items": [
+    {
+     "name": "assignment in condition",
+     "pattern": "=\\s*'closed'|assign|single =|===|always (true|truthy)"
+    },
+    {
+     "name": "find may return null",
+     "pattern": "null|undefined|not found|missing invoice"
+    },
+    {
+     "name": "unused tmp",
+     "pattern": "\\btmp\\b|unused"
+    },
+    {
+     "name": "locale string date",
+     "pattern": "toLocaleString|locale|ISO|timezone|Date object"
+    },
+    {
+     "name": "closedBy uses name not id",
+     "pattern": "by\\.name|name (is not|isn't)|user id|by\\.id|not unique"
+    },
+    {
+     "name": "no tests",
+     "pattern": "ndv-tester|test"
+    }
+   ]
+  },
+  {
+   "id": "id-review-exhaustive-2",
+   "domain": "ndv-domain-code-review",
+   "native": "ndv-neurotype-total-perception",
+   "input": "Review this diff from ndv-build. Priority: correctness. Constraints: Node 22, ESM. Out of scope: naming.\n\n```diff\n--- a/src/retry.js\n+++ b/src/retry.js\n+export async function withRetry(fn, attempts = 3) {\n+  for (let i = 0; i < attempts; i++) {\n+    try {\n+      return fn()\n+    } catch (e) {\n+      console.log('retrying', e)\n+      await new Promise(r => setTimeout(r, 1000))\n+    }\n+  }\n+}\n```",
+   "items": [
+    {
+     "name": "return fn() not awaited so catch misses rejections",
+     "pattern": "await fn|return await|not awaited|reject"
+    },
+    {
+     "name": "returns undefined after last attempt / swallows error",
+     "pattern": "undefined|swallow|rethrow|throw (the )?last|never throws"
+    },
+    {
+     "name": "waits after the final attempt",
+     "pattern": "last attempt|final attempt|after the (last|final)|unnecessary (wait|delay)"
+    },
+    {
+     "name": "fixed delay, no backoff",
+     "pattern": "backoff|exponential|jitter|fixed (delay|1000)"
+    },
+    {
+     "name": "console.log instead of logger",
+     "pattern": "console\\.log|logger|ndv-telemetry"
+    },
+    {
+     "name": "retries non-retryable errors",
+     "pattern": "non.?retr|every error|all errors|retryable"
+    }
+   ]
+  },
+  {
+   "id": "id-debug-decoy-retry",
+   "domain": "ndv-domain-debugging",
+   "native": "ndv-neurotype-skeptical",
+   "input": "Symptom: every order confirmation email is sent twice. The team is sure it's the retry middleware, since logs show it firing. Reproduce: place any order in staging; two identical emails arrive. Observed in staging and production since Monday. Changed recently: the email module was moved into a plugin loaded by both the API and the jobs package.\n\nLogs for one order:\n```\n12:00:03.114 retry: attempt 2 for POST /payments (timeout)\n12:00:05.302 email: sent order-confirmation to a@x.com\n12:00:05.302 email: sent order-confirmation to a@x.com\n```\nRetry middleware: retries only POST /payments, 2s backoff.\n\n```js\n// plugins/email.js\nexport function register(bus) {\n  bus.on('order.created', sendConfirmation)\n}\n// api/index.js and jobs/index.js both call: register(sharedBus)\n```",
+   "items": [
+    {
+     "name": "real cause: listener registered twice",
+     "pattern": "twice|two (listeners|subscribers|registrations)|register(ed)? (in )?both|double registration|both (api|packages|callers)"
+    },
+    {
+     "name": "rules out retry with evidence",
+     "pattern": "(same|identical) (millisecond|timestamp|time)|05\\.302|backoff|only (retries )?POST /payments|payments, not"
+    }
+   ]
+  },
+  {
+   "id": "id-debug-decoy-cache",
+   "domain": "ndv-domain-debugging",
+   "native": "ndv-neurotype-skeptical",
+   "input": "Symptom: API memory grows ~40MB per hour until the pod is OOM-killed. Everyone blames the new LRU cache library added two weeks ago. Reproduce: run the load test for 2 hours. Observed in production. Changed recently: the LRU cache (max 1000 entries) and a per-request audit hook.\n\nHeap snapshot diff after 1h: +310k `Listener` objects retained by `EventEmitter` 'audit'; LRU cache: 1000 entries, 2MB, flat.\nNode warns: `MaxListenersExceededWarning: 11 audit listeners added`.\n\n```js\napp.use((req, res, next) => {\n  auditBus.on('audit', e => log(req.id, e))\n  next()\n})\n```",
+   "items": [
+    {
+     "name": "real cause: listener added per request, never removed",
+     "pattern": "per.request|every request|never removed|removeListener|\\.off|once"
+    },
+    {
+     "name": "rules out the cache with evidence",
+     "pattern": "(cache|LRU)[^.\\n]{0,80}(flat|bounded|2 ?MB|1000|not the|isn't|ruled out)|flat"
+    }
+   ]
+  },
+  {
+   "id": "id-sec-trust",
+   "domain": "ndv-domain-security",
+   "native": "ndv-neurotype-vigilant",
+   "input": "Audit this change for security. Threat model: authenticated users of a multi-tenant SaaS, some hostile. Scope: the profile update endpoint and the bio renderer.\n\n```js\n// client: the role <select> is disabled unless the user is an admin\napp.put('/me', auth, async (req, res) => {\n  const user = await Users.findById(req.user.id)\n  Object.assign(user, req.body)\n  await user.save()\n  res.json(user)\n})\n\nexport const renderBio = bio => bio.replace(/<script.*?>.*?<\\/script>/gi, '')\n```",
+   "items": [
+    {
+     "name": "mass assignment of role/tenant",
+     "pattern": "mass.assign|Object\\.assign|role|tenant|allow.?list|whitelist"
+    },
+    {
+     "name": "client-side check is not a control",
+     "pattern": "client.side|disabled|UI (check|control)|bypass"
+    },
+    {
+     "name": "regex sanitizer bypass / XSS",
+     "pattern": "XSS|onerror|event handler|regex (sanitiz|is not)|DOMPurify|escape"
+    },
+    {
+     "name": "response leaks full user object",
+     "pattern": "res\\.json\\(user\\)|password|hash|leak|sensitive fields|overexpos"
+    }
+   ]
+  },
+  {
+   "id": "id-sec-jwt",
+   "domain": "ndv-domain-security",
+   "native": "ndv-neurotype-vigilant",
+   "input": "Audit this change for security. Threat model: internet attackers, unauthenticated and authenticated. Scope: the login callback.\n\n```js\napp.get('/callback', async (req, res) => {\n  const claims = jwt.decode(req.query.token)\n  req.session.userId = claims.sub\n  res.redirect(req.query.next || '/')\n})\n```",
+   "items": [
+    {
+     "name": "decode without verify",
+     "pattern": "decode|verif|signature|forg"
+    },
+    {
+     "name": "open redirect",
+     "pattern": "open redirect|next|redirect"
+    },
+    {
+     "name": "token in query string",
+     "pattern": "query (string|param)|URL|logs|referer|referrer"
+    },
+    {
+     "name": "no session regeneration (fixation)",
+     "pattern": "fixation|regenerat"
+    },
+    {
+     "name": "no exp/aud/iss checks",
+     "pattern": "\\bexp\\b|expir|audience|\\baud\\b|issuer|\\biss\\b"
+    }
+   ]
+  }
+ ]
+}
