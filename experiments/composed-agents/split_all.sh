@@ -4,7 +4,7 @@ cd "$(dirname "$0")" || exit 1
 while read -r agent neuro module domain; do
   desc=$(sed -n 's/^description: //p' "../../agents/$agent.md" | head -1)
   [ "$desc" = ">" ] && desc=$(awk '/^description: >/{f=1;next} f&&/^[a-z]+:/{exit} f{printf "%s ", $0}' "../../agents/$agent.md" | sed 's/  */ /g')
-  python3 -I split_agent.py "$agent" "$neuro" "$module" "$domain" "Domain layer from $agent. Load it when an agent file or a brief's Load line names it. $desc"
+  python3 -I split_agent.py "$agent" "$neuro" "$module" "$domain" "$desc"
 done <<'MAP'
 ndv-accessibility universal-design - accessibility
 ndv-architect structural ndv-structural architecture

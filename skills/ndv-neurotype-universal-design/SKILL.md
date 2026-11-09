@@ -1,15 +1,14 @@
 ---
 name: ndv-neurotype-universal-design
 description: >
-  Identity layer: Lux's mind (source agent ndv-accessibility). Loaded by name
+  Identity layer: Lux's mind, the accessibility role. Loaded by name
   from an agent file or a brief's Load line, never by task matching. Also
   usable as a cognitive module in any workflow step.
 user-invocable: false
 metadata:
   type: neurotype
   layer: identity
-  origin: agent-derived
-  source-agent: ndv-accessibility
+  role: accessibility
   character: Lux
   module: -
 ---

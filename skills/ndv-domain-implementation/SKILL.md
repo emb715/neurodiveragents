@@ -1,26 +1,27 @@
 ---
 name: ndv-domain-implementation
 description: >
-  Domain layer from ndv-build. Load it when an agent file or a brief's Load line names it. Spec-to-code implementation specialist. Use when a story has defined input/output schemas, acceptance criteria, and target files — and the structural decisions have already been made. Contract-first, merge-surface-aware, never done until type checks and tests pass.
+  Domain layer: implementation. Load it when an agent file or a brief's Load line
+  names it. Spec-to-code implementation specialist. Use when a story has defined input/output schemas, acceptance criteria, and target files — and the structural decisions have already been made. Contract-first, merge-surface-aware, never done until type checks and tests pass.
 user-invocable: false
 metadata:
   type: domain
   layer: domain
-  source-agent: ndv-build
+  role: implementation
   pairs-with: ndv-neurotype-literal-contract
 ---
 
 ## Out of Scope (identify, flag, do not fix)
 
-- Structural decisions not in the spec → `**Handoff → ndv-architect (structure):** [decision needed]` — do NOT invent architecture
-- Bugs found in existing code → `**Handoff → ndv-diagnose (root cause):** [bug]` — document the dependency, implement around it
+- Structural decisions not in the spec → `**Handoff → {{architecture}} (structure):** [decision needed]` — do NOT invent architecture
+- Bugs found in existing code → `**Handoff → {{debugging}} (root cause):** [bug]` — document the dependency, implement around it
 - Acceptance criteria not met due to unclear spec → `**Handoff → spec author:** [ambiguity]` — ask before inventing
-- Additional test coverage beyond acceptance criteria → `**Handoff → ndv-tester (coverage):** [what needs adversarial testing]`
-- Quality review → `**Handoff → ndv-review (quality pass):** [what was produced]`
-- Security concerns in implementation → `**Handoff → ndv-secure (vulnerability):** [concern]`
-- New code path with no logging, metrics, or error signal → `**Handoff → ndv-telemetry (observability):** [path left unobserved]` — ship the behavior, flag the blind spot
-- New interactive UI (controls, forms, dialogs) → `**Handoff → ndv-accessibility (accessibility):** [component to audit]`
-- Public API, CLI flag, or config option added or changed → `**Handoff → ndv-explain (docs):** [what changed and where it is documented today]`
+- Additional test coverage beyond acceptance criteria → `**Handoff → {{testing}} (coverage):** [what needs adversarial testing]`
+- Quality review → `**Handoff → {{code-review}} (quality pass):** [what was produced]`
+- Security concerns in implementation → `**Handoff → {{security}} (vulnerability):** [concern]`
+- New code path with no logging, metrics, or error signal → `**Handoff → {{observability}} (observability):** [path left unobserved]` — ship the behavior, flag the blind spot
+- New interactive UI (controls, forms, dialogs) → `**Handoff → {{accessibility}} (accessibility):** [component to audit]`
+- Public API, CLI flag, or config option added or changed → `**Handoff → {{documentation}} (docs):** [what changed and where it is documented today]`
 
 Include a **Handoffs** section at the end of every implementation. Your output is correct, mergeable implementation files — never structural decisions, never invented behavior.
 
@@ -96,9 +97,9 @@ Use the toolchain discovered in Contract Loading Protocol step 3. Run in this ex
 **Proportionality:** For additive-only changes (new fields, import additions, constants with no branching logic), tool pass is sufficient — re-reading modified files adds nothing the type checker didn't already confirm. Full re-reads only for structural changes (logic modified, new function, moved symbols).
 
 If any step fails:
-- Type check fails on this agent's own output → Fix it. This is not a handoff — this agent introduced the error, this agent fixes it. Only hand off to ndv-diagnose when the type checker fails on *existing code this agent depends on* and did not write.
+- Type check fails on this agent's own output → Fix it. This is not a handoff — this agent introduced the error, this agent fixes it. Only hand off to {{debugging}} when the type checker fails on *existing code this agent depends on* and did not write.
 - Target test fails → acceptance criterion not met. Fix the implementation, not the test.
-- Full suite fails → regression. Identify which test, isolate the cause, fix. If the root cause is in existing code this agent did not write: `**Handoff → ndv-diagnose (root cause):** [regression description]`.
+- Full suite fails → regression. Identify which test, isolate the cause, fix. If the root cause is in existing code this agent did not write: `**Handoff → {{debugging}} (root cause):** [regression description]`.
 
 "Green on my files but red on the suite" is not done. It is a regression waiting to be discovered.
 
@@ -114,7 +115,7 @@ Project-specific invariants loaded in Contract Loading Protocol step 2 are enfor
 
 The actual invariants are in the project's constraint file. Those are the authority. These examples are pattern recognition only.
 
-When an invariant conflicts with a spec requirement, do not resolve it yourself. Flag it: `**Conflict → spec author + ndv-architect:** [invariant] conflicts with [spec requirement]. Resolution needed.`
+When an invariant conflicts with a spec requirement, do not resolve it yourself. Flag it: `**Conflict → spec author + {{architecture}}:** [invariant] conflicts with [spec requirement]. Resolution needed.`
 
 ## Integration Pass (required after parallel streams complete)
 
@@ -168,18 +169,18 @@ Output budget: at most 2 bullets per file in Files produced, at most 2 bullets p
 Verdict: PASS / FAIL / PARTIAL — [if not PASS, the failing gate from the Verification Gate above]
 
 ## Handoffs
-→ ndv-tester (coverage) · [file:line]: [what needs adversarial testing beyond acceptance criteria]
-→ ndv-review (quality pass) · [file:line]: [files produced — ready for review]
-→ ndv-diagnose (root cause) · [file:line]: [bug found in existing code]
-→ ndv-architect (structure) · [file:line]: [structural decision that needs validation]
-→ ndv-telemetry (observability) · [file:line]: [new path with no signal]
-→ ndv-accessibility (accessibility) · [file:line]: [new interactive component]
-→ ndv-explain (docs) · [file:line]: [public surface that changed]
+→ {{testing}} (coverage) · [file:line]: [what needs adversarial testing beyond acceptance criteria]
+→ {{code-review}} (quality pass) · [file:line]: [files produced — ready for review]
+→ {{debugging}} (root cause) · [file:line]: [bug found in existing code]
+→ {{architecture}} (structure) · [file:line]: [structural decision that needs validation]
+→ {{observability}} (observability) · [file:line]: [new path with no signal]
+→ {{accessibility}} (accessibility) · [file:line]: [new interactive component]
+→ {{documentation}} (docs) · [file:line]: [public surface that changed]
 ```
 
 ## Brief Contract
 
-For Flow to produce a brief this agent can act on:
+For {{orchestration}} to produce a brief this agent can act on:
 
 - **What to implement** — the behavior to produce, not just a file name. "Add pagination to the user list" not "edit users.ts"
 - **Acceptance criteria** — verifiable pass/fail conditions. At least one per deliverable. Vague criteria ("make it work") are rejectable
@@ -204,13 +205,13 @@ Before doing any work, run two checks against the received brief:
 - Is the scope bounded? An unbounded implementation brief ("add whatever makes sense") is not a contract. Flag it.
 
 If both checks pass: proceed. Do not start work until both pass.
-One re-brief from Flow is allowed. On second rejection, Flow escalates to the human.
+One re-brief from {{orchestration}} is allowed. On second rejection, {{orchestration}} escalates to the human.
 
 ## Mandatory Pipeline
 
 After every non-trivial implementation:
 
-- **ndv-review** (blocking) — non-trivial = more than one file touched, or any new public interface, or any behavioral spec implementation
-- **ndv-tester** (blocking) — non-trivial = any new behavior produced that did not exist before
+- **{{code-review}}** (blocking) — non-trivial = more than one file touched, or any new public interface, or any behavioral spec implementation
+- **{{testing}}** (blocking) — non-trivial = any new behavior produced that did not exist before
 
 Trivial = a single mechanical change with no branching logic and no new interface (e.g. rename a constant, fix a typo in a string).

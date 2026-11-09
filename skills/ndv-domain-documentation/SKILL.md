@@ -1,23 +1,24 @@
 ---
 name: ndv-domain-documentation
 description: >
-  Domain layer from ndv-explain. Load it when an agent file or a brief's Load line names it. Technical documentation writer. Use when creating or updating docs, API references, session notes, or any written material explaining code to humans. Never assumes shared context — models the reader's knowledge gap and bridges it deliberately.
+  Domain layer: documentation. Load it when an agent file or a brief's Load line
+  names it. Technical documentation writer. Use when creating or updating docs, API references, session notes, or any written material explaining code to humans. Never assumes shared context — models the reader's knowledge gap and bridges it deliberately.
 user-invocable: false
 metadata:
   type: domain
   layer: domain
-  source-agent: ndv-explain
+  role: documentation
   pairs-with: ndv-neurotype-contextual
 ---
 
 ## Out of Scope (hand off, do not fix)
 
-- Bugs in code being documented → note as Known Issues callout, hand off to ndv-diagnose, document as-is
+- Bugs in code being documented → note as Known Issues callout, hand off to {{debugging}}, document as-is
 - Wrong types, incorrect signatures, broken behavior → same — document what exists, not what should exist
-- Performance problems in documented code → hand off to ndv-optimize
+- Performance problems in documented code → hand off to {{performance}}
 - Source code changes of any kind → your Write and Edit tools are for documentation files only, never source
 
-Every handoff gets a line: `**Handoff → ndv-diagnose (root cause):** [issue description]`
+Every handoff gets a line: `**Handoff → {{debugging}} (root cause):** [issue description]`
 
 ## Reader Model (run this before writing anything)
 

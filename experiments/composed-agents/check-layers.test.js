@@ -15,10 +15,19 @@ const MARK = '<!-- ndv:workflow-only -->'
 const fm = t => Object.fromEntries([...(t.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '').matchAll(/^\s*([a-z-]+):\s*(.+)$/gm)].map(m => [m[1], m[2].trim()]))
 const body = t => t.replace(/^---\n[\s\S]*?\n---\n/, '')
 const skill = n => readFileSync(join(ROOT, 'skills', n, 'SKILL.md'), 'utf8')
-// Character names that are not ordinary words. Others (Edge, Signal, Just, ...) are
-// checked only as the agent's own name, with fixed phrases masked out.
-const DISTINCT = ['Pierce', 'Acute', 'Ward', 'Lux', 'Pixel', 'Datum', 'Pulse', 'Delta', 'Arc', 'Craft', 'Scout']
-const PROTECT = ['Signal-to-noise', 'signal-to-noise', 'Edge case', 'Boy Scout', 'Complexity Signal']
+// Fixed phrases where a character name is an ordinary word (same list as split_agent.py).
+const PROTECT = ['| Signal |', '### Flow', 'Signal-to-noise', 'signal-to-noise', 'Edge case', 'Boy Scout', 'Complexity Signal']
+const ROLES = JSON.parse(readFileSync(join(HERE, 'roles.json'), 'utf8'))
+const fill = t => t.replace(/\{\{([a-z-]+)\}\}/g, (_, r) => ROLES[r])
+// every agent slug and character name in the fleet
+const AGENTS = readdirSync(join(ROOT, 'agents')).filter(f => /^ndv-.*\.md$/.test(f)).map(f => f.slice(0, -3))
+const CHARS = Object.fromEntries(AGENTS.map(a => [a, readFileSync(join(ROOT, 'agents', a + '.md'), 'utf8').match(/You are \*\*(\w+)\*\*/)?.[1]]).filter(([, c]) => c))
+// names a layer must not contain: every agent slug, every character but `own`
+const namesIn = (t, own) => {
+  const masked = PROTECT.reduce((s, ph) => s.split(ph).join(''), t)
+  return [...AGENTS.filter(a => new RegExp(`(?<![\\w-])${a}(?![\\w-])`).test(masked)),
+          ...Object.values(CHARS).filter(c => c !== own && new RegExp(`\\b${c}\\b`).test(masked))]
+}
 const sectionsOf = md => { const out = []; let cur = [], fence = false; for (const l of md.split('\n')) { if (l.startsWith('```')) fence = !fence; if (l.startsWith('## ') && !fence) { out.push(cur.join('\n').trim()); cur = [] } cur.push(l) } out.push(cur.join('\n').trim()); return out.filter(Boolean) }
 const sources = readdirSync(HERE).filter(f => f.endsWith('.src.md') && f !== 'ndv-inspect.src.md')
 
@@ -47,23 +56,23 @@ for (const src of sources) {
     assert.equal(id.includes(MARK), module !== '-', 'workflow-only part exactly when a published module exists')
   })
 
-  test(`${slug}: domain skills name no character`, () => {
-    for (const d of refs.slice(1)) {
-      const t = body(skill(d))
-      assert.equal(fm(skill(d)).layer, 'domain')
-      const own = skill(refs[0]).match(/You are \*\*(\w+)\*\*/)[1]
-      const masked = PROTECT.reduce((s, ph) => s.split(ph).join(''), t)
-      const found = [...new Set([...DISTINCT, own])].filter(c => new RegExp(`\\b${c}\\b`).test(masked))
-      assert.deepEqual(found, [], `${d} mentions ${found.join(', ')}`)
+  test(`${slug}: skills name no other agent, only roles that resolve`, () => {
+    const own = skill(refs[0]).match(/You are \*\*(\w+)\*\*/)[1]
+    for (const r of refs) {
+      const t = body(skill(r)).split(MARK)[0]
+      if (r !== refs[0]) assert.equal(fm(skill(r)).layer, 'domain')
+      assert.deepEqual(namesIn(t, r === refs[0] ? own : null), [], `${r} names other agents`)
+      for (const [, role] of t.matchAll(/\{\{([a-z-]+)\}\}/g)) assert.ok(ROLES[role], `${r}: {{${role}}} is in roles.json`)
     }
   })
 
   test(`${slug}: the inline build contains the identity verbatim and nothing workflow-only`, () => {
     const built = execFileSync('node', [join(HERE, 'compose.mjs'), join(HERE, src), '--inline'], { encoding: 'utf8' })
     for (const part of sectionsOf(body(skill(refs[0])).split(MARK)[0]))
-      assert.ok(built.includes(part), `identity part reaches the build unchanged: ${part.slice(0, 60)}`)
+      assert.ok(built.includes(fill(part)), `identity part reaches the build unchanged: ${part.slice(0, 60)}`)
     assert.ok(!built.includes('## Cognitive Core'), 'workflow-only section stays out')
     assert.ok(!/^@skill /m.test(built), 'no unresolved @skill lines')
+    assert.ok(!/\{\{[a-z-]+\}\}/.test(built), 'no unresolved roles')
     assert.ok(!/^skills:/m.test(built), 'no skills: frontmatter in the flat build')
   })
 

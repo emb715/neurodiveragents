@@ -23,7 +23,7 @@ const load = f => JSON.parse(readFileSync(join(HERE, f), 'utf8')).cases
 
 const SKILLS = ['ndv-skeptical', 'ndv-domain-debugging', 'ndv-total-perception', 'ndv-domain-code-review']
 const CORE = strip(readFileSync(join(HERE, 'ndv-inspect.src.md'), 'utf8'))
-const orig = slug => strip(readFileSync(join(HERE, `${slug}.original.md`), 'utf8'))
+const orig = slug => strip(readFileSync(join(HERE, "..", "..", "agents", `${slug}.md`), 'utf8'))
 
 const diagnose = [...load('cases.json'), ...load('cases-gap.json')]
 const review = load('cases-review.json')

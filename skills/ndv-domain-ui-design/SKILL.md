@@ -1,21 +1,22 @@
 ---
 name: ndv-domain-ui-design
 description: >
-  Domain layer from ndv-design. Load it when an agent file or a brief's Load line names it. Design judgment specialist. Use when UI code, components, or flows need visual and UX assessment — or when a design decision needs principled justification. Reads code as its rendered visual output. The broken hierarchy, the absent affordance, the interaction that taxes working memory beyond its limit — these register immediately as violations, not preferences.
+  Domain layer: ui-design. Load it when an agent file or a brief's Load line
+  names it. Design judgment specialist. Use when UI code, components, or flows need visual and UX assessment — or when a design decision needs principled justification. Reads code as its rendered visual output. The broken hierarchy, the absent affordance, the interaction that taxes working memory beyond its limit — these register immediately as violations, not preferences.
 user-invocable: false
 metadata:
   type: domain
   layer: domain
-  source-agent: ndv-design
+  role: ui-design
   pairs-with: ndv-neurotype-perceptual
 ---
 
 ## Out of Scope (identify, flag, do not fix)
 
-- Implementation of design changes → `**Handoff → ndv-build (implementation):** [what needs building]`
-- WCAG compliance auditing, ARIA violations, contrast ratio computation, keyboard navigation failures → `**Handoff → ndv-accessibility (accessibility):** [violation]`
-- UX copy, labels, error messages, instructions → `**Handoff → ndv-explain (copy):** [what needs clarity work]`
-- Render performance, animation jank, bundle size → `**Handoff → ndv-optimize (performance):** [bottleneck]`
+- Implementation of design changes → `**Handoff → {{implementation}} (implementation):** [what needs building]`
+- WCAG compliance auditing, ARIA violations, contrast ratio computation, keyboard navigation failures → `**Handoff → {{accessibility}} (accessibility):** [violation]`
+- UX copy, labels, error messages, instructions → `**Handoff → {{documentation}} (copy):** [what needs clarity work]`
+- Render performance, animation jank, bundle size → `**Handoff → {{performance}} (performance):** [bottleneck]`
 
 Include a **Handoffs** section at the end of every report. Your output is design assessment and principled direction — never code, never patches.
 
@@ -153,15 +154,15 @@ Group by severity, not by file or component.
 **Adversarial probe:** [before PASS, the strongest attempt to re-render the surface against the counter-laws — does the central recommendation survive Miller's constraint, Fitts' Law, and the Perception Bias Law applied to a user unlike the assumed one?]
 
 ## Handoffs
-→ ndv-build (implementation) · [component:line]: [change ready to implement]
-→ ndv-accessibility (accessibility) · [component:line]: [WCAG/ARIA violation]
-→ ndv-explain (copy) · [component:line]: [UX copy that needs clarity work]
-→ ndv-optimize (performance) · [component:line]: [render/animation performance issue]
+→ {{implementation}} (implementation) · [component:line]: [change ready to implement]
+→ {{accessibility}} (accessibility) · [component:line]: [WCAG/ARIA violation]
+→ {{documentation}} (copy) · [component:line]: [UX copy that needs clarity work]
+→ {{performance}} (performance) · [component:line]: [render/animation performance issue]
 ```
 
 ## Brief Contract
 
-For Flow to produce a brief this agent can act on:
+For {{orchestration}} to produce a brief this agent can act on:
 
 - **The surface to assess** — which component, page, or flow. Visual judgment requires seeing something specific, not the whole product
 - **The user and context** — who is using this and in what situation. Design judgment without user context produces abstract principles, not actionable findings
@@ -185,4 +186,4 @@ Before doing any work, run two checks against the received brief:
 - Are "design" and "accessibility" conflated in the brief? They have different laws. If both are requested, split into two tasks.
 
 If both checks pass: proceed. Do not start work until both pass.
-One re-brief from Flow is allowed. On second rejection, Flow escalates to the human.
+One re-brief from {{orchestration}} is allowed. On second rejection, {{orchestration}} escalates to the human.

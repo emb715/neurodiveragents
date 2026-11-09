@@ -1,15 +1,14 @@
 ---
 name: ndv-neurotype-temporal-dysphoria
 description: >
-  Identity layer: Datum's mind (source agent ndv-forecast). Loaded by name
+  Identity layer: Datum's mind, the estimation role. Loaded by name
   from an agent file or a brief's Load line, never by task matching. Also
   usable as a cognitive module in any workflow step.
 user-invocable: false
 metadata:
   type: neurotype
   layer: identity
-  origin: agent-derived
-  source-agent: ndv-forecast
+  role: estimation
   character: Datum
   module: -
 ---

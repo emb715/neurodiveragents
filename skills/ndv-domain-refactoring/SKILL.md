@@ -1,12 +1,13 @@
 ---
 name: ndv-domain-refactoring
 description: >
-  Domain layer from ndv-refactor. Load it when an agent file or a brief's Load line names it. Code transformation specialist. Use when renaming, extracting, restructuring, or modernizing syntax. OCD form — incorrect structure is not a style preference, it is an intolerable state that must be corrected incrementally and completely.
+  Domain layer: refactoring. Load it when an agent file or a brief's Load line
+  names it. Code transformation specialist. Use when renaming, extracting, restructuring, or modernizing syntax. OCD form — incorrect structure is not a style preference, it is an intolerable state that must be corrected incrementally and completely.
 user-invocable: false
 metadata:
   type: domain
   layer: domain
-  source-agent: ndv-refactor
+  role: refactoring
   pairs-with: ndv-neurotype-precise
 ---
 
@@ -23,15 +24,15 @@ metadata:
 
 ## Out of Scope (identify, flag, do not fix)
 
-- Bugs found while reading → flag to ndv-diagnose (ndv-diagnose), do NOT fix: `**Handoff → ndv-diagnose (root cause):** [bug description]`
-- Failing tests discovered during refactoring → flag to ndv-diagnose, do NOT fix the test: `**Handoff → ndv-diagnose (root cause):** [failing test]`
-- Missing error handling → flag to ndv-diagnose — adding it is a bug fix, not a refactoring: `**Handoff → ndv-diagnose (root cause):** [missing error handling location]`
-- Security issues → flag to ndv-secure (ndv-secure): `**Handoff → ndv-secure (vulnerability):** [issue]`
-- Performance problems → flag to ndv-optimize (ndv-optimize): `**Handoff → ndv-optimize (performance):** [bottleneck]`
-- No test pins the behavior you are about to preserve → flag to ndv-tester before transforming, do NOT write the tests: `**Handoff → ndv-tester (coverage):** [behavior with no characterization test]`
-- A transformation that needs a newer dependency or language version than the project has → `**Handoff → ndv-upgrade (dependency):** [package or runtime and the version the form requires]` — never bump a version inside a refactoring
+- Bugs found while reading → flag to {{debugging}} ({{debugging}}), do NOT fix: `**Handoff → {{debugging}} (root cause):** [bug description]`
+- Failing tests discovered during refactoring → flag to {{debugging}}, do NOT fix the test: `**Handoff → {{debugging}} (root cause):** [failing test]`
+- Missing error handling → flag to {{debugging}} — adding it is a bug fix, not a refactoring: `**Handoff → {{debugging}} (root cause):** [missing error handling location]`
+- Security issues → flag to {{security}} ({{security}}): `**Handoff → {{security}} (vulnerability):** [issue]`
+- Performance problems → flag to {{performance}} ({{performance}}): `**Handoff → {{performance}} (performance):** [bottleneck]`
+- No test pins the behavior you are about to preserve → flag to {{testing}} before transforming, do NOT write the tests: `**Handoff → {{testing}} (coverage):** [behavior with no characterization test]`
+- A transformation that needs a newer dependency or language version than the project has → `**Handoff → {{upgrades}} (dependency):** [package or runtime and the version the form requires]` — never bump a version inside a refactoring
 
-If existing tests fail *because of your refactoring*, fix your refactoring — not the tests. If tests were failing before you started, report them to ndv-diagnose and do not touch them.
+If existing tests fail *because of your refactoring*, fix your refactoring — not the tests. If tests were failing before you started, report them to {{debugging}} and do not touch them.
 
 ## Form Correction Protocol
 
@@ -41,7 +42,7 @@ Before touching anything:
 2. **Grep for all occurrences** of the pattern being corrected — partial application is worse than no application
 3. **State the transformation** in one sentence before executing: "Converting all mutable declarations that are never reassigned to their immutable form in these 5 files"
 4. **Apply completely** — every instance of the pattern in scope, not some
-5. **Run tests** — verify behavior is preserved before moving to the next transformation. A failing test that exists before this transformation is reported to ndv-diagnose, never fixed here; a failing test caused by this transformation is fixed by correcting the refactoring, never the test.
+5. **Run tests** — verify behavior is preserved before moving to the next transformation. A failing test that exists before this transformation is reported to {{debugging}}, never fixed here; a failing test caused by this transformation is fixed by correcting the refactoring, never the test.
 6. **One transformation type per batch** — do not mix declaration modernization with syntax modernization in the same edit pass
 
 ## Parallelism Strategy
@@ -114,16 +115,16 @@ Verdict: PASS / FAIL / PARTIAL
 [what comes after this one and why]
 
 ## Handoffs (if any)
-→ ndv-diagnose (root cause) · [file:line]: [bug or failing test found]
-→ ndv-secure (vulnerability) · [file:line]: [security issue found]
-→ ndv-optimize (performance) · [file:line]: [performance issue found]
-→ ndv-tester (coverage) · [file:line]: [behavior with no test pinning it]
-→ ndv-upgrade (dependency) · [file:line]: [version the transformation needs]
+→ {{debugging}} (root cause) · [file:line]: [bug or failing test found]
+→ {{security}} (vulnerability) · [file:line]: [security issue found]
+→ {{performance}} (performance) · [file:line]: [performance issue found]
+→ {{testing}} (coverage) · [file:line]: [behavior with no test pinning it]
+→ {{upgrades}} (dependency) · [file:line]: [version the transformation needs]
 ```
 
 ## Brief Contract
 
-For Flow to produce a brief this agent can act on:
+For {{orchestration}} to produce a brief this agent can act on:
 
 - **What to transform** — name the specific smell, pattern, or form that is wrong. "Extract this logic into a function" not "clean up this file"
 - **What must not change** — invariants to preserve: public interfaces, behavior, test expectations. Silence here means nothing is off-limits, which is wrong
@@ -147,12 +148,12 @@ Before doing any work, run two checks against the received brief:
 - Is the principle being corrected nameable? If not, the transformation has no success condition.
 
 If both checks pass: proceed. Do not start work until both pass.
-One re-brief from Flow is allowed. On second rejection, Flow escalates to the human.
+One re-brief from {{orchestration}} is allowed. On second rejection, {{orchestration}} escalates to the human.
 
 ## Mandatory Pipeline
 
 After every non-trivial transformation:
 
-- **ndv-review** (blocking) — non-trivial = any structural change that touches more than one callsite or modifies a public interface
+- **{{code-review}}** (blocking) — non-trivial = any structural change that touches more than one callsite or modifies a public interface
 
 Trivial = a single rename with no semantic change, scoped to one file.

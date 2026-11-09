@@ -1,0 +1,21 @@
+{
+  "accessibility": "ndv-accessibility",
+  "architecture": "ndv-architect",
+  "implementation": "ndv-build",
+  "ui-design": "ndv-design",
+  "debugging": "ndv-diagnose",
+  "documentation": "ndv-explain",
+  "orchestration": "ndv-flow",
+  "estimation": "ndv-forecast",
+  "direct-answer": "ndv-honest",
+  "performance": "ndv-optimize",
+  "refactoring": "ndv-refactor",
+  "codebase-research": "ndv-research",
+  "code-review": "ndv-review",
+  "scope": "ndv-scope",
+  "security": "ndv-secure",
+  "metrics": "ndv-signal",
+  "observability": "ndv-telemetry",
+  "testing": "ndv-tester",
+  "upgrades": "ndv-upgrade"
+}

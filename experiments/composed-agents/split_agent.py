@@ -1,22 +1,23 @@
 """Split one fleet agent file into its three layers, mechanically.
 
-  python3 -I split_agent.py <agent-slug> <neurotype> <module-skill|-> <domain-name|-> ["<domain description>"]
+  python3 -I split_agent.py <agent-slug> <neurotype> <module-skill|-> <domain-name|-> ["<agent description>"]
 
   e.g. split_agent.py ndv-diagnose skeptical ndv-skeptical debugging "..."
   module "-": no published module yet, the neurotype skill has no workflow-only part
   domain "-": the agent is identity only (ndv-honest)
 
-identity -> skills/ndv-neurotype-<module>/SKILL.md  intro + Primordial Rule + Never Does,
-            verbatim; then, below a workflow-only marker, the published module's
-            text (skills/<module-skill>, left untouched) for use outside the agent
-domain   -> skills/ndv-domain-<name>/SKILL.md       every other section except
-            Self-Validation, plus the domain soundness checks. Character names are
-            neutralised: own character -> "this agent", other characters -> slug.
-protocol -> <slug>.src.md (this folder)              frontmatter + skills + @skill
-            lines + the shared Self-Validation skeleton
+identity -> skills/ndv-neurotype-<x>/SKILL.md  intro + Primordial Rule + Never Does;
+            then, below a workflow-only marker, the published module's text
+            (skills/<module-skill>, left untouched) for use outside the agent
+domain   -> skills/ndv-domain-<x>/SKILL.md     every other section, Self-Validation included
+agent    -> <slug>.src.md (this folder)         frontmatter, skills list, section
+            layout and one @skill line per layer
 
-Only two kinds of text change: the soundness-check pointer, and character names
-in the domain layer. Everything else moves verbatim.
+The skills name no other agent. Wherever the agent file names another agent
+(slug or character), the skill says {{role}} instead, and compose.mjs fills it
+from roles.json when it builds the agent. The agent's own character name stays
+in the identity layer (it is the persona) and becomes "this agent" in the
+domain layer. Nothing else in the text changes.
 """
 import glob
 import json
@@ -28,21 +29,12 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, '..', '..'))
 slug, neuro, module, dname = sys.argv[1:5]
-ddesc = sys.argv[5] if len(sys.argv) > 5 else ''
+adesc = sys.argv[5] if len(sys.argv) > 5 else ''
 ident = 'ndv-neurotype-' + neuro
 domain = None if dname == '-' else 'ndv-domain-' + dname
 WORKFLOW_ONLY = '<!-- ndv:workflow-only -->'
-
-SELF_VALIDATION = '''## Self-Validation Protocol
-
-Before doing any work, run two checks against the received brief:
-
-**1. Completeness check** — verify every Brief Contract field is present and specific enough to act on. If any field is missing or too vague: emit `BRIEF_REJECTED: [field] — [what is needed]` and sentinel.
-
-**2. Domain soundness check** — run the Domain Soundness Checks against what was described.
-
-If both checks pass: proceed. Do not start work until both pass.
-One re-brief from Flow is allowed. On second rejection, Flow escalates to the human.'''
+# Fixed phrases where a character name is an ordinary word; never rewritten.
+PROTECT = ['| Signal |', '### Flow', 'Signal-to-noise', 'signal-to-noise', 'Edge case', 'Boy Scout', 'Complexity Signal']
 
 
 def sections(body):
@@ -62,67 +54,58 @@ def head(name):
     return subprocess.run(['git', '-C', ROOT, 'show', f'HEAD:{name}'], capture_output=True, text=True, check=True).stdout
 
 
-# character name -> agent slug, across the fleet
-CHARS = {}
-for f in glob.glob(os.path.join(ROOT, 'agents', 'ndv-*.md')):
+ROLE_OF = {agent: role for role, agent in json.load(open(os.path.join(HERE, 'roles.json'))).items()}
+CHARS = {}  # character name -> agent slug, across the fleet
+for f in sorted(glob.glob(os.path.join(ROOT, 'agents', 'ndv-*.md'))):
     m = re.search(r'You are \*\*(\w+)\*\*', open(f).read())
     if m:
         CHARS[m.group(1)] = os.path.basename(f)[:-3]
 
 src = head(f'agents/{slug}.md')
-open(os.path.join(HERE, f'{slug}.original.md'), 'w').write(src)
 fm, body = re.match(r'---\n(.*?)\n---\n(.*)', src, re.S).groups()
-parts = sections(body)
-intro, rest = parts[0], parts[1:]
+intro, *rest = sections(body)
 title = lambda p: p.split('\n')[0][3:].strip()
 character = re.search(r'You are \*\*(\w+)\*\*', intro).group(1)
+own_role = ROLE_OF[slug]
 
 
-# Fixed phrases where a character name is an ordinary word; never rewritten.
-PROTECT = ['Signal-to-noise', 'signal-to-noise', 'Edge case', 'Boy Scout', 'Complexity Signal']
-# Names that are not ordinary English words: safe to rewrite to the slug anywhere.
-DISTINCT = {'Pierce', 'Acute', 'Ward', 'Lux', 'Pixel', 'Datum', 'Pulse', 'Delta', 'Arc', 'Craft', 'Scout'}
-
-
-def neutral(text):
+def roles(text, keep_own_name):
     masks = {}
     for i, ph in enumerate(PROTECT):
-        key = f'\x00{i}\x00'
-        masks[key] = ph
-        text = text.replace(ph, key)
-    text = re.sub(rf"\b{character}'s\b", "this agent's", text)
-    text = re.sub(rf"\b{character}\b", 'this agent', text)
+        masks[f'\x00{i}\x00'] = ph
+        text = text.replace(ph, f'\x00{i}\x00')
+    if not keep_own_name:
+        text = re.sub(rf"\b{character}'s\b", "this agent's", text)
+        text = re.sub(rf"\b{character}\b", 'this agent', text)
     for name, other in CHARS.items():
-        if name == character:
-            continue
-        text = re.sub(rf"\b{name}'s\b", f"{other}'s", text)
-        if name in DISTINCT:
-            text = re.sub(rf"\b{name}\b", other, text)
+        if name != character:
+            text = re.sub(rf'\b{name}\b', '{{' + ROLE_OF[other] + '}}', text)
+    text = re.sub(r'(?<![\w-])ndv-[a-z]+(?:-[a-z]+)*(?![\w-])',
+                  lambda m: '{{' + ROLE_OF[m.group(0)] + '}}' if m.group(0) in ROLE_OF else m.group(0), text)
     for key, ph in masks.items():
         text = text.replace(key, ph)
-    # "`ndv-x` (Name)" became "`ndv-x` (ndv-x)": keep the slug once
-    return re.sub(r'`(ndv-[a-z-]+)` \(\1\)', r'`\1`', text)
+    # "`ndv-x` (Name)" became "`{{r}}` ({{r}})": keep it once
+    return re.sub(r'`(\{\{[a-z-]+\}\})` \(\1\)', r'`\1`', text)
 
 
-identity_secs = [p for p in rest if title(p) in ('Primordial Rule', f'What {character} Never Does')]
-sv = next((p for p in rest if title(p) == 'Self-Validation Protocol'), None)
-domain_secs = [neutral(p) for p in rest if p not in identity_secs]
-sound = None and neutral(sv.split('**2. Domain soundness check**')[1].split('\n\nIf both checks pass')[0].split('\n', 1)[1].strip()) if sv else None
+is_identity = lambda p: title(p) in ('Primordial Rule', f'What {character} Never Does')
+identity_secs = [roles(p, True) for p in rest if is_identity(p)]
+domain_secs = [roles(p, False) for p in rest if not is_identity(p)]
+layout = [roles(title(p), is_identity(p)) for p in rest]
+intro = roles(intro, True)
 
-module_text = head(f'skills/{module}/SKILL.md').split('---\n', 2)[2].strip() if module != '-' else None
 nl = '\n\n'
 persona = f'''---
 name: {ident}
 description: >
-  Identity layer: {character}'s mind (source agent {slug}). Loaded by name
+  Identity layer: {character}'s mind, the {own_role} role. Loaded by name
   from an agent file or a brief's Load line, never by task matching. Also
   usable as a cognitive module in any workflow step.
 user-invocable: false
 metadata:
   type: neurotype
   layer: identity
-  origin: agent-derived
-  source-agent: {slug}
+  role: {own_role}
   character: {character}
   module: {module}
 ---
@@ -131,13 +114,14 @@ metadata:
 
 {nl.join(identity_secs)}
 '''
-if module_text:
+if module != '-':
+    module_text = head(f'skills/{module}/SKILL.md').split('---\n', 2)[2].strip()
     persona += f'''
 {WORKFLOW_ONLY}
 
 ## Cognitive Core
 
-The same mind outside its home domain. When this skill is loaded into a step that is not {slug}'s usual work, apply this:
+The same mind outside its home domain. When this skill is loaded into a step outside the {own_role} role, apply this:
 
 {module_text}
 '''
@@ -145,33 +129,27 @@ The same mind outside its home domain. When this skill is loaded into a step tha
 dom = f'''---
 name: {domain}
 description: >
-  {ddesc}
+  Domain layer: {own_role}. Load it when an agent file or a brief's Load line
+  names it. {roles(adesc.strip(), False)}
 user-invocable: false
 metadata:
   type: domain
   layer: domain
-  source-agent: {slug}
+  role: {own_role}
   pairs-with: {ident}
 ---
 
 {nl.join(domain_secs)}
 '''
-if sound:
-    dom += f'''
-## Domain Soundness Checks
-
-Run these as check 2 of the Self-Validation Protocol:
-
-{sound}
-'''
 
 layers = [ident] + ([domain] if domain else [])
-layout = '<!-- ndv:layout ' + json.dumps([title(p) if p in identity_secs else neutral(title(p)) for p in rest]) + ' -->\n\n'
-agent = '---\n' + fm + '\nskills:\n' + ''.join(f'  - {l}\n' for l in layers) + '---\n\n' + layout + ''.join(f'@skill {l}\n\n' for l in layers) 
+agent = ('---\n' + fm + '\nskills:\n' + ''.join(f'  - {l}\n' for l in layers) + '---\n\n'
+         + '<!-- ndv:layout ' + json.dumps(layout) + ' -->\n\n'
+         + ''.join(f'@skill {l}\n\n' for l in layers))
 
 for name, text in ((ident, persona),) + (((domain, dom),) if domain else ()):
     os.makedirs(os.path.join(ROOT, 'skills', name), exist_ok=True)
     open(os.path.join(ROOT, 'skills', name, 'SKILL.md'), 'w').write(text)
 open(os.path.join(HERE, f'{slug}.src.md'), 'w').write(agent)
-left = [n for n in DISTINCT | {character} if domain and re.search(rf'\b{n}\b', dom.split('---', 2)[2])]
-print(f'{slug}: {ident} + {domain}; character {character}; capitalised names left in domain: {left or "none"}')
+used = sorted(set(re.findall(r'\{\{([a-z-]+)\}\}', persona.split(WORKFLOW_ONLY)[0] + (dom if domain else ''))))
+print(f'{slug}: {character}, role {own_role}; refers to {len(used)} roles')

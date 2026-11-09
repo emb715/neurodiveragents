@@ -1,21 +1,22 @@
 ---
 name: ndv-domain-metrics
 description: >
-  Domain layer from ndv-signal. Load it when an agent file or a brief's Load line names it. Metrics skeptic. Use when reviewing engineering KPIs, OKRs, sprint velocity, test coverage targets, DORA metrics, or any measurement system. Audits whether metrics measure what they claim to measure. Goodhart's Law as a cognitive style — the moment a measure becomes a target, it stops being a measure, and Signal notices before anyone else does.
+  Domain layer: metrics. Load it when an agent file or a brief's Load line
+  names it. Metrics skeptic. Use when reviewing engineering KPIs, OKRs, sprint velocity, test coverage targets, DORA metrics, or any measurement system. Audits whether metrics measure what they claim to measure. Goodhart's Law as a cognitive style — the moment a measure becomes a target, it stops being a measure, and this agent notices before anyone else does.
 user-invocable: false
 metadata:
   type: domain
   layer: domain
-  source-agent: ndv-signal
+  role: metrics
   pairs-with: ndv-neurotype-goodhart
 ---
 
 ## Out of Scope (identify, flag, do not fix)
 
-- Performance bottlenecks in instrumented code → `**Handoff → ndv-optimize (performance):** [bottleneck]`
-- Telemetry infrastructure gaps → `**Handoff → ndv-telemetry (observability):** [gap]`
-- Planning and estimation problems → `**Handoff → ndv-forecast (estimate):** [planning issue]`
-- Architectural issues revealed by metrics → `**Handoff → ndv-architect (structure):** [structural concern]`
+- Performance bottlenecks in instrumented code → `**Handoff → {{performance}} (performance):** [bottleneck]`
+- Telemetry infrastructure gaps → `**Handoff → {{observability}} (observability):** [gap]`
+- Planning and estimation problems → `**Handoff → {{estimation}} (estimate):** [planning issue]`
+- Architectural issues revealed by metrics → `**Handoff → {{architecture}} (structure):** [structural concern]`
 
 Your output is metric quality assessments and measurement recommendations — never dashboards, never instrumentation code, never estimates.
 
@@ -126,9 +127,9 @@ Never recommend a single metric as a KPI. Always recommend a minimum of three th
 - [metric 3]: qualitative anchor — [what it catches that numbers miss]
 
 ## Handoffs
-→ ndv-telemetry (observability) · [metric or system]: [instrumentation gap that prevents measuring what matters]
-→ ndv-forecast (estimate) · [metric or system]: [planning metric that needs calibration]
-→ ndv-architect (structure) · [file:line]: [structural issue revealed by metric patterns]
+→ {{observability}} (observability) · [metric or system]: [instrumentation gap that prevents measuring what matters]
+→ {{estimation}} (estimate) · [metric or system]: [planning metric that needs calibration]
+→ {{architecture}} (structure) · [file:line]: [structural issue revealed by metric patterns]
 ```
 
 ## Parallelism Strategy

@@ -10,7 +10,10 @@
 //   --runtime  agent file that loads its skills at run time: each @skill line
 //              becomes a load instruction; `skills:` kept for platforms that
 //              preload skills from agent frontmatter.
-// Usage: node compose.mjs <src.md> --inline|--runtime [--skills-dir dir]
+// Skills name other agents by role ({{security}}); both renderings resolve the
+// roles from roles.json (--roles to use another mapping): --inline writes the
+// agent names in place, --runtime adds a role table for the skills it loads.
+// Usage: node compose.mjs <src.md> --inline|--runtime [--skills-dir dir] [--roles file]
 import { readFileSync, existsSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -19,6 +22,11 @@ const [src, mode = '--inline'] = process.argv.slice(2)
 const i = process.argv.indexOf('--skills-dir')
 const SKILLS = i > 0 ? process.argv[i + 1] : join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'skills')
 const MARK = '<!-- ndv:workflow-only -->'
+const r = process.argv.indexOf('--roles')
+const ROLES = JSON.parse(readFileSync(r > 0 ? process.argv[r + 1] : join(dirname(fileURLToPath(import.meta.url)), 'roles.json'), 'utf8'))
+const ROLE = /\{\{([a-z-]+)\}\}/g
+const agentFor = role => { if (!ROLES[role]) throw new Error(`no agent for role {{${role}}} in roles file`); return ROLES[role] }
+const fill = t => t.replace(ROLE, (_, role) => agentFor(role))
 
 const text = readFileSync(src, 'utf8')
 const m = text.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/)
@@ -47,7 +55,8 @@ function sections(md) {
 }
 
 if (mode === '--inline') {
-  body = body.replace(/^@skill ([a-z0-9-]+)\s*$/gm, (_, name) => skillBody(name))
+  body = fill(body.replace(/^@skill ([a-z0-9-]+)\s*$/gm, (_, name) => skillBody(name)))
+  layout?.forEach((t, k) => { layout[k] = fill(t) })
   fm = fm.replace(/\nskills:\n(  - .*\n?)+/, '\n').replace(/\n+$/, '')
   if (layout) {
     const [pre, ...secs] = sections(body)
@@ -61,7 +70,9 @@ if (mode === '--inline') {
     body = [pre, ...ordered, ...byTitle.values()].filter(Boolean).join('\n\n')
   }
 } else {
+  const used = [...new Set([...body.matchAll(/^@skill ([a-z0-9-]+)\s*$/gm)].flatMap(m => [...skillBody(m[1]).matchAll(ROLE)].map(x => x[1])))]
   body = body.replace(/^@skill ([a-z0-9-]+)\s*$/gm, (_, name) =>
     `Before anything else, load the \`${name}\` skill with the Skill tool and apply all of it. It is a required part of this agent, not optional reference.`)
+  if (used.length) body += `\n\n## Roles\n\nThe skills name other agents by role, as \`{{role}}\`. In this fleet:\n\n${used.map(x => `- \`{{${x}}}\` → \`${agentFor(x)}\``).join('\n')}`
 }
 process.stdout.write(`---\n${fm}\n---\n\n${body.trim()}\n`)

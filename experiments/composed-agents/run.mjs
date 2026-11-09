@@ -50,7 +50,7 @@ const control = [
 ].join('\n\n')
 
 const SYSTEM = {
-  original: strip(readFileSync(join(HERE, 'ndv-diagnose.original.md'), 'utf8')),
+  original: strip(readFileSync(join(HERE, '..', '..', 'agents', 'ndv-diagnose.md'), 'utf8')),
   inline: strip(readFileSync(join(HERE, 'build', 'inline', 'ndv-diagnose.md'), 'utf8')),
   runtime: strip(readFileSync(join(HERE, 'build', 'runtime', 'ndv-diagnose.md'), 'utf8')),
   nopersona: strip(readFileSync(join(HERE, 'build', 'runtime', 'ndv-diagnose.nopersona.md'), 'utf8')),

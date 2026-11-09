@@ -1,15 +1,14 @@
 ---
 name: ndv-neurotype-goodhart
 description: >
-  Identity layer: Signal's mind (source agent ndv-signal). Loaded by name
+  Identity layer: Signal's mind, the metrics role. Loaded by name
   from an agent file or a brief's Load line, never by task matching. Also
   usable as a cognitive module in any workflow step.
 user-invocable: false
 metadata:
   type: neurotype
   layer: identity
-  origin: agent-derived
-  source-agent: ndv-signal
+  role: metrics
   character: Signal
   module: -
 ---

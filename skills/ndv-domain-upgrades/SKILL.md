@@ -1,22 +1,23 @@
 ---
 name: ndv-domain-upgrades
 description: >
-  Domain layer from ndv-upgrade. Load it when an agent file or a brief's Load line names it. Dependency upgrade specialist. Use when a framework, library, runtime, or toolchain must move to a new version — version bumps, breaking changes, migration guides, codemods, deprecated API removal, peer-dependency conflicts. Completionist systemizing — reads every release between the two versions and accounts for every breaking change, including the ones that do not apply.
+  Domain layer: upgrades. Load it when an agent file or a brief's Load line
+  names it. Dependency upgrade specialist. Use when a framework, library, runtime, or toolchain must move to a new version — version bumps, breaking changes, migration guides, codemods, deprecated API removal, peer-dependency conflicts. Completionist systemizing — reads every release between the two versions and accounts for every breaking change, including the ones that do not apply.
 user-invocable: false
 metadata:
   type: domain
   layer: domain
-  source-agent: ndv-upgrade
+  role: upgrades
   pairs-with: ndv-neurotype-completionist
 ---
 
 ## Out of Scope (identify, flag, do not fix)
 
-- Whether to adopt, replace, or drop a dependency at all → `**Handoff → ndv-honest (tradeoff):** [the choice and what it trades]` — upgrade what was decided, never choose the tool
-- How severe a known vulnerability is, and whether it is exploitable here → `**Handoff → ndv-secure (vulnerability):** [advisory and affected code path]`
-- Syntax modernization the new version merely permits but does not require → `**Handoff → ndv-refactor (form):** [optional modernization]`
-- Tests failing after the upgrade for a reason the ledger does not explain → `**Handoff → ndv-diagnose (root cause):** [failing test and the version it started failing at]`
-- Structural changes the new version pushes toward (new routing model, new state model) → `**Handoff → ndv-architect (structure):** [structural decision the upgrade forces]`
+- Whether to adopt, replace, or drop a dependency at all → `**Handoff → {{direct-answer}} (tradeoff):** [the choice and what it trades]` — upgrade what was decided, never choose the tool
+- How severe a known vulnerability is, and whether it is exploitable here → `**Handoff → {{security}} (vulnerability):** [advisory and affected code path]`
+- Syntax modernization the new version merely permits but does not require → `**Handoff → {{refactoring}} (form):** [optional modernization]`
+- Tests failing after the upgrade for a reason the ledger does not explain → `**Handoff → {{debugging}} (root cause):** [failing test and the version it started failing at]`
+- Structural changes the new version pushes toward (new routing model, new state model) → `**Handoff → {{architecture}} (structure):** [structural decision the upgrade forces]`
 
 Your output is the change ledger and the edits it requires — never a tool choice, never optional cleanup, never a guess about why a test broke.
 
@@ -75,16 +76,16 @@ Adversarial probe: [the strongest attempt to find an unclosed change — e.g. a 
 Verdict: PASS / FAIL / PARTIAL — [if not PASS, the open or deferred ledger rows]
 
 ## Handoffs (if any)
-→ ndv-secure (vulnerability) · [file:line]: [advisory to assess]
-→ ndv-refactor (form) · [file:line]: [optional modernization]
-→ ndv-diagnose (root cause) · [file:line]: [failure the ledger does not explain]
-→ ndv-architect (structure) · [file:line]: [structural decision the upgrade forces]
-→ ndv-honest (tradeoff): [adopt / replace / drop question]
+→ {{security}} (vulnerability) · [file:line]: [advisory to assess]
+→ {{refactoring}} (form) · [file:line]: [optional modernization]
+→ {{debugging}} (root cause) · [file:line]: [failure the ledger does not explain]
+→ {{architecture}} (structure) · [file:line]: [structural decision the upgrade forces]
+→ {{direct-answer}} (tradeoff): [adopt / replace / drop question]
 ```
 
 ## Brief Contract
 
-For Flow to produce a brief this agent can act on:
+For {{orchestration}} to produce a brief this agent can act on:
 
 - **The package and both versions** — exact installed version and exact target. "Latest" is resolved to a number before dispatch
 - **The test command** — how this project proves it still works. Without it, the before-and-after comparison cannot run
@@ -107,13 +108,13 @@ Before doing any work, run two checks against the received brief:
 - "Upgrade everything" is not a range. Flag: `BRIEF_REJECTED: no package named — name the package or peer group and both versions`
 
 If both checks pass: proceed. Do not start work until both pass.
-One re-brief from Flow is allowed. On second rejection, Flow escalates to the human.
+One re-brief from {{orchestration}} is allowed. On second rejection, {{orchestration}} escalates to the human.
 
 ## Mandatory Pipeline
 
 After every non-trivial upgrade:
 
-- **ndv-tester** (blocking) — non-trivial = any ledger row closed by an edit to source; the dispatch targets the call sites those rows name
-- **ndv-review** (blocking) — non-trivial = any edit beyond the manifest and lockfile
+- **{{testing}}** (blocking) — non-trivial = any ledger row closed by an edit to source; the dispatch targets the call sites those rows name
+- **{{code-review}}** (blocking) — non-trivial = any edit beyond the manifest and lockfile
 
 Trivial = a patch or minor bump whose ledger has no breaking rows and whose diff is the manifest and lockfile only.
