@@ -56,6 +56,15 @@ for (const src of sources) {
     assert.ok(!body(id).includes('## Cognitive Core'), 'one persona text, no second copy')
   })
 
+  test(`${slug}: I/O and handoffs live in the agent file, not in a skill`, () => {
+    const CONTRACT = /^## (Out of Scope|Handoffs|Brief Contract|Self-Validation Protocol|Output Format|Parallelism Strategy|Mandatory Pipeline)/
+    for (const r of refs) for (const sec of sectionsOf(body(skill(r))))
+      assert.doesNotMatch(sec, CONTRACT, `${r} carries a contract section: ${sec.split('\n')[0]}`)
+    const original = execFileSync('git', ['-C', ROOT, 'show', `HEAD:agents/${slug}.md`], { encoding: 'utf8' })
+    for (const sec of sectionsOf(body(original)).filter(x => CONTRACT.test(x)))
+      assert.ok(text.includes(sec), `agent file keeps ${sec.split('\n')[0]} verbatim`)
+  })
+
   test(`${slug}: skills name no other agent, only roles that resolve`, () => {
     for (const r of refs) {
       const t = body(skill(r))

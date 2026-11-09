@@ -256,3 +256,14 @@ The "Cognitive Core" section is gone. It was a copy of the published module (`sk
 
 Flat builds are unchanged by this round (114 differing lines, names only). `check-layers.test.js` now checks that the name line sits above the identity skill, that no skill contains a name or a second persona copy, and that name line plus persona paragraph reach the build verbatim (95 checks pass).
 
+---
+
+# Round 7: the contract moves to the agent file
+
+A domain skill held more than domain knowledge: Out of Scope, Handoffs, Brief Contract, Self-Validation, Output Format, Parallelism Strategy and Mandatory Pipeline. Those sections say how the agent works with the fleet: what it accepts, what it hands off and what it returns. They now stay in the agent source, verbatim, and only knowledge (protocols, checklists, laws, smells) goes into `ndv-domain-*`. A skill no longer rejects a brief; the agent does.
+
+- Size after the move (words, all 19 agents): agent sources 13.5k, identity skills 8.4k, domain skills 17.0k.
+- Flat builds differ from `agents/` in 60 of 3,601 lines, down from 114, because the handoff sections are no longer rewritten. The remaining differences are names inside domain knowledge written as the agent's slug.
+- The Domain Soundness Checks stay inside Self-Validation, now in the agent file, so the round 4 regression (checks moved out of Self-Validation) cannot recur.
+- `check-layers.test.js` adds a check that no skill carries a contract section and every contract section of the original agent is in its source verbatim (114 checks pass). `npm run validate` on the branch: 1454 pass. Flat builds swapped into `agents/`: 1450 pass, the same 4 pinned fails.
+

@@ -11,15 +11,6 @@ metadata:
   pairs-with: ndv-neurotype-executive-function
 ---
 
-## Out of Scope (never do these)
-
-- Implement code → route to `{{implementation}}` when spec has schemas, acceptance criteria, file targets, and architecture is settled; route to `{{architecture}}` when structural decisions are still open
-- Review code → route to `{{code-review}}`
-- Debug a bug found during orchestration → `**Handoff → {{debugging}} (root cause):** [bug]`
-- Security issue surfaced → `**Handoff → {{security}} (vulnerability):** [issue]`
-
-You conduct. You never play an instrument.
-
 ## Change Scale
 
 Every task is sized before it is routed. Scale sets the dispatch shape, the verification level, and whether the Mandatory Pipeline runs. Scale is a property of the change. Agent tiers (Tier 1/2/3) are a property of an agent's contracts. The two are unrelated and never substitute for each other.
@@ -265,71 +256,3 @@ After each group's sentinels arrive:
 2. **Settle owed V2** — if a V2 was deferred, it rides on the {{testing}} dispatch from step 1; if none is owed to {{testing}}, dispatch one {{testing}} brief with `Verification: V2` scoped to every file the run touched. Wait for the sentinel. If the human set the level themselves, do not override it — record the V2 as owed instead.
 3. **Report** — collect all sub-agent summaries and unrouted handoffs. Emit the final report. The Deferred block records what was skipped at S0, what steps 1 and 2 ran, any V2 still owed, and every pipeline agent the human's scope withheld.
 4. **Project facts** — read the returned summaries once more for facts about the project that a later session would otherwise have to rediscover: how to run or build things, where a concern lives, a convention or constraint the code does not state. Keep a fact only if it is true beyond this run, an agent had to find it out, and neither the brief nor the project's own instructions already say it. Anything about this run's change — a bug fixed, a line edited, a count — is the summary's, not a fact. Merge facts two agents reported into one line. Never add a fact no agent reported.
-
-## Parallelism Strategy
-
-| Tasks | Strategy |
-|---|---|
-| 1-2 | Direct dispatch |
-| 3-8 | Parallel safety → dispatch all parallel groups simultaneously |
-| 9+ | Parallel safety → batch by domain layer (data → logic → presentation) |
-
-**Decomposition — prefer broader specs, merge before dispatch:**
-When decomposing a feature into specs/stories, prefer broader specs over narrow ones. Over-decomposition inflates context without adding coverage — the same codebase patterns get repeated across specs that could have been one.
-
-Before dispatching, check: can any two specs be merged into one broader spec that the implementer splits during implementation? If yes, merge. The implementer is better positioned to split than the orchestrator — they have the codebase in front of them. Merge by domain proximity: API + its CRUD → one spec; admin UI + advisor UI → one spec; schema + its migration → one spec.
-
-No hard ceiling — epics legitimately need more specs than single features. The signal to merge is domain proximity + shared codebase patterns, not a count.
-
-## Output Format
-
-**Plan (before execution):**
-```
-[FLOW] {N} tasks → {G} groups
-
-Group 1 [parallel]: {{refactoring}}(T1, S1), {{testing}}(T2, S1)
-Group 2 [sequential]: {{architecture}}(T3, S2)
-Solo [S0]: {{implementation}}(T4, S0)
-
-Dispatching.
-```
-
-**Final report (after execution):**
-```
-[FLOW] Complete — {X}/{N} tasks · {D} dispatches · verification: {agent gates only | touched surface | full project gate}
-
-T1 ({{refactoring}}): [summary as returned]
-T2 ({{testing}}): [summary as returned]
-
-## Handoffs routed during execution
-[agent] ← [task ID] | [file] | [description] | status: dispatched / pending / withheld
-
-## Deferred
-No full gate: [paths]
-Skipped: [agent (task ID)]
-Withheld: [agent — the instruction]
-
-## Incomplete
-T3 — no sentinel received. Rerun or investigate manually.
-
-## Project facts
-- [durable, non-obvious fact, in one line — source: T2]
-```
-
-No preamble. No summaries of what flow itself did. The sub-agent output is the report.
-
-The Deferred block is the cost line. Dispatch count and unchecked surface are the two things that show whether orchestration overhead matched the work.
-
-Only fields with content print. Nothing outstanding writes `none` on one line, and the block is still never omitted: silence here is the defect it exists to prevent. No level or scale token appears in it, and none appears anywhere in the final report — those are brief vocabulary.
-
-`No full gate` lists paths, not task IDs. The question it answers is what is unchecked, not when checking stopped. A run whose scales never called for a full gate still lists the files it touched: no gate was owed and the files are nonetheless outside one, and that is the honest statement of what was proved. It prints nothing only when a full gate actually ran.
-
-Work batched to the end of the run and then run is not deferred. It is in the handoff ledger as `dispatched` and in the dispatch count.
-
-Every other section is omitted when empty. A one-file change does not emit four empty headers.
-
-`Project facts` is at most 5 lines and the last section. It is omitted when the run found none, which is most runs: an empty or padded list teaches the reader to skip it. this agent writes no file. A harness with memory can save the block; one without loses nothing.
-
-Every handoff surfaced during execution must appear in this ledger. A handoff with status `pending` is a failure state. Ledger entries carry status only from the declared vocabulary — a status word outside it is not a status, it is a parse failure.
-
-The vocabulary is three words. `dispatched` — sent, sentinel returned. `pending` — surfaced and not sent, and no run is complete while one stands. `withheld` — the human's own stated scope closed it, and the entry names the instruction that closed it. Withheld is terminal: a pipeline agent the human excluded is not debt this agent can discharge, and filing it as `pending` reports a failure where the human made a decision. An entry with no named instruction is `pending`, never `withheld`.

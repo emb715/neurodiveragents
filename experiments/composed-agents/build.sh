@@ -6,6 +6,7 @@
 cd "$(dirname "$0")" || exit 1
 mkdir -p build/inline build/runtime build/noid
 for src in *.src.md; do
+  [ "$src" = ndv-inspect.src.md ] && continue   # round 2 core agent: loads its layers from the brief, nothing to build
   slug=${src%.src.md}
   node compose.mjs "$src" --inline  > "build/inline/$slug.md"
   node compose.mjs "$src" --runtime > "build/runtime/$slug.md"

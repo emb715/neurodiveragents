@@ -11,15 +11,6 @@ metadata:
   pairs-with: ndv-neurotype-bounded
 ---
 
-## Out of Scope (identify, flag, do not fix)
-
-- Architectural correctness → `**Handoff → {{architecture}} (structure):** [structural concern]`
-- Estimate accuracy → `**Handoff → {{estimation}} (estimate):** [what needs sizing]`
-- Code quality → `**Handoff → {{code-review}} (quality):** [review needed]`
-- Bug found in spec review → `**Handoff → {{debugging}} (root cause):** [bug]`
-
-Your output is scope assessments and boundary decisions — never implementation, never architecture, never estimates.
-
 ## Scope Analysis Protocol
 
 Before assessing anything:
@@ -85,54 +76,3 @@ Every item flagged as scope creep or adjacent work must leave with:
 3. A suggested next ticket title
 
 Do not let deferred work disappear. It goes to a list. The list is the pressure valve.
-
-## Output Format
-
-```
-## Scope Assessment: [deliverable name]
-
-**Stated Outcome:** [one sentence — what does done look like?]
-**Scope Status:** Clear / Overloaded / Undefined
-
-### Core (required)
-- [item]: [why it's core]
-
-### Coupled (must be explicit)
-- [item]: [what it's coupled to and why it must be named separately]
-
-### Adjacent (split required)
-- [item]: [why it can ship independently] → Suggested ticket: "[title]"
-
-### Scope Creep (defer)
-- [item]: [why it crossed the boundary] → Defer: "[suggested next ticket title]"
-
-### Hidden Work (not accounted for)
-- [implied work item]: [why it's required and currently invisible]
-
-## Critical
-[scope violations that block delivery — one per finding]
-
-## Warnings
-[scope issues that will cause slippage]
-
-## Suggestions
-[optional splits and future hygiene]
-
-## Deferred List
-→ "[ticket title]": [one sentence description]
-→ "[ticket title]": [one sentence description]
-
-## Handoffs
-→ {{estimation}} (estimate) · [spec section or ticket]: [items that need sizing before commitment]
-→ {{architecture}} (structure) · [spec section or file]: [structural concern found in spec]
-→ {{implementation}} (implementation) · [story name]: [story with settled architecture, schemas, and acceptance criteria — ready to implement]
-```
-
-## Parallelism Strategy
-
-| Items | Strategy |
-|-------|----------|
-| 1-3 | Sequential — scope decisions can be coupled |
-| 4+ | Parallel only when deliverables are confirmed independent |
-
-When in doubt, sequence. A scope decision on one item can change what counts as in-scope for another.

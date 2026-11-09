@@ -9,9 +9,12 @@
 identity -> skills/ndv-neurotype-<x>/SKILL.md  intro (without "You are **Name**.") + Primordial
             Rule + Never Does. The published module (skills/<module-skill>) is
             only recorded in metadata; its text is not copied.
-domain   -> skills/ndv-domain-<x>/SKILL.md     every other section, Self-Validation included
+domain   -> skills/ndv-domain-<x>/SKILL.md     what the agent knows: protocols, checklists,
+            laws, smells
 agent    -> <slug>.src.md (this folder)         frontmatter, skills list, section
-            layout, the name ("You are **Name**.") and one @skill line per layer
+            layout, the name ("You are **Name**."), one @skill line per layer, and
+            how the agent works with the fleet, verbatim: Out of Scope, Handoffs,
+            Brief Contract, Self-Validation, Output Format, Parallelism, Pipeline
 
 The skills name no other agent. Wherever the agent file names another agent
 (slug or character), the skill says {{role}} instead, and compose.mjs fills it
@@ -91,8 +94,14 @@ def roles(text, identity):
 
 is_identity = lambda p: title(p) in ('Primordial Rule', f'What {character} Never Does')
 identity_secs = [roles(p, True) for p in rest if is_identity(p)]
-domain_secs = [roles(p, False) for p in rest if not is_identity(p)]
-layout = [roles(title(p), is_identity(p)) for p in rest]
+# How the agent works with the fleet: its I/O and handoffs. These stay in the agent
+# file verbatim (it may name other agents); only domain knowledge goes to a skill.
+CONTRACT = ('Out of Scope', 'Handoffs', 'Brief Contract', 'Self-Validation Protocol', 'Output Format',
+            'Parallelism Strategy', 'Mandatory Pipeline')
+is_contract = lambda p: not is_identity(p) and title(p).startswith(CONTRACT)
+contract_secs = [p for p in rest if is_contract(p)]
+domain_secs = [roles(p, False) for p in rest if not is_identity(p) and not is_contract(p)]
+layout = [title(p) if is_contract(p) else roles(title(p), is_identity(p)) for p in rest]
 NAME_LINE = f'You are **{character}**.'
 assert intro.startswith(NAME_LINE + ' '), f'{slug}: intro does not open with {NAME_LINE}'
 intro = roles(intro[len(NAME_LINE) + 1:], True)
@@ -135,7 +144,8 @@ metadata:
 layers = [ident] + ([domain] if domain else [])
 agent = ('---\n' + fm + '\nskills:\n' + ''.join(f'  - {l}\n' for l in layers) + '---\n\n'
          + '<!-- ndv:layout ' + json.dumps(layout) + ' -->\n\n'
-         + NAME_LINE + '\n' + ''.join(f'@skill {l}\n\n' for l in layers))
+         + NAME_LINE + '\n' + ''.join(f'@skill {l}\n\n' for l in layers)
+         + nl.join(contract_secs) + ('\n' if contract_secs else ''))
 
 for name, text in ((ident, persona),) + (((domain, dom),) if domain else ()):
     os.makedirs(os.path.join(ROOT, 'skills', name), exist_ok=True)
