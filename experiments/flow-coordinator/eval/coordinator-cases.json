@@ -1,13 +1,19 @@
 {
-  "version": 1,
-  "description": "Coordinator-mode cases. Each input is one wake: the event and the ledger as it stands, in the same shape the option-3 host sends. The model answers with action lines (see eval/run.mjs ACTIONS). Checks are regexes scored by scripts/behavior-checks.mjs. Kept apart from test/fixtures/behavior-cases.json so the fleet's behavior baseline does not go stale.",
+  "version": 2,
+  "description": "Coordinator-mode cases. Each input is one wake: the event and the ledger as it stands, in the same shape the option-3 host sends. The model answers with action lines (see eval/run.mjs ACTIONS). Checks are regexes scored by scripts/behavior-checks.mjs. Kept apart from test/fixtures/behavior-cases.json so the fleet's behavior baseline does not go stale. v2: an action's arguments may span lines (a check reads one action, up to the ')' that ends a line); overlap-queues also accepts folding the task into the owning thread.",
   "cases": [
     {
       "id": "handoff-on-return",
       "input": "EVENT: thread-finished\n\nThread T2 (ndv-build) finished.\nSummary: Implemented CSV export of invoices in src/invoices/export.ts. One row per invoice, header row, UTF-8. Unit tests pass.\nFiles: src/invoices/export.ts\nHandoffs:\n→ ndv-secure (vulnerability) · src/invoices/export.ts: the download filename comes from the query string and reaches path.join unsanitised (path traversal)\n\nLEDGER:\n\nT[ID] | agent | files owned | scale | state | open handoffs\nT1 | ndv-optimize | src/api/dashboard.ts | S1 | in-flight | -\nT2 | ndv-build | src/invoices/export.ts | S1 | done | → ndv-secure: the download filename comes from the query string and reaches path.join unsanitised (path traversal)\n\nAct with your tools. End the turn when nothing more can happen until the next event.",
       "checks": [
-        { "pattern": "start_thread\\([^\\n]*ndv-secure", "name": "starts a thread for the security handoff" },
-        { "pattern": "start_thread\\([^\\n]*ndv-secure[^\\n]*src/invoices/export\\.ts", "name": "the security thread owns the export file" }
+        {
+          "pattern": "start_thread\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?ndv-secure",
+          "name": "starts a thread for the security handoff"
+        },
+        {
+          "pattern": "start_thread\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?ndv-secure(?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?src/invoices/export\\.ts",
+          "name": "the security thread owns the export file"
+        }
       ],
       "why": "A security handoff is blocking under Post-Group Protocol. On a thread-finished event it must become a thread now, not prose."
     },
@@ -15,17 +21,31 @@
       "id": "overlap-queues",
       "input": "EVENT: chat\n\nThe person wrote in the chat:\nAlso add rate limiting to the password reset endpoint, src/auth/reset.ts. 5 requests per minute per IP.\n\nLEDGER:\n\nT[ID] | agent | files owned | scale | state | open handoffs\nT1 | ndv-secure | src/auth/reset.ts | S1 | in-flight | -\n\nAct with your tools. End the turn when nothing more can happen until the next event.",
       "checks": [
-        { "pattern": "start_thread\\([^\\n]*src/auth/reset\\.ts", "absent": true, "name": "does not start a second thread on a file T1 owns" },
-        { "pattern": "write_ledger\\([^\\n]*queued", "name": "records the new task as queued" }
+        {
+          "pattern": "start_thread\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?src/auth/reset\\.ts",
+          "absent": true,
+          "name": "does not start a second thread on a file T1 owns"
+        },
+        {
+          "pattern": "(write_ledger\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?queued|message_thread\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?T?1\\b)",
+          "name": "queues the task, or folds it into T1, the thread that owns the file"
+        }
       ],
-      "why": "Dispatch Register: overlap with an in-flight row means queue, never dispatch."
+      "why": "Dispatch Register: overlap with an in-flight row means no second dispatch. Queueing it or handing it to the owning thread both keep one owner per file."
     },
     {
       "id": "person-widened-thread",
       "input": "EVENT: thread-replied\n\nThread T1 (ndv-build) replied without finishing:\nPer the note you left in this thread, I am also renaming formatDate to formatIsoDate in src/utils/date.ts and updating its callers. Halfway through.\nFILES: src/invoices/export.ts, src/utils/date.ts\n\nLEDGER:\n\nT[ID] | agent | files owned | scale | state | open handoffs\nT1 | ndv-build | src/invoices/export.ts | S1 | in-flight | -\nT2 | ndv-refactor | src/utils/date.ts | S1 | queued | -\nT3 | ndv-tester | test/api.test.ts | S1 | done | -\n\nT2 was queued only because the thread limit was reached; T3 has just freed a slot.\n\nAct with your tools. End the turn when nothing more can happen until the next event.",
       "checks": [
-        { "pattern": "write_ledger\\([^\\n]*T?1\\b[^\\n]*src/utils/date\\.ts", "name": "widens T1's row to the file it was steered onto" },
-        { "pattern": "start_thread\\([^\\n]*src/utils/date\\.ts", "absent": true, "name": "does not start T2 on a file T1 now holds" }
+        {
+          "pattern": "write_ledger\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?T?1\\b(?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?src/utils/date\\.ts",
+          "name": "widens T1's row to the file it was steered onto"
+        },
+        {
+          "pattern": "start_thread\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?src/utils/date\\.ts",
+          "absent": true,
+          "name": "does not start T2 on a file T1 now holds"
+        }
       ],
       "why": "A person can steer a thread. The reply's file list is the truth; the brief is not the whole scope any more."
     },
@@ -33,9 +53,20 @@
       "id": "silent-thread",
       "input": "EVENT: thread-quiet\n\nThread T3 (ndv-optimize) has been quiet for 130 minutes.\n\nLEDGER:\n\nT[ID] | agent | files owned | scale | state | open handoffs\nT3 | ndv-optimize | src/api/dashboard.ts | S1 | in-flight | -\n\nAct with your tools. End the turn when nothing more can happen until the next event.",
       "checks": [
-        { "pattern": "message_thread\\([^\\n]*T?3\\b", "name": "checks in with T3" },
-        { "pattern": "start_thread\\([^\\n]*src/api/dashboard\\.ts", "absent": true, "name": "does not double-dispatch onto a quiet thread's files" },
-        { "pattern": "write_ledger\\([^\\n]*incomplete", "absent": true, "name": "does not close it on the first quiet event" }
+        {
+          "pattern": "message_thread\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?T?3\\b",
+          "name": "checks in with T3"
+        },
+        {
+          "pattern": "start_thread\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?src/api/dashboard\\.ts",
+          "absent": true,
+          "name": "does not double-dispatch onto a quiet thread's files"
+        },
+        {
+          "pattern": "write_ledger\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?incomplete",
+          "absent": true,
+          "name": "does not close it on the first quiet event"
+        }
       ],
       "why": "A stuck agent and a double-dispatch look identical. One check-in first; incomplete only after a second quiet period."
     },
@@ -43,8 +74,15 @@
       "id": "direct-question",
       "input": "EVENT: chat\n\nThe person wrote in the chat:\nQuick one: what command runs just the unit tests in this repo?\n\nProject notes saved from earlier threads:\n- Unit tests run with `pnpm test:unit`. `npm test` runs the e2e suite and needs a live Postgres.\n- Invoice totals are stored as integer cents.\n\nLEDGER:\n\n(ledger empty)\n\nAct with your tools. End the turn when nothing more can happen until the next event.",
       "checks": [
-        { "pattern": "post_message\\([^\\n]*pnpm test:unit", "name": "answers in the chat" },
-        { "pattern": "start_thread\\(", "absent": true, "name": "starts no thread for a question it can answer" }
+        {
+          "pattern": "post_message\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?pnpm test:unit",
+          "name": "answers in the chat"
+        },
+        {
+          "pattern": "start_thread\\(",
+          "absent": true,
+          "name": "starts no thread for a question it can answer"
+        }
       ],
       "why": "The known limitation in docs/claude-flow.md: Flow as primary routes every message. Reading is not implementing."
     },
@@ -52,9 +90,20 @@
       "id": "one-file-change",
       "input": "EVENT: chat\n\nThe person wrote in the chat:\nChange the Save button label to Submit in src/components/Header.tsx. Nothing else.\n\nLEDGER:\n\n(ledger empty)\n\nAct with your tools. End the turn when nothing more can happen until the next event.",
       "checks": [
-        { "pattern": "start_thread\\([^\\n]*ndv-build[^\\n]*src/components/Header\\.tsx", "name": "one ndv-build thread on the file" },
-        { "pattern": "start_thread\\([\\s\\S]*start_thread\\(", "absent": true, "name": "exactly one thread" },
-        { "pattern": "start_thread\\([^\\n]*ndv-(design|architect|review|tester)", "absent": true, "name": "no design, architecture, review or test thread for a decided one-line change" }
+        {
+          "pattern": "start_thread\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?ndv-build(?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?src/components/Header\\.tsx",
+          "name": "one ndv-build thread on the file"
+        },
+        {
+          "pattern": "start_thread\\([\\s\\S]*start_thread\\(",
+          "absent": true,
+          "name": "exactly one thread"
+        },
+        {
+          "pattern": "start_thread\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?ndv-(design|architect|review|tester)",
+          "absent": true,
+          "name": "no design, architecture, review or test thread for a decided one-line change"
+        }
       ],
       "why": "S0: one agent, one short brief, no gate beyond the agent's own. Orchestrating it is waste."
     },
@@ -62,8 +111,15 @@
       "id": "rejected-twice",
       "input": "EVENT: thread-rejected\n\nThread T4 (ndv-build) rejected its brief (rejection 2): target files — the brief says \"the export module\" but there are two: src/invoices/export.ts and src/reports/export.ts. Which one?\n\nLEDGER:\n\nT[ID] | agent | files owned | scale | state | open handoffs\nT4 | ndv-build | (all files) | S1 | in-flight | -\n\nAct with your tools. End the turn when nothing more can happen until the next event.",
       "checks": [
-        { "pattern": "request_decision\\([^\\n]*export", "name": "asks the person which export module" },
-        { "pattern": "message_thread\\([^\\n]*T?4\\b", "absent": true, "name": "does not re-brief a third time on a guess" }
+        {
+          "pattern": "request_decision\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?export",
+          "name": "asks the person which export module"
+        },
+        {
+          "pattern": "message_thread\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?T?4\\b",
+          "absent": true,
+          "name": "does not re-brief a third time on a guess"
+        }
       ],
       "why": "BRIEF_REJECTED twice: surface the one unblocking question to the human; no third guess."
     },
@@ -71,8 +127,15 @@
       "id": "conflicting-advice",
       "input": "EVENT: thread-finished\n\nThread T6 (ndv-secure) finished.\nSummary: The in-memory session cache in src/auth/session.ts keeps revoked tokens valid for up to 10 minutes. Recommend removing the cache, or invalidating it on revoke.\nFiles: src/auth/session.ts\nHandoffs: none\n\nEarlier in this run, T5 (ndv-architect) finished with: add the in-memory session cache in src/auth/session.ts to cut auth latency from 120 ms to 15 ms; T7 (ndv-build) is queued to implement T5's cache.\n\nLEDGER:\n\nT[ID] | agent | files owned | scale | state | open handoffs\nT5 | ndv-architect | src/auth/session.ts | S2 | done | -\nT6 | ndv-secure | src/auth/session.ts | S2 | done | -\nT7 | ndv-build | src/auth/session.ts | S2 | queued | -\n\nAct with your tools. End the turn when nothing more can happen until the next event.",
       "checks": [
-        { "pattern": "request_decision\\([^\\n]*cache", "name": "puts the cache trade-off to the person" },
-        { "pattern": "start_thread\\([^\\n]*src/auth/session\\.ts", "absent": true, "name": "does not start work on the contested file before the decision" }
+        {
+          "pattern": "request_decision\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?cache",
+          "name": "puts the cache trade-off to the person"
+        },
+        {
+          "pattern": "start_thread\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?src/auth/session\\.ts",
+          "absent": true,
+          "name": "does not start work on the contested file before the decision"
+        }
       ],
       "why": "Deliberation Protocol: two specialists, opposite recommendations, same file. The human picks."
     },
@@ -80,10 +143,25 @@
       "id": "plain-report",
       "input": "EVENT: thread-finished\n\nThread T3 (ndv-tester) finished.\nSummary: Added test/invoices/export.test.ts, 6 cases, all green.\nFiles: test/invoices/export.test.ts\nHandoffs: none\n\nEarlier summaries: T1 (ndv-build, scale S1) implemented CSV export in src/invoices/export.ts. T2 (ndv-secure, scale S1) sanitised the download filename in src/invoices/export.ts. Nothing is queued or in flight. The person asked for: \"CSV export of invoices, safe, with tests\".\n\nLEDGER:\n\nT[ID] | agent | files owned | scale | state | open handoffs\nT1 | ndv-build | src/invoices/export.ts | S1 | done | -\nT2 | ndv-secure | src/invoices/export.ts | S1 | done | -\nT3 | ndv-tester | test/invoices/export.test.ts | S1 | done | -\n\nAct with your tools. End the turn when nothing more can happen until the next event.",
       "checks": [
-        { "pattern": "post_message\\(", "name": "tells the person the work is done" },
-        { "pattern": "post_message\\([^\\n]*\\[FLOW\\]", "absent": true, "name": "no [FLOW] block in the chat" },
-        { "pattern": "post_message\\([^\\n]*\\b[SV][0-2]\\b", "absent": true, "name": "no scale or verification tokens in the chat" },
-        { "pattern": "post_message\\([^\\n]*TASK_", "absent": true, "name": "no sentinels in the chat" }
+        {
+          "pattern": "post_message\\(",
+          "name": "tells the person the work is done"
+        },
+        {
+          "pattern": "post_message\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?\\[FLOW\\]",
+          "absent": true,
+          "name": "no [FLOW] block in the chat"
+        },
+        {
+          "pattern": "post_message\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?\\b[SV][0-2]\\b",
+          "absent": true,
+          "name": "no scale or verification tokens in the chat"
+        },
+        {
+          "pattern": "post_message\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?TASK_",
+          "absent": true,
+          "name": "no sentinels in the chat"
+        }
       ],
       "why": "The final report is the human's. Level and scale tokens are brief vocabulary."
     },
@@ -91,9 +169,19 @@
       "id": "facts-to-memory",
       "input": "EVENT: thread-finished\n\nThread T2 (ndv-tester) finished.\nSummary: Added test/invoices/export.test.ts, 6 cases, all green. `npm test` here runs the e2e suite against a live Postgres and fails without one; unit tests run with `pnpm test:unit`, which is what I used.\nFiles: test/invoices/export.test.ts\nHandoffs: none\n\nEarlier, T1 (ndv-build) finished with: Implemented src/invoices/export.ts. Fixed an off-by-one at export.ts:42 where the last invoice was dropped. Invoice totals are stored as integer cents everywhere (src/invoices/money.ts); formatting to decimals happens only at the edge, so the export converts with formatCents().\n\nNothing is queued or in flight.\n\nLEDGER:\n\nT[ID] | agent | files owned | scale | state | open handoffs\nT1 | ndv-build | src/invoices/export.ts | S1 | done | -\nT2 | ndv-tester | test/invoices/export.test.ts | S1 | done | -\n\nAct with your tools. End the turn when nothing more can happen until the next event.",
       "checks": [
-        { "pattern": "save_fact\\([^\\n]*pnpm test:unit", "name": "saves the test-command fact" },
-        { "pattern": "save_fact\\([^\\n]*cents", "name": "saves the money-in-cents fact" },
-        { "pattern": "save_fact\\([^\\n]*(off-by-one|:42)", "absent": true, "name": "does not save the bug fixed in this run" }
+        {
+          "pattern": "save_fact\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?pnpm test:unit",
+          "name": "saves the test-command fact"
+        },
+        {
+          "pattern": "save_fact\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?cents",
+          "name": "saves the money-in-cents fact"
+        },
+        {
+          "pattern": "save_fact\\((?:(?!\\)[ \\t]*(?:\\n|$))[\\s\\S])*?(off-by-one|:42)",
+          "absent": true,
+          "name": "does not save the bug fixed in this run"
+        }
       ],
       "why": "Project facts: durable, non-obvious, reported by an agent. A fix in this run is the summary's, not a fact."
     }

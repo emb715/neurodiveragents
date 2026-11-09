@@ -54,3 +54,20 @@ test('a correct reply passes every case', () => {
     assert.ok(r.pass, `${c.id}: missed ${r.missed.join('; ')}`)
   }
 })
+
+test('an action spread over several lines still counts', () => {
+  const c = cases.find(x => x.id === 'rejected-twice')
+  const multi = 'request_decision(\n  question="Which export module?",\n  options=["src/invoices/export.ts", "src/reports/export.ts"],\n  recommended=0\n)'
+  assert.ok(scoreOutput(c.checks, multi).pass)
+})
+
+test('a check reads one action only, not the prose or the action after it', () => {
+  const report = cases.find(x => x.id === 'plain-report')
+  const clean = 'post_message(text="All done (export, filename fix, tests).")\nPrivate note: [FLOW] Complete, S1 V1, TASK_3_COMPLETE'
+  assert.ok(scoreOutput(report.checks, clean).pass, 'tokens in a private note after the action are not in the chat')
+  const dirty = 'post_message(text="[FLOW] Complete — 3/3 tasks")'
+  assert.equal(scoreOutput(report.checks, dirty).pass, false)
+  const quiet = cases.find(x => x.id === 'silent-thread')
+  const twoActions = 'message_thread(id=T3, text="Still going?")\nwrite_ledger(id=T3, state=in-flight, note="checked in")'
+  assert.ok(scoreOutput(quiet.checks, twoActions).pass)
+})

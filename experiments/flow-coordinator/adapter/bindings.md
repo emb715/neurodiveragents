@@ -32,6 +32,8 @@ The project coordinator already has thread, message and decision tools. Use them
 
 The host defines the tools and runs the ledger in code. The overlap check, the queue, the quiet timer and the file widening are already enforced; your ledger writes add notes and handoffs.
 
+Your final text at the end of a wake is not shown to the person. Only `post_message` reaches them. Your working directory is the main checkout; threads work in their own copies, so write paths in briefs relative to the repository root.
+
 | Action | Tool |
 |---|---|
 | `start_thread` | `mcp__coordinator__start_thread` |

@@ -21,6 +21,7 @@
  *   node experiments/flow-coordinator/eval/run.mjs --case direct-question --arms adapter
  *   node experiments/flow-coordinator/eval/run.mjs --print adapter           # show an arm's system prompt
  *   node experiments/flow-coordinator/eval/run.mjs --dry                     # build every prompt, call nothing
+ *   node experiments/flow-coordinator/eval/run.mjs --rescore a.json,b.json   # re-score saved outputs with the current checks, merged; no calls
  *
  * Flags: --models a,b · --arms control,flow,adapter · --runs n · --case id,id ·
  *        --provider claude|anthropic|ollama · --concurrency n · --out path
@@ -148,9 +149,24 @@ if (DRY) {
   process.exit(0)
 }
 
+// --rescore: saved outputs, current checks. Runs from several files are
+// merged and renumbered, so three one-run files score as one three-run report.
+async function rescore(files) {
+  const byId = Object.fromEntries(fixture.cases.map(c => [c.id, c]))
+  const seen = {}
+  return files.flatMap(f => JSON.parse(readFileSync(f, 'utf8')).results).filter(r => byId[r.case]).map(r => {
+    const c = byId[r.case]
+    const key = `${r.model}|${r.arm}|${r.case}`
+    const run = seen[key] = (seen[key] ?? -1) + 1
+    const scored = r.error ? { pass: false, missed: c.checks.map(() => 'error') } : scoreOutput(c.checks, r.output)
+    return { ...r, run, pass: scored.pass, missed: scored.missed, checks_passed: c.checks.length - scored.missed.length, checks_total: c.checks.length }
+  })
+}
+
+const RESCORE = arg('rescore', null)?.split(',')
 let done = 0
-console.error(`Running ${jobs.length} calls (concurrency ${CONCURRENCY})`)
-const results = await pool(jobs, CONCURRENCY, async ({ model, arm, c, run }) => {
+if (!RESCORE) console.error(`Running ${jobs.length} calls (concurrency ${CONCURRENCY})`)
+const results = RESCORE ? await rescore(RESCORE) : await pool(jobs, CONCURRENCY, async ({ model, arm, c, run }) => {
   const res = await runModel({ NDV_EVAL_MODEL: model, NDV_EVAL_SYSTEM_FILE: systemFile[arm], NDV_EVAL_MAX_TOKENS: '16000' }, c.input)
   const scored = res.ok ? scoreOutput(c.checks, res.text) : { pass: false, missed: c.checks.map(() => 'error') }
   done++
@@ -161,15 +177,17 @@ const results = await pool(jobs, CONCURRENCY, async ({ model, arm, c, run }) => 
     ...(res.ok ? {} : { error: res.error }), output: res.text,
   }
 })
-process.stderr.write('\n')
+if (!RESCORE) process.stderr.write('\n')
 
 // ─── report ─────────────────────────────────────────────────────────────────
 
 const sum = (xs, f) => xs.reduce((n, x) => n + f(x), 0)
 const verdict = (a, b, win) => a > b ? win : a === b ? 'NO GAIN' : 'WORSE'
-const report = { run_at: new Date().toISOString(), fixture_version: fixture.version, runs: RUNS, models: {} }
+const REPORT_MODELS = RESCORE ? [...new Set(results.map(r => r.model))] : MODELS
+const REPORT_RUNS = RESCORE ? Math.max(...results.map(r => r.run)) + 1 : RUNS
+const report = { run_at: new Date().toISOString(), fixture_version: fixture.version, runs: REPORT_RUNS, ...(RESCORE ? { rescored_from: RESCORE } : {}), models: {} }
 
-for (const model of MODELS) {
+for (const model of REPORT_MODELS) {
   const mine = results.filter(r => r.model === model)
   const arm = a => {
     const rs = mine.filter(r => r.arm === a)
@@ -185,7 +203,7 @@ for (const model of MODELS) {
   }))]))
   report.models[model] = m
 
-  console.log(`\nCOORDINATOR EVAL: ${model} · ${cases.length} cases · ${RUNS} run(s)`)
+  console.log(`\nCOORDINATOR EVAL: ${model} · ${cases.length} cases · ${REPORT_RUNS} run(s)`)
   for (const [a, v] of Object.entries(arms)) console.log(`  ${a.padEnd(8)} checks ${v.checks}/${v.of} · cases ${v.cases}/${v.of_cases}${v.errors ? ` · errors ${v.errors}` : ''}`)
   if (m.adapter_vs_control) console.log(`  adapter vs control: ${m.adapter_vs_control}`)
   if (m.adapter_vs_flow) console.log(`  adapter vs flow:    ${m.adapter_vs_flow}`)

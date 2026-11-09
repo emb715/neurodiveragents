@@ -7,13 +7,15 @@
  * in-process MCP server, so the host sees and enforces every action.
  *
  * Worker: one session per thread, in that thread's worktree. Built-in tools
- * are exactly the agent's own `tools:` list, pre-approved; anything else is
- * denied (permissionMode 'dontAsk'). Project settings load, so the repo's
- * CLAUDE.md reaches the worker as it would any Claude Code session.
+ * are exactly the agent's own `tools:` list. Nothing is pre-approved: every
+ * call that needs permission goes through guard.js, which denies tools
+ * outside the list and file writes outside the worktree. Project settings
+ * load, so the repo's CLAUDE.md reaches the worker as it would any session.
  */
 
 import { query, createSdkMcpServer, tool } from '@anthropic-ai/claude-agent-sdk'
 import { z } from 'zod'
+import { workerPermission } from '../guard.js'
 
 const READ_ONLY = ['Read', 'Glob', 'Grep']
 
@@ -84,8 +86,8 @@ export class SdkRunner {
         ...(sessionId ? { resume: sessionId } : {}),
         cwd,
         tools,
-        allowedTools: tools,
-        permissionMode: 'dontAsk',
+        allowedTools: [], // every call goes through the guard
+        canUseTool: async (name, input) => workerPermission(name, input, { cwd, tools }),
         settingSources: ['project'],
         abortController,
         ...(this.workerModel ? { model: this.workerModel } : {}),

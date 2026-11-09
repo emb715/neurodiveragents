@@ -22,8 +22,8 @@ export class ScriptedRunner {
       this.toolCalls.push({ name, args })
       return tools[name].handler(args)
     }
-    await this.coordinatorScript({ prompt, call, wake: this.wakes.length })
-    return { sessionId: sessionId ?? 'coordinator-session' }
+    const text = await this.coordinatorScript({ prompt, call, wake: this.wakes.length })
+    return { text: typeof text === 'string' ? text : '', sessionId: sessionId ?? 'coordinator-session' }
   }
 
   async worker(args) {

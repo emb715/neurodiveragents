@@ -325,3 +325,42 @@ test('every action in coordinator.md has a host tool, and the sdk-host binding n
   const block = hostBlocks()['sdk-host']
   for (const a of actions) assert.match(block, new RegExp('`mcp__coordinator__' + a + '`'))
 })
+
+// ─── found in the first live run ─────────────────────────────────────────────
+
+test('a chat answer left in final text, with no post_message, still reaches the person', async () => {
+  const { host, posts, cleanup } = setup({ coordinator: async () => 'Run npm run unit.' })
+  host.chat('how do I run the tests?')
+  await host.idle()
+  assert.deepEqual(posts, ['Run npm run unit.'])
+  cleanup()
+})
+
+test('final text of a thread event is not forwarded: it may be a private note', async () => {
+  const { host, posts, cleanup } = setup({
+    coordinator: async ({ call, wake }) => {
+      if (wake === 1) { await call('start_thread', { agent: 'ndv-build', brief: 'A', files: ['a'] }); return '' }
+      return '[FLOW] Complete — 1/1 tasks'
+    },
+    worker: ({ id }) => done(id),
+  })
+  host.chat('go')
+  await host.idle()
+  assert.deepEqual(posts, [])
+  cleanup()
+})
+
+test('absolute repo paths in a brief and in FILES become repo-relative', async () => {
+  const { host, runner, cleanup } = setup({
+    repoRoot: '/work/repo',
+    coordinator: async ({ call, wake }) => {
+      if (wake === 1) await call('start_thread', { agent: 'ndv-build', brief: 'Write /work/repo/hello.txt', files: ['/work/repo/hello.txt'] })
+    },
+    worker: ({ id }) => `ok\nFILES: /work/repo/hello.txt, /work/repo/b.txt\nTASK_${id}_COMPLETE`,
+  })
+  host.chat('go')
+  await host.idle()
+  assert.match(runner.workerCalls[0].prompt, /^Write hello\.txt/)
+  assert.deepEqual(host.ledger.get('1').files, ['hello.txt', 'b.txt'])
+  cleanup()
+})

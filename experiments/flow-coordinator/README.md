@@ -37,7 +37,7 @@ For a claude.ai project, paste the block in `option-2-adapter/project-instructio
 ```bash
 cd experiments/flow-coordinator/option-3-sdk-host
 npm install
-npm test                                            # 15 tests, fake model, no tokens
+npm test                                            # 21 tests, fake model, no tokens
 node src/cli.js --repo /path/to/project             # real run: chat in the terminal
 node src/cli.js --print-prompt                      # the coordinator's system prompt
 ```
@@ -58,6 +58,10 @@ node --test experiments/flow-coordinator/eval/cases.test.js    # fixture integri
 Every arm gets the same action format and the same wake input; the arms differ only in Flow and the adapter. The control arm is built the way `scripts/eval-behavior.mjs` builds its control: routing table, handoff line, `BRIEF_REJECTED` and the ledger format, nothing else. Scoring reuses `scripts/behavior-checks.mjs`. The project's rule decides: ship only if Flow plus adapter beats the control (EARNS) and beats Flow alone (GAIN) on every model.
 
 The cases test the text layer. The host's guarantees are tested in code by `option-3-sdk-host/test/host.test.js`.
+
+## Where it stands
+
+After 3 runs on Haiku 4.5 and Sonnet 5, Flow plus the adapter beats both the plain model and Flow alone, by 3 to 4 checks out of 75. Flow alone scores below the plain model. Two live runs of option 3 each found a real bug that the fake-model tests couldn't; both are fixed. Details in [FINDINGS.md](FINDINGS.md).
 
 ## How to pivot from here
 

@@ -70,7 +70,8 @@ export function readReply(text, id) {
 export function threadFooter(id) {
   return [
     'You are working in a thread, not answering the person. Your final reply is read by the coordinator only.',
-    'List every file you changed or read for the decision on one line: FILES: path, path',
+    'Your working directory is this task\'s own checkout of the repository. Use paths relative to it; never write outside it.',
+    'List every file you changed or read for the decision on one line, relative paths: FILES: path, path',
     'Emit handoff lines, then the sentinel, as the last lines of your final reply.',
     'Handoff format (emit BEFORE sentinel): → [agent] ([domain]) · [file or symbol]: [what needs to happen]',
     `End with exactly: TASK_${id}_COMPLETE`,

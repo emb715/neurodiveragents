@@ -22,6 +22,7 @@ import { Ledger } from './ledger.js'
 import { readReply, threadFooter } from './protocol.js'
 import * as P from './prompts.js'
 import { createWorktree } from './worktree.js'
+import { relativize, relativeFiles } from './guard.js'
 import { REPO_ROOT } from '../../adapter/assemble.mjs'
 
 // Host-neutral tool specs. runners/sdk.js turns them into MCP tools; the
@@ -71,6 +72,7 @@ export const TOOL_SPECS = {
 }
 
 const HOUR = 60 * 60 * 1000
+const PERSON_WAITS = new Set(['chat', 'decision-answered'])
 
 export class Host {
   constructor({
@@ -201,6 +203,8 @@ export class Host {
   #startThread({ agent, brief, files = [], scale = 'S1' }) {
     if (!P.agentExists(this.agentsDir, agent)) return `Unknown agent "${agent}". Nothing started.`
     if (!brief?.trim()) return 'Empty brief. Nothing started.'
+    brief = relativize(brief, this.repoRoot)
+    files = relativeFiles(files, this.repoRoot)
     const blockers = this.ledger.blockers(files)
     const full = this.ledger.inFlight().length >= this.maxThreads
     if (blockers.length || full) {
@@ -305,6 +309,7 @@ export class Host {
       return
     }
 
+    r.files = relativeFiles(r.files, row.cwd, this.repoRoot)
     const widened = this.ledger.widen(row.id, r.files)
     if (r.complete) {
       this.ledger.update(row.id, { state: 'done', handoffs: r.handoffs, summary: r.summary, sessionId: row.sessionId })
@@ -344,12 +349,23 @@ export class Host {
 
   async #wake(event) {
     const prompt = P.wakePrompt(event, this.ledger.table(), this.startedFromQueue.splice(0))
+    const tools = this.tools()
+    let posted = false
+    const post = tools.post_message.handler
+    tools.post_message.handler = a => { posted = true; return post(a) }
     const res = await this.runner.coordinator({
       prompt,
       systemPrompt: this.coordinatorPrompt,
       sessionId: this.state.coordinatorSession,
-      tools: this.tools(),
+      tools,
     })
+    // Found in the first live run: asked a plain question, the coordinator
+    // answered in its final text instead of calling post_message, and the
+    // person saw nothing. When the person is the one waiting, forward it.
+    if (!posted && PERSON_WAITS.has(event.type) && res?.text?.trim()) {
+      this.log(`forwarded final text of a ${event.type} wake (no post_message call)`)
+      tools.post_message.handler({ text: res.text.trim() })
+    }
     if (res?.sessionId && res.sessionId !== this.state.coordinatorSession) {
       this.state.coordinatorSession = res.sessionId
       this.#saveState()
