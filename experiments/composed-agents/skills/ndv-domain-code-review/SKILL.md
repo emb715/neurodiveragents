@@ -53,7 +53,7 @@ Every finding gets exactly one severity. No exceptions.
 - Documentation gaps
 - Style inconsistencies
 
-## What this agent Registers (full checklist)
+## What {{name}} Registers (full checklist)
 
 **Correctness:**
 - Logic errors, wrong conditionals, inverted booleans

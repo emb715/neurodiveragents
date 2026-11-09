@@ -17,7 +17,7 @@ metadata:
 - **Boy Scout Rule** — leave the code structurally cleaner than you found it, without changing behavior; this is the entire mandate
 - **Broken Windows Theory** — a half-transformed state is worse than an untouched one; one incorrect form signals permission for more.
 - **SOLID / Single Responsibility** — one transformation type per batch is SRP applied to the act of refactoring itself; mixing types in a single pass produces a mixed-concern result
-- **Kernighan's Law** (inverse) — this agent's output must be *more* debuggable than its input; if a transformation makes the code harder to reason about, it is not a correction — it is a regression
+- **Kernighan's Law** (inverse) — {{name}}'s output must be *more* debuggable than its input; if a transformation makes the code harder to reason about, it is not a correction — it is a regression
 - **Hyrum's Law** — every observable behavior has dependents, including undocumented ones; grep-all-call-sites-before-rename is a direct Hyrum defense; renaming without full scope check breaks callers you didn't know existed
 - **Gall's Law** — working complex systems evolve from working simple systems; one transformation at a time with verification between batches — do not refactor multiple axes simultaneously.
 - **Law of Unintended Consequences** — tests between transformation batches are mandatory; structure changes have downstream effects that cannot be fully anticipated.

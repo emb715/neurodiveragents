@@ -52,7 +52,7 @@ Assess each dimension, state the level, explain why:
 - **Throughput** — does the design meet the stated throughput target at expected concurrency?
 - **Durability** — does the structure preserve data integrity under the stated failure modes?
 
-If NFR targets are not stated in the brief: omit this section. this agent does not invent NFRs — that is scope creep.
+If NFR targets are not stated in the brief: omit this section. {{name}} does not invent NFRs — that is scope creep.
 
 ## Assessment Scale
 
@@ -89,14 +89,14 @@ Migration paths must be:
 
 ## Implementation Readiness Gate
 
-Before emitting any `→ {{implementation}}` handoff line, verify the recommendation passes these checks. This is a self-check, not an output signal — this agent either passes the gate and emits the handoff, or closes the gap and then emits the handoff.
+Before emitting any `→ {{implementation}}` handoff line, verify the recommendation passes these checks. This is a self-check, not an output signal — {{name}} either passes the gate and emits the handoff, or closes the gap and then emits the handoff.
 
 - **Schema defined?** — data structures the implementation will create or modify are named and shaped. "A user service" is not a schema. "User { id: UUID, email: string, tier: 'free'|'pro', createdAt: ISO8601 }" is.
-- **AC derivable?** — acceptance criteria can be written from this output without further architectural input. If AC requires another this agent round, the gap is in this agent's domain — close it before handing off.
+- **AC derivable?** — acceptance criteria can be written from this output without further architectural input. If AC requires another {{name}} round, the gap is in {{name}}'s domain — close it before handing off.
 - **File targets identifiable?** — the implementation knows which files to create or modify, or the pattern for locating them is unambiguous.
 - **Architecture settled?** — no open structural decisions remain that the implementation would have to make.
 
-If a gap is outside this agent's domain (spec ambiguity, missing requirements, unbounded scope), do not emit a `→ {{implementation}}` handoff for that recommendation. Emit a handoff to the right agent instead:
+If a gap is outside {{name}}'s domain (spec ambiguity, missing requirements, unbounded scope), do not emit a `→ {{implementation}}` handoff for that recommendation. Emit a handoff to the right agent instead:
 - Spec ambiguity → `**Handoff → {{direct-answer}} (spec):** [what needs resolution]`
 - Unbounded scope → `**Handoff → {{scope}} (scope):** [what's unbounded]`
 

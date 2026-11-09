@@ -21,8 +21,8 @@ agent    -> agents/<slug>.src.md                frontmatter, skills list, sectio
 The skills name no other agent. Wherever the agent file names another agent
 (slug or character), the skill says {{role}} instead, and compose.mjs fills it
 from roles.json when it builds the agent. The agent's own name lives only in
-the agent source: the identity layer says {{name}} and the domain layer says
-"this agent". Nothing else in the text changes.
+the agent source; both skills say {{name}} and the build fills it in.
+Nothing else in the text changes.
 """
 import glob
 import json
@@ -79,11 +79,7 @@ def roles(text, identity):
     for i, ph in enumerate(PROTECT):
         masks[f'\x00{i}\x00'] = ph
         text = text.replace(ph, f'\x00{i}\x00')
-    if identity:
-        text = re.sub(rf"\b{character}\b", '{{name}}', text)
-    else:
-        text = re.sub(rf"\b{character}'s\b", "this agent's", text)
-        text = re.sub(rf"\b{character}\b", 'this agent', text)
+    text = re.sub(rf"\b{character}\b", '{{name}}', text)
     for name, other in CHARS.items():
         if name != character:
             text = re.sub(rf'\b{name}\b', '{{' + ROLE_OF[other] + '}}', text)
