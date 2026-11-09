@@ -267,3 +267,9 @@ A domain skill held more than domain knowledge: Out of Scope, Handoffs, Brief Co
 - The Domain Soundness Checks stay inside Self-Validation, now in the agent file, so the round 4 regression (checks moved out of Self-Validation) cannot recur.
 - `check-layers.test.js` adds a check that no skill carries a contract section and every contract section of the original agent is in its source verbatim (114 checks pass). `npm run validate` on the branch: 1454 pass. Flat builds swapped into `agents/`: 1450 pass, the same 4 pinned fails.
 
+---
+
+# Round 8: everything in one folder
+
+The 37 layer skills moved from the repo's `skills/` into `skills/` here, so nothing outside this folder changes and nothing new ships with the npm package. The folder is split into `agents/`, `skills/`, `tools/` and `evals/` (see README). File paths in rounds 1 to 7 above refer to the old flat layout. Regenerating from scratch reproduces the moved files byte for byte; checks unchanged (114 pass, flat builds differ in 60 lines).
+

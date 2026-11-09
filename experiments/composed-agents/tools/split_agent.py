@@ -1,4 +1,6 @@
 """Split one fleet agent file into its three layers, mechanically.
+Paths below are relative to experiments/composed-agents; agents are read from the
+repo's agents/ at git HEAD.
 
   python3 -I split_agent.py <agent-slug> <neurotype> <module-skill|-> <domain-name|-> ["<agent description>"]
 
@@ -11,7 +13,7 @@ identity -> skills/ndv-neurotype-<x>/SKILL.md  intro (without "You are **Name**.
             only recorded in metadata; its text is not copied.
 domain   -> skills/ndv-domain-<x>/SKILL.md     what the agent knows: protocols, checklists,
             laws, smells
-agent    -> <slug>.src.md (this folder)         frontmatter, skills list, section
+agent    -> agents/<slug>.src.md                frontmatter, skills list, section
             layout, the name ("You are **Name**."), one @skill line per layer, and
             how the agent works with the fleet, verbatim: Out of Scope, Handoffs,
             Brief Contract, Self-Validation, Output Format, Parallelism, Pipeline
@@ -30,7 +32,8 @@ import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ROOT = os.path.normpath(os.path.join(HERE, '..', '..'))
+BASE = os.path.normpath(os.path.join(HERE, '..'))   # experiments/composed-agents
+ROOT = os.path.normpath(os.path.join(BASE, '..', '..'))
 slug, neuro, module, dname = sys.argv[1:5]
 adesc = sys.argv[5] if len(sys.argv) > 5 else ''
 ident = 'ndv-neurotype-' + neuro
@@ -56,7 +59,7 @@ def head(name):
     return subprocess.run(['git', '-C', ROOT, 'show', f'HEAD:{name}'], capture_output=True, text=True, check=True).stdout
 
 
-ROLE_OF = {agent: role for role, agent in json.load(open(os.path.join(HERE, 'roles.json'))).items()}
+ROLE_OF = {agent: role for role, agent in json.load(open(os.path.join(BASE, 'roles.json'))).items()}
 CHARS = {}  # character name -> agent slug, across the fleet
 for f in sorted(glob.glob(os.path.join(ROOT, 'agents', 'ndv-*.md'))):
     m = re.search(r'You are \*\*(\w+)\*\*', open(f).read())
@@ -148,8 +151,8 @@ agent = ('---\n' + fm + '\nskills:\n' + ''.join(f'  - {l}\n' for l in layers) + 
          + nl.join(contract_secs) + ('\n' if contract_secs else ''))
 
 for name, text in ((ident, persona),) + (((domain, dom),) if domain else ()):
-    os.makedirs(os.path.join(ROOT, 'skills', name), exist_ok=True)
-    open(os.path.join(ROOT, 'skills', name, 'SKILL.md'), 'w').write(text)
-open(os.path.join(HERE, f'{slug}.src.md'), 'w').write(agent)
+    os.makedirs(os.path.join(BASE, 'skills', name), exist_ok=True)
+    open(os.path.join(BASE, 'skills', name, 'SKILL.md'), 'w').write(text)
+open(os.path.join(BASE, 'agents', f'{slug}.src.md'), 'w').write(agent)
 used = sorted(set(re.findall(r'\{\{([a-z-]+)\}\}', persona + (dom if domain else ''))) - {'name'})
 print(f'{slug}: {character}, role {own_role}; refers to {len(used)} roles')

@@ -19,11 +19,12 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
 import { tmpdir } from 'node:os'
-import { scoreOutput } from '../../scripts/behavior-checks.mjs'
-import { routingContext } from '../../scripts/routing-context.mjs'
+import { scoreOutput } from '../../../scripts/behavior-checks.mjs'
+import { routingContext } from '../../../scripts/routing-context.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const ROOT = join(HERE, '..', '..')
+const BASE = join(HERE, '..')   // experiments/composed-agents
+const ROOT = join(BASE, '..', '..')
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d }
 const RUNS = +arg('runs', '3')
 const ARMS = arg('arms', 'original,inline,runtime,selfload,control').split(',')
@@ -50,10 +51,10 @@ const control = [
 ].join('\n\n')
 
 const SYSTEM = {
-  original: strip(readFileSync(join(HERE, '..', '..', 'agents', 'ndv-diagnose.md'), 'utf8')),
-  inline: strip(readFileSync(join(HERE, 'build', 'inline', 'ndv-diagnose.md'), 'utf8')),
-  runtime: strip(readFileSync(join(HERE, 'build', 'runtime', 'ndv-diagnose.md'), 'utf8')),
-  nopersona: strip(readFileSync(join(HERE, 'build', 'runtime', 'ndv-diagnose.nopersona.md'), 'utf8')),
+  original: strip(readFileSync(join(ROOT, 'agents', 'ndv-diagnose.md'), 'utf8')),
+  inline: strip(readFileSync(join(BASE, 'build', 'inline', 'ndv-diagnose.md'), 'utf8')),
+  runtime: strip(readFileSync(join(BASE, 'build', 'runtime', 'ndv-diagnose.md'), 'utf8')),
+  nopersona: strip(readFileSync(join(BASE, 'build', 'runtime', 'ndv-diagnose.nopersona.md'), 'utf8')),
   selfload: 'You are a senior software engineer. Do the task in the user message.',
   control,
 }
@@ -62,7 +63,7 @@ const PREAMBLE = 'Everything you need about the code is inline below; you cannot
 
 function run(arm, c) {
   const dir = mkdtempSync(join(tmpdir(), 'ndv-comp-'))
-  if (WITH_SKILLS.has(arm)) for (const s of SKILLS) cpSync(join(ROOT, 'skills', s), join(dir, '.claude', 'skills', s), { recursive: true })
+  if (WITH_SKILLS.has(arm)) for (const s of SKILLS) cpSync(join(BASE, 'skills', s), join(dir, '.claude', 'skills', s), { recursive: true })
   const args = ['-p', '--model', MODEL, '--tools', WITH_SKILLS.has(arm) ? 'Skill' : '', '--strict-mcp-config',
     '--no-session-persistence', '--output-format', 'stream-json', '--verbose', '--system-prompt', SYSTEM[arm]]
   return new Promise(resolve => {

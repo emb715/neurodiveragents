@@ -8,11 +8,12 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
 import { tmpdir } from 'node:os'
-import { scoreOutput } from '../../scripts/behavior-checks.mjs'
-import { routingContext } from '../../scripts/routing-context.mjs'
+import { scoreOutput } from '../../../scripts/behavior-checks.mjs'
+import { routingContext } from '../../../scripts/routing-context.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const ROOT = join(HERE, '..', '..')
+const BASE = join(HERE, '..')   // experiments/composed-agents
+const ROOT = join(BASE, '..', '..')
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d }
 const RUNS = +arg('runs', '3'), CONC = +arg('concurrency', '8')
 const MODEL = process.env.NDV_EVAL_MODEL || 'claude-sonnet-5'
@@ -29,8 +30,8 @@ const control = slug => {
     'If a brief from ndv-flow is missing something you need in order to do the job correctly, do not start: reply with', 'BRIEF_REJECTED: <field> — <what is needed>'].join('\n\n')
 }
 const ARMS = {
-  full: s => strip(readFileSync(join(HERE, 'build', 'inline', s + '.md'), 'utf8')),
-  noid: s => strip(readFileSync(join(HERE, 'build', 'noid', s + '.md'), 'utf8')),
+  full: s => strip(readFileSync(join(BASE, 'build', 'inline', s + '.md'), 'utf8')),
+  noid: s => strip(readFileSync(join(BASE, 'build', 'noid', s + '.md'), 'utf8')),
   control,
 }
 const PREAMBLE = 'Everything you need about the code is inline below; you cannot read files or run commands. Produce your normal output for this task.\n\n'

@@ -20,9 +20,9 @@ import { fileURLToPath } from 'node:url'
 
 const [src, mode = '--inline'] = process.argv.slice(2)
 const i = process.argv.indexOf('--skills-dir')
-const SKILLS = i > 0 ? process.argv[i + 1] : join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'skills')
+const SKILLS = i > 0 ? process.argv[i + 1] : join(dirname(fileURLToPath(import.meta.url)), '..', 'skills')
 const r = process.argv.indexOf('--roles')
-const ROLES = JSON.parse(readFileSync(r > 0 ? process.argv[r + 1] : join(dirname(fileURLToPath(import.meta.url)), 'roles.json'), 'utf8'))
+const ROLES = JSON.parse(readFileSync(r > 0 ? process.argv[r + 1] : join(dirname(fileURLToPath(import.meta.url)), '..', 'roles.json'), 'utf8'))
 const ROLE = /\{\{([a-z-]+)\}\}/g
 const agentFor = role => { if (!ROLES[role]) throw new Error(`no agent for role {{${role}}} in roles file`); return ROLES[role] }
 

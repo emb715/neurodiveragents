@@ -10,10 +10,11 @@ import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
 import { tmpdir } from 'node:os'
-import { scoreOutput } from '../../scripts/behavior-checks.mjs'
+import { scoreOutput } from '../../../scripts/behavior-checks.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
-const ROOT = join(HERE, '..', '..')
+const BASE = join(HERE, '..')   // experiments/composed-agents
+const ROOT = join(BASE, '..', '..')
 const arg = (k, d) => { const i = process.argv.indexOf('--' + k); return i > 0 ? process.argv[i + 1] : d }
 const RUNS = +arg('runs', '3'), CONC = +arg('concurrency', '8')
 const MODEL = process.env.NDV_EVAL_MODEL || 'claude-sonnet-5'
@@ -22,8 +23,8 @@ const strip = t => t.replace(/^---\n[\s\S]*?\n---\n/, '').trim()
 const load = f => JSON.parse(readFileSync(join(HERE, f), 'utf8')).cases
 
 const SKILLS = ['ndv-skeptical', 'ndv-domain-debugging', 'ndv-total-perception', 'ndv-domain-code-review']
-const CORE = strip(readFileSync(join(HERE, 'ndv-inspect.src.md'), 'utf8'))
-const orig = slug => strip(readFileSync(join(HERE, "..", "..", "agents", `${slug}.md`), 'utf8'))
+const CORE = strip(readFileSync(join(BASE, 'agents', 'ndv-inspect.src.md'), 'utf8'))
+const orig = slug => strip(readFileSync(join(ROOT, "agents", `${slug}.md`), 'utf8'))
 
 const diagnose = [...load('cases.json'), ...load('cases-gap.json')]
 const review = load('cases-review.json')
@@ -42,7 +43,7 @@ const PREAMBLE = 'Everything you need about the code is inline below; you cannot
 
 function run(arm, c) {
   const dir = mkdtempSync(join(tmpdir(), 'ndv-r2-'))
-  if (arm.load) for (const s of SKILLS) cpSync(join(ROOT, 'skills', s), join(dir, '.claude', 'skills', s), { recursive: true })
+  if (arm.load) for (const s of SKILLS) cpSync(join(BASE, 'skills', s), join(dir, '.claude', 'skills', s), { recursive: true })
   const prompt = PREAMBLE + (arm.load ? `Load: ${arm.load.join(', ')}\n\n` : '') + c.input
   const args = ['-p', '--model', MODEL, '--tools', arm.load ? 'Skill' : '', '--strict-mcp-config',
     '--no-session-persistence', '--output-format', 'stream-json', '--verbose', '--system-prompt', arm.system]
