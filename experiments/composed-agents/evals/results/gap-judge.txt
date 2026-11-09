@@ -1,0 +1,6 @@
+
+arm        fidelity  scope   (mean of 0-2, n)
+original   2.00      2.00    12
+runtime    1.92      1.83    12
+nopersona  1.83      2.00    12
+control    1.75      1.92    12

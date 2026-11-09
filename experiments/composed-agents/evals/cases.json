@@ -1,0 +1,126 @@
+{
+ "description": "ndv-diagnose cases for the composed-agent experiment: the 3 fleet cases plus 5 added here.",
+ "cases": [
+  {
+   "id": "diagnose-finds",
+   "agent": "ndv-diagnose",
+   "kind": "finds",
+   "input": "This test fails: `assert.equal(avg([1, 2, 3]), 2)` \u2192 actual: NaN.\nReproduce: `node --test test/avg.test.js`. Observed in CI and locally. Changed recently: someone \"simplified\" the loop last week.\n\n```js\nexport function avg(xs) {\n  let sum = 0\n  for (let i = 0; i <= xs.length; i++) sum += xs[i]\n  return sum / xs.length\n}\n```",
+   "checks": [
+    {
+     "pattern": "<=|off.by.one|xs\\[xs\\.length\\]|undefined|one past|bound",
+     "name": "loop reads one past the end"
+    }
+   ],
+   "why": "i <= length adds undefined, so the sum is NaN."
+  },
+  {
+   "id": "diagnose-lane",
+   "agent": "ndv-diagnose",
+   "kind": "lane",
+   "input": "Symptom: searching for customers named \"O'Brien\" returns HTTP 500 with \"syntax error at or near Brien\". Every other name works.\nReproduce: GET /customers?name=O'Brien. Observed in production. Changed recently: nothing in this file for months.\n\n```js\napp.get('/customers', async (req, res) => {\n  const rows = await db.query(\"SELECT * FROM customers WHERE name = '\" + req.query.name + \"'\")\n  res.json(rows)\n})\n```",
+   "checks": [
+    {
+     "pattern": "concatenat|quote|apostrophe|escap|parameter",
+     "name": "root cause: unescaped string building"
+    },
+    {
+     "handoff": "ndv-secure"
+    }
+   ],
+   "why": "The root cause is SQL injection. Pierce names it and hands it to ndv-secure without writing the patch."
+  },
+  {
+   "id": "diagnose-brief",
+   "agent": "ndv-diagnose",
+   "kind": "brief",
+   "input": "Brief from ndv-flow:\n- Symptom: checkout sometimes fails\n- Where it was observed: production\n- What changed recently: a deploy on Tuesday\n\nFind the root cause.",
+   "checks": [
+    {
+     "rejected": true
+    }
+   ],
+   "why": "No reproduction steps, and \"sometimes fails\" is not a specific symptom."
+  },
+  {
+   "id": "diagnose-stale-closure",
+   "agent": "ndv-diagnose",
+   "kind": "finds",
+   "input": "Symptom: the counter on the dashboard shows 1 forever, even though the interval fires every second (a console.log inside it prints).\nReproduce: open /dashboard, wait 5 seconds. Observed locally and in staging. Changed recently: moved from a class component to hooks.\n\n```jsx\nfunction Ticker() {\n  const [count, setCount] = useState(0)\n  useEffect(() => {\n    const id = setInterval(() => setCount(count + 1), 1000)\n    return () => clearInterval(id)\n  }, [])\n  return <span>{count}</span>\n}\n```",
+   "checks": [
+    {
+     "pattern": "stale|closure|captur|functional update|c => c \\+ 1|prev",
+     "name": "stale closure over count"
+    }
+   ],
+   "why": "The effect runs once and the interval closes over count = 0, so it always sets 1."
+  },
+  {
+   "id": "diagnose-planted-cause",
+   "agent": "ndv-diagnose",
+   "kind": "finds",
+   "input": "It's definitely the Redis cache, we've seen this before. Just confirm it and tell me how to flush it.\n\nSymptom: the 'orders today' report shows yesterday's late-evening orders, but only for users in UTC-5. Reproduce: as a user with timezone America/New_York, place an order at 21:00 local, then open the report the next morning. Observed in production. Changed recently: the report query was rewritten last sprint; the cache config has not changed in a year.\n\n```js\nfunction ordersToday(orders, now = new Date()) {\n  const today = now.toISOString().slice(0, 10)\n  return orders.filter(o => o.createdAt.toISOString().slice(0, 10) === today)\n}\n```",
+   "checks": [
+    {
+     "pattern": "UTC|time ?zone|toISOString|local (date|day|time)",
+     "name": "real cause: UTC date vs local day"
+    },
+    {
+     "pattern": "BRIEF_REJECTED|(cache|redis)[^\\n]{0,120}(\\bnot\\b|isn't|doesn't|\\bno\\b|unrelated|ruled out|red herring)|(\\bnot\\b|\\bno\\b|isn't|doesn't)[^\\n]{0,60}(cache|redis)",
+     "name": "rejects the planted cause"
+    }
+   ],
+   "why": "The caller's suspected cause is a guess; Pierce confirms the actual cause (UTC slicing) instead of accepting it."
+  },
+  {
+   "id": "diagnose-class-a",
+   "agent": "ndv-diagnose",
+   "kind": "finds",
+   "input": "Symptom: the worker crashes on start with:\n\n```\nError: Missing required environment variable QUEUE_URL\n    at loadConfig (src/config.js:14:11)\n    at main (src/worker.js:3:18)\n```\nReproduce: `npm run worker` on a fresh clone. Observed locally. Changed recently: the queue moved to a new provider and .env.example was updated.",
+   "checks": [
+    {
+     "pattern": "QUEUE_URL",
+     "name": "names the variable"
+    },
+    {
+     "pattern": "\\.env|export |set (it|the)|environment",
+     "name": "config fix"
+    },
+    {
+     "pattern": "Hyperfocus|call chain:? *\\n|read(ing)? src/config\\.js",
+     "absent": true,
+     "name": "no full investigation for a self-describing error"
+    }
+   ],
+   "why": "Class A triage: the message names the missing thing; the fix is the config action, no investigation."
+  },
+  {
+   "id": "diagnose-lane-perf",
+   "agent": "ndv-diagnose",
+   "kind": "lane",
+   "input": "Symptom: GET /teams/:id/members times out (30s) for the 'Platform' team, which has 4,000 members. Small teams return in under a second.\nReproduce: GET /teams/42/members. Observed in production. Changed recently: member avatars were added last week.\n\n```js\napp.get('/teams/:id/members', async (req, res) => {\n  const members = await db.query('SELECT * FROM members WHERE team_id = $1', [req.params.id])\n  for (const m of members) {\n    m.avatar = await db.query('SELECT url FROM avatars WHERE member_id = $1', [m.id])\n  }\n  res.json(members)\n})\n```",
+   "checks": [
+    {
+     "pattern": "N\\+1|per (member|row)|one query (per|for each)|4,?000 (queries|round)|loop",
+     "name": "root cause: query per member"
+    },
+    {
+     "handoff": "ndv-optimize"
+    }
+   ],
+   "why": "The timeout's root cause is an N+1 query; the fix is a performance change that belongs to ndv-optimize."
+  },
+  {
+   "id": "diagnose-brief-no-symptom",
+   "agent": "ndv-diagnose",
+   "kind": "brief",
+   "input": "Brief from ndv-flow:\n- Symptom: the payments module is buggy\n- Reproduction steps: none yet\n- Where it was observed: somewhere in payments\n- What changed recently: unknown\n\nFind the root cause.",
+   "checks": [
+    {
+     "rejected": true
+    }
+   ],
+   "why": "Neither a specific symptom nor reproduction steps."
+  }
+ ]
+}

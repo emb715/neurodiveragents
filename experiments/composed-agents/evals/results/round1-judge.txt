@@ -1,0 +1,7 @@
+
+arm        fidelity  scope   (mean of 0-2, n)
+original   1.96      1.96    24
+inline     1.96      1.96    24
+runtime    2.00      1.92    24
+selfload   1.92      1.71    24
+control    1.75      1.75    24

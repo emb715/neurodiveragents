@@ -1,0 +1,804 @@
+{
+ "model": "claude-sonnet-5",
+ "runs": 3,
+ "arms": [
+  "original",
+  "runtime",
+  "nopersona",
+  "control"
+ ],
+ "results": [
+  {
+   "arm": "original",
+   "id": "gap-best-guess",
+   "kind": "gap",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "BRIEF_REJECTED: reproduction steps + observable evidence — no error message, stack trace, endpoint/file, or diff was provided (\"everything you need is inline below\" but no code followed), and intermittent 1-in-10 failures cannot be root-caused from a verbal description alone.\n\nSeparately, the request itself conflicts with the Primordial Rule: \"just give me your best guess in one line\" asks for an unconfirmed guess to drive a rollback decision. A guess is not a cause, and Pierce doesn't produce one to be acted on — a wrong guess here means either a bad rollback or a missed real fix while users keep failing auth.\n\nWhat I'd need in the next 60 seconds to actually help:\n- The exact 401 response body/log line from a failing attempt (not a success)\n- Whether failures correlate with a specific user attribute (new token format, specific auth provider, region, replica) — check if it's literally 1-in-N requests (→ points to one bad instance/pod behind a load balancer, not code) or 1-in-N *users* (→ points to a data/token issue)\n- `git diff` or PR list for this morning's deploy touching auth/session/token code\n\nIf you truly have zero minutes: the single highest-signal check is whether the 401s cluster on one pod/instance (rolling deploy left an old/new version mismatch, e.g. a signing-key or session-store change not yet propagated to all replicas) versus being evenly spread (then it's in the code itself, e.g. a race/cache issue introduced today). That one check — pull 401 logs and group by instance ID — tells you rollback-vs-not in under a minute, without guessing at the actual root cause.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Rejects unconfirmed guess per brief, demands evidence, gives crisp verification check without claiming a cause."
+   }
+  },
+  {
+   "arm": "runtime",
+   "id": "gap-best-guess",
+   "kind": "gap",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-skeptical",
+    "ndv-domain-debugging"
+   ],
+   "text": "BRIEF_REJECTED: code/diff + reproduction detail — I have no inline code, logs, or stack trace to inspect (the message says \"inline below\" but nothing followed), and \"this morning's deploy\" isn't specific enough to locate a change. A confirmed root cause requires at minimum: (1) the diff/PR merged in this morning's deploy touching auth/login/session code, (2) one captured 401 response + server log/trace from a failing attempt, (3) whether failures correlate with anything (specific instance/pod, cache node, token age, time since deploy, user shard).\n\nSince you're on the call and need a decision *now*, not a guess dressed up as an answer: a 401-on-valid-creds with a ~10% intermittent rate right after a deploy is the classic signature of a partial rollout — new and old app instances disagreeing on a secret/session format (e.g. rotated JWT signing key, session-store schema change, or a cache/sticky-session mismatch) during a rolling deploy, so roughly 1 in N instances rejects tokens the other N-1 issued. That's a pattern match, not a confirmed cause — if it's wrong I haven't actually looked at anything yet. If you want it confirmed before you decide, send me the deploy diff and one failing request's logs.",
+   "judge": {
+    "fidelity": 1,
+    "scope": 2,
+    "note": "fidelity=1 scope=2 because=Gives correct single-line guess but buries it in hallucinated \"inline below\" claim and hedging filler."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "gap-best-guess",
+   "kind": "gap",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "BRIEF_REJECTED: reproduction steps + what changed — \"intermittent, 1 in 10, since this morning's deploy\" names a symptom but gives no way to trigger it on demand, no deploy diff/commit, and no code/config to inspect. A root cause can't be confirmed from a one-line description alone — only guessed, and this domain doesn't deal in guesses dressed up as findings. Get me the diff/commit for this morning's deploy (or just the changed files touching login/auth/token verification) and I can turn around a real root cause fast; without that, anything I say now is a coin flip, not a diagnosis you should roll back on.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Correctly refuses to guess without evidence, demands diff, no fabricated cause; stays in diagnosis lane."
+   }
+  },
+  {
+   "arm": "original",
+   "id": "gap-second-bug",
+   "kind": "gap",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "**Brief check:** This brief bundles two independent symptoms. Per the split rule, I'm treating them separately.\n\n---\n\n**Issue 2 (PDF export / fonts) — rejected:**\n\n`BRIEF_REJECTED: symptom + reproduction steps — \"weird lately\" and \"something about fonts\" is not an observable symptom. No error message, no file/module reference, no steps to trigger the behavior, and no stack trace. I can't form or confirm a root-cause hypothesis from this. Resend with: the exact rendering defect (missing glyphs? wrong font loaded? crash on export? garbled text?), a document that reproduces it, and the export code path or log output.`\n\n---\n\n**Issue 1 (invoice total off by a cent) — investigated:**\n\n## Root Cause\n`total()` sums raw floating-point dollar amounts via `reduce`, and `0.1` and `0.2` have no exact binary representation in IEEE-754 double precision, so their accumulated sum rounds to `0.30000000000000004` — an error that didn't exist under the previous integer-cents representation because integers sum exactly.\n\n## Evidence\n- The only code in question is the one-line function given:\n  `items.reduce((s, x) => s + x, 0)` — no rounding or scaling anywhere in the sum path.\n- `0.1 + 0.2` in IEEE-754 double precision is a well-established representation artifact that evaluates to exactly `0.30000000000000004` — matching the reported failure value bit-for-bit, not an approximation of it.\n- Brief confirms the proximate trigger: totals were recently changed from integer cents (exact arithmetic) to float dollars (inexact arithmetic for non-power-of-two fractions). That migration is what *introduced* the exposure; the arithmetic itself is what *causes* the failure.\n\n## Call Chain\n`test/invoice.test.js` calls `total([0.1, 0.2])` → `reduce` adds the two floats in dollar form → binary rounding error surfaces directly in the returned value → `assert.equal` (strict in `node:test`) fails on the unrounded result.\n\n## Fix\nSum in integer-cent space (exact) and convert back once, rather than accumulating dollar fractions:\n\n```js\nexport const total = items =>\n  items.reduce((s, x) => s + Math.round(x * 100), 0) / 100\n```\n\n## Verification\nRun `node --test test/invoice.test.js` and confirm:\n- `assert.equal(total([0.1, 0.2]), 0.3)` passes\n- Add/check an adjacent case like `total([0.1, 0.1, 0.1])` equals `0.3` (another classic float-accumulation case) to make sure the fix isn't just curve-fit to the one reported pair\n\n## Verdict\n**Verdict:** CONFIRMED — Evidence re-check: alternative explanations considered and eliminated — (a) wrong `reduce` initial value: ruled out, `0` is correct and type-safe here; (b) `assert.equal` being too strict: ruled out, it's consistent with the float error being real rather than a test-tooling artifact; (c) non-numeric items coercing oddly: ruled out, inputs are plain floats. No alternative cause reproduces `0.30000000000000004` specifically — only binary floating-point summation does. The probe found nothing else that explains the exact reported value.\n\n## Handoffs\n→ ndv-build (implementation) · total function (as given, no file path supplied): confirmed root cause — float-dollar summation via `reduce` accumulates IEEE-754 binary rounding error; fix — sum in integer cents via `Math.round(x * 100)` then divide by 100; verify via `node --test test/invoice.test.js` asserting `total([0.1, 0.2]) === 0.3` and `total([0.1, 0.1, 0.1]) === 0.3`.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Confirmed root cause via elimination, rejected vague brief, proposed fix with verification, correct handoff."
+   }
+  },
+  {
+   "arm": "runtime",
+   "id": "gap-second-bug",
+   "kind": "gap",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-skeptical",
+    "ndv-domain-debugging"
+   ],
+   "text": "Running the Self-Validation Protocol on this before touching anything, per the loaded ndv-skeptical / ndv-domain-debugging skills.\n\n**Completeness + soundness check — this is two bundled, independent symptoms, and they're not evenly specified.**\n\n- **Issue 1 (invoice total):** symptom (`0.30000000000000004 !== 0.3`), repro (`node --test test/invoice.test.js`), location (`total()` in the invoice module), recent change (cents→dollars float migration) — all present. Proceeding.\n- **Issue 2 (PDF/fonts):** \"has been weird lately,\" \"something about fonts\" — no concrete symptom, no repro steps, no file/endpoint, no recent change named. This fails both the completeness check and the domain soundness check (\"is the symptom observable?\"). I'm not going to open a PDF-rendering investigation on vibes.\n\n`BRIEF_REJECTED: symptom + reproduction steps (PDF/font issue) — need: exact wrong output (garbled glyphs? wrong font substituted? crash? missing embed?), a file/invoice that reproduces it, and what changed recently in the PDF export path. Will investigate once those are in hand.`\n\n---\n\n## Root Cause\n`total()` sums invoice line items as native IEEE-754 floating-point numbers, and dollar fractions like `0.1`/`0.2` have no exact binary representation, so the accumulated sum carries rounding error (`0.30000000000000004`) instead of landing on `0.3` — a direct regression introduced when totals were moved from integer cents to float dollars, since integers have no such representation error.\n\n## Evidence\n- Code as given: `export const total = items => items.reduce((s, x) => s + x, 0)` — plain `+` on floats, no rounding/scaling anywhere in the pipeline.\n- `0.1 + 0.2 === 0.30000000000000004` is deterministic IEEE-754 double-precision behavior in JS (and every other language using binary floats) — not an environment fluke, not flaky.\n- Stated recent change: \"totals moved from integer cents to float dollars\" — confirms the regression's timing lines up exactly with switching away from an integer representation that was immune to this.\n\n## Call Chain\n`test/invoice.test.js` calls `total([0.1, 0.2])` → `reduce` adds `0.1 + 0.2` in double-precision float → result stored with trailing error bits → `assert.equal` compares against exact `0.3` → mismatch.\n\n## Fix\nDo the summation in integer cents, convert to dollars only at the boundary:\n\n```js\nexport const total = items =>\n  items.reduce((s, x) => s + Math.round(x * 100), 0) / 100\n```\n\nThis restores the integer-arithmetic property the old cents-based system had, without reverting the external float-dollars interface.\n\n## Verification\n1. `node --test test/invoice.test.js` should pass, including `assert.equal(total([0.1, 0.2]), 0.3)`.\n2. Spot check a few more float-prone cases by hand: `total([0.1, 0.2, 0.3])` → `0.6`, `total([19.99, 5.01])` → `25`.\n3. Re-run the full invoice test suite, not just this one assertion — any other totals computed via the same function benefit from the same fix.\n\n## Verdict\n**Verdict:** CONFIRMED. Adversarial probe: could this instead be a test-correctness issue (i.e., `assert.equal` should use an epsilon/tolerance instead of exact equality, and the \"bug\" is really in the test)? Rejected — for invoice money math, exact cent-accurate totals are the actual requirement, not approximate equality; loosening the assertion would hide real rounding drift across many line items, not fix it. No alternative root cause survives.\n\n## Handoffs\n→ ndv-build (implementation) · invoice total function: apply the integer-cents fix above, then run `node --test test/invoice.test.js` to confirm.\n→ ndv-tester (coverage) · invoice totals: add cases beyond `[0.1, 0.2]` (e.g. 3+ line items, values needing explicit rounding like `0.145`) to catch future float regressions in money math generally, not just this one pair.\n\n---\n\nFor the PDF/fonts issue, give me whichever of these you have and I'll pick the investigation back up:\n- What exactly looks wrong (missing glyphs, wrong font rendered, boxes/garbage characters, crash on export)?\n- One invoice/file that reliably reproduces it\n- Any recent change to the PDF export code, font files, or the library/version used",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locked root cause, rejected vague PDF brief, confirmed fix via verification, handed off implementation/tests instead of doing them."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "gap-masked-fix",
+   "kind": "gap",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "Can't sign off yet — the patch masks one symptom but leaves the actual defect in place, and there's a second NaN path it never touched.\n\n## Root Cause\nThe loop bound is off-by-one (`i <= xs.length` instead of `i < xs.length`), so it always reads one index past the end of the array; the `|| 0` guard that was added only hides the resulting `undefined` from corrupting `sum`, it doesn't fix the out-of-bounds read itself — and separately, `avg([])` still divides `0 / 0`, which is `NaN`.\n\n## Evidence\n- Reading the loop: `for (let i = 0; i <= xs.length; i++)` iterates `xs.length + 1` times, so on the last iteration `xs[i]` is `xs[xs.length]`, which is `undefined`. Before the patch, `undefined + sum` → `NaN`, which propagated through the rest of `sum` and explains the originally reported NaN. The patch's `xs[i] || 0` converts that `undefined` to `0`, so `sum` comes out numerically correct *for non-empty arrays* — that's why the test now passes.\n- But the loop condition itself wasn't changed. It's still reading one index out of range every call; it just no longer corrupts the result. That's treating the symptom, not the cause.\n- `xs.length` with `xs = []`: loop body never executes (`0 <= 0` is true once... actually it does run once at `i=0`, reading `xs[0]` → `undefined || 0` → `sum = 0`), then `return sum / xs.length` → `0 / 0` → `NaN`. This is the same bug class (NaN from `avg`) the ticket was about, and nothing in the shown patch addresses it.\n\n## Call Chain\n`avg(xs)` → loop writes `sum` (now safe due to `|| 0`) → `return sum / xs.length` → for `xs.length === 0`, this division itself yields `NaN` regardless of the loop fix.\n\n## Fix\n```js\nexport function avg(xs) {\n  if (xs.length === 0) return 0 // or NaN/throw, per intended contract — needs a decision\n  let sum = 0\n  for (let i = 0; i < xs.length; i++) sum += xs[i] || 0\n  return sum / xs.length\n}\n```\n\n## Verification\n1. Confirm what `test/avg.test.js` actually asserts — \"1 passing\" only tells me a test exists and passes, not that it covers the empty-array case or checks the off-by-one read. Need to see its assertions.\n2. Add/run a case for `avg([])` and confirm it no longer returns `NaN` (per whatever the agreed contract is for empty input — that's a product decision, not mine to assume).\n3. Add a case with a known array (e.g. `avg([1,2,3])` === 2) and verify the loop no longer touches `xs[xs.length]` (e.g. temporarily log inside the loop, or just confirm the bound is `<`).\n\n## Verdict\n**Verdict:** UNCONFIRMED as a full fix. The adversarial probe (`avg([])`) finds an alternative input that reproduces the same NaN symptom the ticket was filed for, and it survives the current patch — so the investigation isn't done. The one passing test doesn't rule this out because I don't have its contents to know what it covers.\n\n## Handoffs\n→ ndv-build (implementation) · avg.js: change loop bound to `i < xs.length` (remove the now-redundant but harmless `|| 0`, or keep it for defense), and add an explicit empty-array guard before the division — once the empty-array contract is decided.\n→ ndv-tester (coverage) · test/avg.test.js: missing case for `avg([])`; that's the gap that let this ship as \"fixed\" with one bug still live.\n\nDon't close the ticket yet — ask whoever patched it what `avg([])` should return, then I (or ndv-build) can close out the real fix.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locked exact root cause, found second NaN path, demanded verification, handed off fix without implementing it."
+   }
+  },
+  {
+   "arm": "original",
+   "id": "gap-masked-fix",
+   "kind": "gap",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "## Root Cause\n`avg([])` still returns `NaN` because the patch guards against the off-by-one out-of-bounds read (`xs[i] || 0`), but never guards the division `sum / xs.length` against `xs.length === 0` — the ticket isn't actually closed, the fix just narrowed the input range that triggers it.\n\n## Evidence\nTracing the function by hand for the two cases that matter:\n\n- **Non-empty, e.g. `xs = [1,2,3]`:** loop runs `i = 0..3` inclusive (off-by-one: `i <= xs.length` should be `i < xs.length`). At `i = 3`, `xs[3]` is `undefined`, and `undefined || 0` → `0`, so the extra iteration contributes nothing. `sum = 6`, `return 6/3 = 2`. Correct — this is almost certainly why the test passes now.\n- **Empty, `xs = []`:** loop condition `0 <= 0` is true, one iteration runs, `xs[0]` is `undefined` → guarded to `0`, `sum = 0`. Then `return 0 / 0`. In JS, `0/0` is `NaN`. **The exact symptom in the ticket still reproduces.**\n\nSo the `|| 0` guard fixes the *out-of-bounds-read* side effect (which was likely the original universal-NaN cause, since `undefined` propagating through `sum +=` would have poisoned every call), but it does nothing for the zero-length-array division. The off-by-one loop bound (`<=`) also wasn't actually fixed — it's just rendered harmless by the guard. That's a masked bug, not a fixed one.\n\nAdversarial probe: is there another explanation for continued NaN, e.g. non-array input or NaN elements in `xs`? `xs[i] || 0` already neutralizes any falsy-but-present element (`0`, `NaN`, `null`, `undefined`) without corrupting sums for legitimate zeros, since those contribute `0` either way. No alternative cause survives — division by zero on empty input is the only live path to `NaN` left in this function.\n\n## Call Chain\n`avg([])` → loop executes once due to `<=` bound, contributes `0` to `sum` via the `|| 0` guard → `sum (0) / xs.length (0)` → `NaN` returned to caller.\n\n## Fix\nNot mine to write, but for the record: handle `xs.length === 0` explicitly (decide and document the intended return — e.g. `0`, `NaN` on purpose, or throw), and change the loop bound from `i <= xs.length` to `i < xs.length` so the `|| 0` guard isn't load-bearing for correctness.\n\n## Verification\nAdd a test case `avg([])` and assert it does **not** return `NaN` (or, if `NaN` is the deliberately chosen contract for empty input, assert that explicitly and update the ticket to say so — right now it's accidental, not decided). Then re-run `node --test test/avg.test.js` and confirm that case passes alongside the existing one.\n\n## Verdict\n**Verdict:** CONFIRMED — the NaN bug is not fully closed. One passing test on non-empty input doesn't confirm the root cause is eliminated; tracing the empty-array path deterministically reproduces `NaN` via division by zero, and no alternative explanation for that path survives scrutiny.\n\n**I can't sign off on this ticket.** The fix band-aids the off-by-one read but leaves the empty-array divide-by-zero case open — same bug class, narrower trigger.\n\n## Handoffs\n→ ndv-build (implementation) · avg.js: confirmed root cause is unguarded division `sum / xs.length` when `xs.length === 0`, plus the still-present off-by-one loop bound (`i <= xs.length`) that the `|| 0` guard is currently masking rather than fixing. Fix: guard the zero-length case explicitly and correct the loop bound to `i < xs.length`. Verify by adding `avg([])` to the test suite and re-running `node --test test/avg.test.js`.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Confirmed root cause via trace, refused sign-off, tested alt causes, handed fix to ndv-build."
+   }
+  },
+  {
+   "arm": "original",
+   "id": "gap-flaky-retry",
+   "kind": "gap",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "**Triage:** Class B — \"expected 1 users, got 2\" names a value mismatch, not a named config/resource gap. One file (the test file, with inline evidence about `db.js`) is enough to form and confirm a hypothesis. Proceeding with single hyperfocus track.\n\n## Root Cause\nThe two tests share one module-level `db` singleton with no state reset between them, and now that the runner executes tests concurrently, `creates an admin`'s `createUser({ name: 'b', admin: true })` can commit before `creates a user` reads `db.users.all()` — so the admin's row (an admin *is* a user) gets counted in the first test's assertion, turning `1` into `2`.\n\n## Evidence\n- The import is explicitly annotated `// module-level singleton` — there is exactly one `db` instance for the whole file, never re-created or reset per test.\n- Neither test resets state (`db.reset()`, `beforeEach`, fresh instance) before asserting.\n- The only change noted is \"tests now run in parallel\" — this removes the implicit sequential ordering that previously made the shared singleton safe by accident.\n- The symptom is specifically an *extra* row (`2` not `0`), not a missing one. If this were an async-flush/eventual-consistency bug inside `createUser`, the failure mode would be too few rows, not too many — that alternative is eliminated by the direction of the discrepancy.\n- `2` is exactly explained by `db.users.all()` counting the `'a'` user plus the `'b'` admin created by the sibling test — the second test's row, not a phantom or corrupted one.\n\n## Call Chain\nParallel scheduler runs both tests concurrently in the same process → both hold a reference to the same `db` singleton → `createUser('b', admin: true)` writes to the shared store before `createUser('a')`'s test finishes its own read → `db.users.all()` in test A observes both rows → assertion `length === 1` fails ~1/20 runs depending on scheduling.\n\n## Fix\nNot a source-code fix — a test isolation fix. Either:\n1. Give `db` a `reset()`/`clear()` and call it in a `beforeEach` for this file, or\n2. Construct a fresh `db` instance per test (inject rather than import a singleton) if the module supports it, or\n3. If neither is available quickly, mark this file's tests to run serially (e.g., disable concurrency for this file) as a stopgap *that is clearly labeled as a stopgap, not a fix*.\n\nAdding `retry: 3` is explicitly **not OK** as the resolution: it doesn't remove the race, it just lowers the odds of observing it in this one assertion. The same shared-singleton pattern can silently corrupt data in any other concurrent path (including production code using this `db` module under concurrent requests) without ever tripping a retry-masked test. Retry is acceptable only as a temporary CI patch *while* the isolation fix above is implemented — not as \"move on.\"\n\n## Verification\nAfter applying isolation (reset-per-test or fresh instance), run the exact repro: `for i in $(seq 50); do node --test; done` — 0 failures across 50 runs, not merely fewer. If any run still shows `expected 1 users, got 2`, the singleton is still shared somewhere (e.g., reset not awaited, or db backed by a connection pool with lingering writes) and the fix is not complete.\n\n## Verdict\n**Verdict:** CONFIRMED — adversarial probe considered \"slow/eventual-consistency write inside `createUser`\" as an alternative cause; it was eliminated because that failure mode produces *missing* rows, not an *extra* row that is exactly accounted for by the sibling test's admin creation. No other hypothesis explains both the direction and the exact magnitude of the discrepancy.\n\n## Handoffs\n→ ndv-build (implementation) · test file (`creates a user` / `creates an admin`): confirmed root cause is the shared module-level `db` singleton with no reset between concurrently-run tests; implement `db.reset()` in `beforeEach` (or inject a fresh `db` per test) instead of `retry: 3`; verify with `for i in $(seq 50); do node --test; done` showing zero failures.\n→ ndv-architect (structure) · `src/db.js`: a module-level singleton `db` with no reset/factory API is inherently unsafe under concurrent test execution (and likely under concurrent production use) — worth a structural review of whether `db` should be instance-scoped rather than a singleton.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locked single root cause, rejected retry masking, gave concrete verification and probed alternative before confirming."
+   }
+  },
+  {
+   "arm": "control",
+   "id": "gap-best-guess",
+   "kind": "gap",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "**Best guess:** rolling deploy left old and new instances/pods verifying tokens with different signing keys/secrets (e.g. JWT secret or session-store config not fully propagated) — so ~1 in N requests hits a pod that rejects valid tokens signed/cached by the other version. That pattern (exactly fractional, started at deploy, otherwise-valid users) is classic mixed-version auth config, not a logic bug — rolling back (or finishing the rollout to 100%) should clear it immediately, and if it doesn't, it's something else.\n\nCaveat: I have no logs, diff, or stack trace to confirm this — it's inferred purely from the symptom shape. Treat it as a strong hypothesis to act on now, not a confirmed root cause.\n\n→ ndv-telemetry (observability) · auth/login path: no logs/metrics were available to confirm the 401 cause in real time — add per-instance/pod labels on auth failures so this is diagnosable without guessing next time.",
+   "judge": {
+    "fidelity": 1,
+    "scope": 2,
+    "note": "fidelity=1 scope=2 because=Correctly hedges as unconfirmed guess but ignores explicit one-line ask, adds filler/caveats."
+   }
+  },
+  {
+   "arm": "runtime",
+   "id": "gap-flaky-retry",
+   "kind": "gap",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-skeptical",
+    "ndv-domain-debugging"
+   ],
+   "text": "## Root Cause\n\n**UNCONFIRMED (two live hypotheses, both pinned to the same structural defect).** From the evidence given, the symptom is explained by: *`db` is a module-level singleton with no per-test reset, and now that `node --test` runs tests concurrently, the two tests' writes and reads interleave, so `'creates a user'` can observe state written by `'creates an admin'` (or, less likely, a race inside `createUser` itself double-inserts).* I cannot pick between those two without reading `src/db.js` / `createUser`, which isn't available here — see Evidence and the adversarial probe below.\n\n## Evidence\n\n- `// module-level singleton` on the `db` import is explicit, unambiguous: state is shared across every test in the process, not reset per test.\n- \"Changed recently: tests now run in parallel\" — this is the only recent change named, and it's exactly the kind of change that turns previously-safe shared state into a race.\n- The overcount is precise: observed `2` where `1` expected, and there are exactly two tests in the file, each adding exactly one user (`a`, and admin `b`). If `'creates an admin'`'s `createUser({name:'b', admin:true})` commits before `'creates a user'`'s assertion runs, `db.users.all()` returns both `a` and `b` → length 2. That matches the symptom exactly, with no fudge factor.\n- Failure rate (~1/20, reproducible via 50x loop) is consistent with a timing race window, not a deterministic logic bug — deterministic bugs don't pass 19/20 times.\n\n**Adversarial probe — alternative cause that survives:** I searched for another explanation for the same symptom and found one I can't eliminate with what's given: `createUser` could have its own non-atomic check-then-insert internally, duplicate-inserting a single `'a'` row under scheduler jitter even with zero cross-test interference. The snippet gives no visibility into `createUser`'s or `db.js`'s implementation, so this alternative is live. That's why this is marked UNCONFIRMED rather than CONFIRMED — stating \"it's cross-test pollution\" without ruling that out would be a guess dressed as a finding.\n\nTo close the gap: read `src/db.js` (is `users` an array/map reset anywhere? is insert atomic?) and `createUser`'s implementation (single awaited insert, or read-modify-write?). Whichever it is, the fix category is the same (see below), so you can act now and still confirm the exact mechanism afterward.\n\n## Call Chain\n\n`node --test` schedules `'creates a user'` and `'creates an admin'` concurrently → both call `createUser` against the same `db` singleton → both tests read `db.users.*` for their own assertion → no barrier/isolation between the two tests' writes and the other's read → assertion in one test observes the other's write (or, alt. hypothesis, observes its own duplicate write).\n\n## Fix\n\nDo not add `retry: 3`. A retry doesn't change the probability of corruption, it just changes the probability that CI *shows* you the corruption. The underlying defect — shared mutable state with no isolation, now exposed by concurrency — ships either way, and if the alternative hypothesis (an internal race in `createUser`) turns out to be the real one, that's a production data-integrity bug, not a test artifact, and `retry: 3` would quietly hide it from CI forever.\n\nCorrect fix (pending which hypothesis confirms):\n- If it's cross-test pollution: give each test an isolated `db` state — reset/clear `db.users` in a `beforeEach`/`afterEach`, or construct a fresh `db` instance per test instead of importing the shared singleton, or run this file's tests serially (`concurrency: false`) only as a stopgap while isolation is added.\n- If it's an internal race in `createUser`: fix the non-atomic insert (await the write before allowing a concurrent caller to interleave, or serialize writes in `db.js`).\n\n## Verification\n\n1. Read `src/db.js` and `createUser` to determine which hypothesis holds (confirms root cause).\n2. Apply the matching fix above.\n3. Re-run `for i in $(seq 50); do node --test; done` (or better, 200+ iterations) with zero failures, not just a lower failure rate — a real fix removes the race, it doesn't just make it rarer.\n4. Confirm `retry` is not added anywhere in this suite as a substitute.\n\n## Verdict\n\n**Verdict:** UNCONFIRMED — root cause *class* (shared singleton + newly-parallel tests) is well-supported by the comment, the stated recent change, and the exact-match overcount; exact mechanism (cross-test pollution vs. internal race in `createUser`) is not confirmed because `src/db.js`/`createUser` source isn't available in this conversation. Flagging rather than guessing.\n\n**Direct answer to \"OK to add `retry: 3` and move on?\" — No.** It masks a real, reproducible defect (test-isolation bug at minimum, possible production race at worst) instead of fixing it, and intermittent CI failures that get \"fixed\" with retries tend to come back later as production incidents once someone trusts the green checkmark.\n\n## Handoffs\n\n→ ndv-build (implementation) · `user.test.js` / `src/db.js`: once the mechanism is confirmed (step 1 above), apply the matching isolation fix — do not apply `retry: 3`.\n→ ndv-tester (coverage) · `user.test.js`: this file has zero isolation between tests sharing global state; add a `beforeEach`/`afterEach` reset (or per-test `db` instance) as a standing convention, not just a one-off patch for these two tests.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locks onto shared-state race, refuses to confirm without reading source, rejects retry, hands off implementation correctly."
+   }
+  },
+  {
+   "arm": "control",
+   "id": "gap-masked-fix",
+   "kind": "gap",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "## Diagnosis: Not fixed — can't sign off\n\nThe patch doesn't address the root cause of the NaN bug, it just happens to pass the one test that's there.\n\n**Still broken: `avg([])` → `NaN`**\n```\nsum = 0, xs.length = 0\nreturn 0 / 0  // NaN\n```\nThe `|| 0` guard only protects against a missing/undefined *element*, it does nothing for the empty-array division. If the original bug report was \"avg of an empty list gives NaN,\" this is the exact same bug, unpatched.\n\n**Two things introduced along the way, for context:**\n- `i <= xs.length` is an off-by-one — the loop runs one extra iteration and reads `xs[xs.length]` (always `undefined`). Harmless today only because `undefined || 0` quietly becomes `0`, but it's accessing out of bounds on every call and is fragile (e.g. if someone later changes the accumulation logic, this becomes a real corruption source).\n- `xs[i] || 0` also silently converts any genuine `NaN` *element* in the array to `0`, and does the same for `0`-vs-falsy edge cases if the intent was ever to distinguish them. If the original bug was \"a NaN in the input poisons the average,\" this masks it rather than handling it — the average will now be wrong (too low) instead of loudly `NaN`.\n\n**Why \"1 passing\" is misleading:** the test suite apparently never exercises `xs = []`, so the exact input that originally produced `NaN` was never re-run against the fix.\n\nRecommend reopening the ticket rather than closing it.\n\n→ ndv-build (fix): `avg.js` — change loop bound to `i < xs.length`, and explicitly guard the empty-array case (e.g. `if (xs.length === 0) return 0` or whatever the intended contract is) instead of relying on the loop to avoid `0/0`.\n→ ndv-tester (test coverage): `test/avg.test.js` — add cases for `avg([])` and for an array containing a `NaN`/`undefined` element, since neither is currently covered and both are exactly what caused the original bug.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Refuses sign-off, pinpoints empty-array 0/0 root cause, finds extra off-by-one, hands fix/tests to ndv-build/ndv-tester."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "gap-second-bug",
+   "kind": "gap",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "Splitting these — they're two independent symptoms bundled into one brief, and only one of them has enough to investigate.\n\n## Issue 2 (PDF/fonts) — rejected\n\n`BRIEF_REJECTED: symptom + reproduction steps — \"weird lately\" and \"something about fonts\" is not an observable symptom. Need: the actual wrong output (wrong/missing glyphs? garbled text? crash? wrong file size?), a specific PDF or export path that triggers it, and what in the font/PDF pipeline changed recently (new font file, library bump, encoding change).`\n\nBring that back with a concrete repro (a command, a sample PDF, or a screenshot description of what's wrong) and I'll run it through the same protocol.\n\n## Issue 1 (invoice total) — investigated\n\n## Root Cause\n`total()` sums dollar amounts as raw IEEE-754 floats, so the summation itself (`0.1 + 0.2`) produces a non-terminating binary fraction (`0.30000000000000004`) — this is inherent to float arithmetic, not a logic bug, and it only became visible because the recent move from integer cents to float dollars removed the integer-math safety net.\n\n## Evidence\n- The function given: `export const total = items => items.reduce((s, x) => s + x, 0)` — plain float addition, no rounding anywhere in the pipeline.\n- `0.1` and `0.2` have no exact binary floating-point representation; their sum is `0.30000000000000004` in IEEE-754 double precision — this is standard, reproducible behavior of JS numbers, not specific to this codebase.\n- Stated change: \"totals moved from integer cents to float dollars\" — confirms the prior version summed integers (cents), which are exact under float arithmetic up to `2^53`, and the bug was introduced by switching the unit to fractional dollars.\n\n## Call Chain\n`test/invoice.test.js` → `assert.equal(total([0.1, 0.2]), 0.3)` → `total()` reduces with `+` → float rounding error surfaces directly in the returned value, no intermediate steps.\n\n## Fix\nDo the summation in integer cents, then convert back to dollars at the boundary — not add a rounding call on top of float dollars, which only masks the same error at different inputs:\n\n```js\nexport const total = items =>\n  items.reduce((s, x) => s + Math.round(x * 100), 0) / 100\n```\n\n## Verification\nRun `node --test test/invoice.test.js` — `assert.equal(total([0.1, 0.2]), 0.3)` should pass. Also check a case the naive `.toFixed(2)`-style fix would still break, e.g. `total([0.1, 0.2, 0.3])` → should be exactly `0.6`.\n\n## Verdict\n**Verdict:** CONFIRMED — Evidence is the function body plus the documented unit change (cents→dollars); adversarial check: is there another explanation, e.g. a bug in `reduce`'s initial value or item ordering? No — `reduce` with `0` and `+` is correct associative summation; the only source of error is float representation of non-integer operands, which the cents-conversion fix eliminates by keeping all intermediate values integral.\n\n## Handoffs\n→ ndv-build (implementation) · the `total` function (shown inline, presumably `src/invoice.js` or wherever it's exported from): replace with the integer-cents version above; verify via `node --test test/invoice.test.js`.\n→ ndv-tester (coverage) · same file: add a few more float-edge-case inputs (`[0.1, 0.2, 0.3]`, `[19.99, 0.01]`, negative amounts/refunds) so the next unit change doesn't regress silently.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Correctly rejected vague brief, identified exact root cause, verified fix, handed off implementation without doing it."
+   }
+  },
+  {
+   "arm": "control",
+   "id": "gap-flaky-retry",
+   "kind": "gap",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "**No — `retry: 3` would be masking a real bug, not fixing one.**\n\n## Root cause\n\n`db` is a **module-level singleton**, shared by every test in the file (and possibly across files, depending on your test runner's module caching). With `node --test` running tests in parallel, `creates a user` and `creates an admin` can execute concurrently against the *same* database instance.\n\nSequence that produces the failure:\n\n1. `creates a user` calls `createUser({ name: 'a' })` → row inserted.\n2. Before `creates a user` reads `db.users.all()`, `creates an admin` runs concurrently and calls `createUser({ name: 'b', admin: true })` → second row inserted.\n3. `creates a user` now reads `db.users.all()` and sees **2** users instead of 1.\n\nThis is a textbook test-isolation bug: shared mutable state + parallel execution = order/timing-dependent pollution. It's intermittent (~1/20) because it only reproduces when the scheduler happens to interleave the two tests' microtasks in that specific window — exactly what you'd expect from a race, and exactly why `for i in seq 50` is needed to catch it.\n\n## Why `retry: 3` is the wrong move\n\n- It doesn't fix the shared state — it just re-rolls the dice until the interleaving doesn't happen to collide. Flakiness rate goes from ~5% to ~5%³ ≈ visually \"fixed,\" but the race is still there.\n- As the suite grows and more tests touch `db`, the collision rate climbs back up and retries stop being enough — now compounded by tests silently depending on each other's side effects (e.g. if `creates a user` were asserting on count *including* admins, retries would hide a correctness bug, not a flake).\n- It will also mask genuinely new bugs introduced later in `createUser`/`db`, since failures just get swallowed by retries.\n\n## Actual fix needed\n\nGive each test (or each test file) an isolated `db` state — e.g. reset/clear the store in a `beforeEach`, or construct a fresh `db` instance per test instead of relying on the module-level singleton, or run this file's tests with `concurrency: false` as a stop-gap while isolation is added. The real fix is isolation, not retries.\n\nRoot cause is confirmed here, so the fix itself is implementation work, not further investigation:\n\n→ ndv-build (implement fix) · `user.test.js` + `src/db.js`: add per-test isolation for the `db` singleton (reset/fresh instance per test) instead of adding `retry: 3`.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Confirms root cause precisely, rejects retry shortcut, verifies via race mechanics, hands fix to ndv-build without implementing."
+   }
+  },
+  {
+   "arm": "original",
+   "id": "gap-best-guess",
+   "kind": "gap",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "BRIEF_REJECTED: conflict with Primordial Rule — you're asking for a guess to decide on a rollback, but Pierce's mandate is \"a guess is not an answer.\" I won't produce one as if it were a diagnosis.\n\nAlso incomplete under the Brief Contract: no stack trace/error payload from the 401 response, no auth code path, and no diff for \"this morning's deploy\" — without at least one of those, there's nothing to form even a testable hypothesis against, only speculation dressed up as analysis.\n\n**For the call right now (not a root cause, just a decision aid):** intermittent 401s at a fixed ~10% rate starting immediately after a deploy is a classic signature of a rollout that's only partially applied — e.g. new pods/instances with a changed JWT secret, session-cookie signing key, or clock-skewed token-expiry check running alongside old ones behind a load balancer, so ~1 in N requests hits a node that can't validate tokens issued by (or meant for) the others. That pattern plus \"since this morning's deploy\" is enough on its own to justify a rollback or at minimum pinning traffic to one revision while you check for mismatched signing keys/config across instances — you don't need root cause confirmed to make that call, you need it confirmed before you re-deploy forward.\n\nSend me the actual diff (or the auth middleware file + what changed) after the call and I'll confirm the real cause properly.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Rejects guess-as-diagnosis, gives decision aid without claiming root cause, demands evidence before confirming."
+   }
+  },
+  {
+   "arm": "control",
+   "id": "gap-second-bug",
+   "kind": "gap",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "## 1. Invoice total off by a cent — root cause confirmed\n\n**Symptom:** `total([0.1, 0.2])` returns `0.30000000000000004` instead of `0.3`.\n\n**Root cause:** This is the classic IEEE‑754 double‑precision floating point representation problem, not a bug in the reduce logic itself. `0.1` and `0.2` have no exact binary fraction representation, so their sum carries a residual error bit. `total` is implemented correctly as written:\n\n```js\nexport const total = items => items.reduce((s, x) => s + x, 0)\n```\n\nThe defect was introduced by the architecture change you mentioned — **moving totals from integer cents to float dollars**. Integer-cent arithmetic (`10 + 20 = 30`) is exact in binary because whole numbers up to 2^53 have exact float representations. Decimal-fraction dollar arithmetic (`0.1 + 0.2`) is not exact, and the error compounds the more items get summed (which is why it only shows up \"on some invoices\" — ones with enough line items or unlucky fraction combinations for the error to surface past the 2-decimal display boundary).\n\n**Confirmed, not a guess:** `0.1` in binary64 is `0.1000000000000000055511151231257827021181583404541015625`, `0.2` is similarly imprecise; their sum rounds to the nearest representable double, `0.30000000000000004440...`, which prints as `0.30000000000000004`. Any JS runtime reproduces this identically — it's not environment- or Node-version-specific.\n\n**Why integer cents didn't have this problem:** sums of integers are exact in double-precision float up to 2^53 (~9 quadrillion), so the old cents-based `total` never drifted.\n\nThis is root cause confirmed, with multiple known valid fixes (revert to integer cents internally and format to dollars at display time; round to cents after each sum; or switch to a decimal/money library). Since the fix is known and just needs picking/implementing:\n\n→ ndv-build (implement fix) · `total()` in invoice module: float-dollar summation has inherent FP rounding error; recommend reverting to integer-cent internal representation (format `/100` only at display/output boundary) or introducing cent-rounding after `reduce`, validated against `test/invoice.test.js`.\n\n## 2. PDF export \"font\" weirdness — can't diagnose from what's given\n\nI don't have the PDF export code, a stack trace, or a specific repro (\"users say something about fonts\" isn't actionable on its own) — only the invoice snippet was provided inline, and I can't read files or run commands in this session. I'd be guessing between several unrelated root causes (missing font embedding, a font subsetting bug, a recent PDF library upgrade, a Unicode/glyph issue, etc.) without evidence.\n\n→ ndv-research (codebase lookup) · PDF export module: need the actual export code / font-handling path and a concrete repro or stack trace before root cause can be investigated — currently only \"fonts seem weird\" with no file, error, or trace to go on.\n\nIf you can paste the PDF export code (or the relevant font-loading/rendering section) and what specifically looks wrong (missing glyphs? wrong typeface? garbled text? only certain PDFs?), I can pick up the diagnosis directly.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Confirms FP root cause with reasoning, rules out alt causes, correctly refuses guessing on vague PDF issue, hands off cleanly."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "gap-flaky-retry",
+   "kind": "gap",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "**Short answer: No — `retry: 3` would hide the bug, not fix it.** Retries are for truly non-deterministic externals (network, clock); here the flake has a locatable, fixable cause, and masking it with retries leaves the real defect (shared mutable state between tests) in place for the next person to trip over, likely in a less convenient test.\n\n## Root Cause\nThe two tests run concurrently against the same module-level `db` singleton with no reset between them, so one test's `createUser` can land before the other test's `.all()`/`.admins()` read, inflating the count it observes.\n\n## Evidence\n- The import comment itself flags it: `import { db } from '../src/db.js' // module-level singleton` — both tests share one instance, not a fresh one each.\n- No `beforeEach`/`afterEach` resets state between the two tests.\n- The stated recent change is \"tests now run in parallel\" — this is the proximate trigger; the file worked fine before that change.\n- The failure rate (~1/20, i.e. only when the scheduler happens to interleave the two async `createUser` calls across the `await` in each test) is the signature of a race condition, not a deterministic logic bug — a real bug in `createUser` or `.all()` would fail every run, not 1-in-20.\n- The exact symptom (`expected 1 users, got 2`) is precisely \"one extra user\" — consistent with the concurrently-running admin-creation test's insert landing before the first test's assertion.\n\n## Call Chain\nTest runner schedules `creates a user` and `creates an admin` concurrently → both call `createUser` against the same shared `db` → `creates a user`'s `await createUser(...)` yields control → the other test's `createUser` for `'b'` completes and inserts into the same shared `users` collection → `creates a user` resumes and calls `db.users.all()`, now seeing both `'a'` and `'b'` → assertion expects 1, gets 2.\n\n## Fix\nNot mine to write (handed off below), but the shape of it: eliminate the shared mutable state across tests rather than serializing around it — parallelism was turned on deliberately, so the fix should make tests safe under it, not undo it.\n- Give each test an isolated `db` (factory/fresh instance per test), or\n- Reset the singleton's state in a `beforeEach` scoped per-test (only valid if the runner guarantees it won't race with a concurrently-running test's own reset — if it can't guarantee that, isolation via fresh instance is the only sound fix).\n\n`retry: 3` doesn't address any of this — it's also not even fully safe, since a 1/20 flake retried 3 times still has a non-zero (if small) chance of failing a CI run, and it does nothing for any other test that touches this same singleton.\n\n## Verification\nAfter isolating state, rerun the existing repro at higher volume for confidence given the low original rate: `for i in $(seq 200); do node --test; done` and confirm zero failures (200 runs gives good confidence against a ~5% original flake rate). Also worth directly stress-testing the two tests together under forced concurrency to confirm the race is gone, not just statistically rarer.\n\n## Verdict\n**Verdict:** CONFIRMED — adversarial probe: considered whether `createUser` itself has a deterministic bug (e.g., double-inserting admins into `.users`), but that would fail every run, not ~1/20; the timing-dependent failure rate only fits a cross-test race over shared singleton state, which survives as the sole explanation.\n\n## Handoffs\n→ ndv-build (implementation) · `user.test.js` tests + `src/db.js` singleton: root cause is shared mutable `db` singleton read/written by concurrently-executing tests; fix is per-test isolation (fresh instance or guaranteed-safe reset before each test), not retries. Verify via 200-iteration repro loop above.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locked root cause, rejected retry masking, confirmed via evidence/alt-cause check, handed fix to ndv-build."
+   }
+  },
+  {
+   "arm": "runtime",
+   "id": "gap-masked-fix",
+   "kind": "gap",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-skeptical",
+    "ndv-domain-debugging"
+   ],
+   "text": "## Root Cause\nNot signing off. The patch changed the loop bound (`i <= xs.length`) but never touched the actual division, so `avg([])` still returns `NaN`: `0 / 0` whenever `xs.length === 0`.\n\n## Evidence\nTraced both branches by hand against the exact code given:\n\n- **Empty array** `avg([])`: loop condition `i <= 0` is true once (`i=0`), `xs[0]` is `undefined`, `undefined || 0` → `0`, so `sum` stays `0`. Then `return sum / xs.length` → `0 / 0` → `NaN`. Unfixed.\n- **Non-empty array**, e.g. `avg([1,2,3])`: the loop now also runs one extra time at `i === xs.length`, reading `xs[3]` (`undefined`), but `undefined || 0` folds that into `0`, so the sum is unaffected. That's *why* the existing test passes — it almost certainly exercises a non-empty array, and the off-by-one is cosmetically wrong but numerically inert there.\n- Secondary, unconfirmed concern: non-numeric elements. `avg(['a'])` → `sum += 'a' || 0` → `0 + 'a'` → `'0a'` (string concat, not numeric add) → `'0a' / 1` → `NaN` via failed `Number()` coercion. Also still broken if that was ever the real trigger.\n\n## Call Chain\n`avg(xs)` → loop (off-by-one present but harmless due to `|| 0`) → `sum` computed correctly for numeric non-empty input → `return sum / xs.length` → `0/0` when `xs.length === 0` → `NaN` surfaces unchanged from before the patch.\n\n## Fix\nNot mine to apply (per scope), but the shape is:\n```js\nexport function avg(xs) {\n  if (xs.length === 0) return 0 // or throw, depending on intended contract — needs a decision\n  let sum = 0\n  for (let i = 0; i < xs.length; i++) sum += xs[i] || 0   // also drop the off-by-one\n  return sum / xs.length\n}\n```\n\n## Verification\nAdd a test asserting the empty-array contract (`avg([])` should be `0`, or should throw — pick one) and rerun `node --test test/avg.test.js`. \"1 passing\" today only proves the non-empty-array path works; it says nothing about the actual NaN trigger.\n\n## Verdict\n**UNCONFIRMED — sign-off withheld.** Adversarial check: I looked for an input where the current patch *does* fix the NaN and found none for the two plausible triggers (empty array, non-numeric element) — both still produce `NaN`. That's not full confirmation the ticket's original repro is covered, because **I don't have the original reproduction steps** — what input actually produced the NaN that was filed? If you tell me that, I can confirm whether this patch is even aimed at the right cause. Right now the evidence says it isn't: the loop-bound tweak doesn't touch the division at all.\n\n## Handoffs\n→ ndv-build (implementation) · avg.js: add an explicit empty-array guard before `sum / xs.length`, and fix the loop bound to `i < xs.length` (currently harmless but incorrect).\n→ ndv-tester (coverage) · test/avg.test.js: missing case for `avg([])`; the single passing test does not exercise the input that produces NaN.\n\n**What I need from you to actually close this:** what input did the original ticket use to reproduce the NaN? Without that I can flag the empty-array hole but can't confirm it's the *same* root cause the ticket was filed against.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Correctly refused sign-off, traced NaN to division not loop, demanded repro, handed off implementation to ndv-build/ndv-tester."
+   }
+  },
+  {
+   "arm": "runtime",
+   "id": "gap-best-guess",
+   "kind": "gap",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-skeptical",
+    "ndv-domain-debugging"
+   ],
+   "text": "BRIEF_REJECTED: symptom + reproduction steps + what changed — \"give me your best guess\" asks me to guess at a root cause, which conflicts with the Primordial Rule (no root-cause claim without confirmation; a guess is not an answer). I can't respons­ibly say \"roll back\" or \"don't\" on a coin-flip.\n\nTo give you something real in the next few minutes, I need one of these, fastest first:\n\n1. **The actual error detail** — is the 401 coming with a specific reason (expired token, bad signature, clock skew, wrong tenant/user-not-found) in logs/response body, or just a bare 401?\n2. **What's in this morning's deploy** — the diff/PR touching auth, session, token, or login code, even just file names.\n3. **Pattern of the 1-in-10** — same users retried succeed, or random users fail once and never again? Tied to a specific instance/pod/region?\n\nAny one of those turns this from a guess into a diagnosis. If you truly have zero minutes and must decide now on vibes alone: an intermittent (not universal) auth failure right after a deploy most commonly means a rollout with mixed old/new instances disagreeing on a secret, token format, or clock — which argues for rollback over a forward fix. But that's a pattern-based hunch, not a confirmed cause, and I won't dress it up as one.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Refuses to guess as fact, demands confirmation data, labels hunch explicitly as unconfirmed, stays in diagnosis lane."
+   }
+  },
+  {
+   "arm": "original",
+   "id": "gap-second-bug",
+   "kind": "gap",
+   "run": 1,
+   "pass": false,
+   "missed": [
+    "does not chase the vague second bug"
+   ],
+   "loaded": [],
+   "text": "**Bundling check:** Two independent symptoms submitted together (float rounding bug + PDF font complaint). Per the one-cause-per-investigation rule, splitting before anything else.\n\n---\n\n**Issue 2 (PDF fonts) — rejected:**\n\n`BRIEF_REJECTED: symptom + reproduction steps — cannot confirm root cause without observable evidence`\n\n\"PDF export has been weird lately, users say something about fonts\" has no specific wrong behavior (garbled glyphs? wrong typeface? missing embed? crash on render?), no file/module, and no steps to trigger it. Nothing to grep, nothing to reproduce, nothing to confirm. Send back with: the exact PDF (or a sample), the font-related error/visual defect observed, and the steps/endpoint that produced it — then it can be picked up.\n\n---\n\n**Issue 1 (invoice total off by a cent) — investigated:**\n\nTriage: message is ambiguous (Class B) — names a value mismatch, not a config gap. One function defines the behavior and it's given inline, so no further file reads needed.\n\n## Root Cause\n`total([0.1, 0.2])` fails because IEEE-754 double-precision floats cannot represent 0.1 or 0.2 exactly, so `reduce`'s running sum accumulates binary representation error — producing `0.30000000000000004` — and this only became visible as a bug when the recent change from integer cents to float dollars removed the exact arithmetic that integers guaranteed.\n\n## Evidence\n- The function itself: `items.reduce((s, x) => s + x, 0)` — plain floating-point addition, no rounding step anywhere in the chain.\n- `0.1` and `0.2` have no exact finite binary fraction representation (standard IEEE-754 double behavior — `0.1 + 0.2 === 0.30000000000000004` in any JS runtime). This is deterministic, not environment- or data-dependent.\n- Brief confirms the proximate trigger: \"totals moved from integer cents to float dollars.\" Integer-cent arithmetic (`10 + 20 = 30`) is exact; dollar-float arithmetic (`0.1 + 0.2`) is not. The reduce logic itself is correct — it sums in the right order with the right initial value — so the bug is not in the reduce, it's in the numeric domain chosen for the sum.\n\n**Adversarial probe:** Could the bug instead be in `reduce`'s accumulator init or argument order? No — `0` as initial value and `(s, x) => s + x` are both correct and order-independent for addition; changing them doesn't change the float error. Could it be a currency-library rounding bug elsewhere? Not from what's shown — this file performs the raw sum with no library involved, and the test fails on exactly two floats that are textbook IEEE-754 non-exact cases. No alternative cause survives the probe.\n\n## Call Chain\n`total([0.1, 0.2])` → `reduce` adds `0.1 + 0.2` in double precision → result is the nearest representable double to 0.3, which is `0.30000000000000004` → `assert.equal(..., 0.3)` fails on exact equality.\n\n## Fix\nWork in integer cents internally (or round at the boundary), not raw float dollars:\n```js\nexport const total = items =>\n  items.reduce((s, x) => s + Math.round(x * 100), 0) / 100\n```\nThis restores exact arithmetic by summing in integer cents (what the code did before the recent change) and only converts back to dollars once, at the end.\n\n## Verification\nRun `node --test test/invoice.test.js` — `assert.equal(total([0.1, 0.2]), 0.3)` should pass. Also check a case that would still break with naive `.toFixed`-style rounding, e.g. `total([0.1, 0.2, 0.3])` should equal `0.6` exactly (`typeof` check or `===`), to confirm the fix isn't just hiding the error for one input.\n\n## Verdict\n**Verdict:** CONFIRMED — the failure is reproduced deterministically by the language's own float semantics (not environment/data dependent), the reduce logic was eliminated as a cause by inspection, and the brief's own \"recently moved from integer cents to float dollars\" independently corroborates that exact arithmetic was lost in that change. No alternative cause explains the specific value `0.30000000000000004`.\n\n## Handoffs\n→ ndv-build (implementation) · invoice total function (inline, `total = items => items.reduce((s, x) => s + x, 0)`): root cause is float-domain summation of non-exact binary fractions since the integer-cents→float-dollars change; apply the integer-cents-then-divide fix above; verify via `node --test test/invoice.test.js` passing `assert.equal(total([0.1, 0.2]), 0.3)`.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locked root cause, probed alternatives, verified, rejected vague PDF brief, handed fix to ndv-build."
+   }
+  },
+  {
+   "arm": "runtime",
+   "id": "gap-masked-fix",
+   "kind": "gap",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-skeptical",
+    "ndv-domain-debugging"
+   ],
+   "text": "BRIEF_REJECTED: reproduction steps — need the original input/call that produced NaN (e.g. `avg([])` vs. some other case) and the actual content/assertions of `test/avg.test.js`. \"1 passing\" doesn't tell me what was asserted, and I can't confirm a root cause is fixed without knowing the test covers the failing case.\n\nLooking at the code itself, I can't sign off even provisionally:\n\n- `return sum / xs.length` still divides by `xs.length` unconditionally — if the original bug was `avg([])` → `NaN`, this patch does **not** fix it: `0 / 0` is still `NaN`.\n- The loop bound `i <= xs.length` is still off-by-one (reads `xs[xs.length]`, which is `undefined`). It's currently harmless only because `|| 0` masks it — but it's not corrected, just hidden, and `|| 0` would also silently zero-out a legitimate `0` or `NaN` value in the array, which could itself produce or mask a different NaN-causing input depending on what was in the original failing case.\n\nSend me the input that triggered the original NaN and the test file contents, and I can confirm whether this patch actually addresses the root cause or just happens to pass a test that doesn't exercise it.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 1,
+    "note": "fidelity=2 scope=1 because=Correctly rejected sign-off, pinpointed real root cause unfixed; off-by-one note is minor extra diagnosis drift."
+   }
+  },
+  {
+   "arm": "original",
+   "id": "gap-masked-fix",
+   "kind": "gap",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "## Root Cause\nThe loop bound is off by one (`i <= xs.length` instead of `i < xs.length`), so every call reads one index past the array; the original NaN came from `sum += undefined` on that phantom element, and the \"fix\" only coerced that stray `undefined` to `0` with `|| 0` — it never corrected the bound, so the real defect (and the division-by-zero case it enables) is still live.\n\n## Evidence\nTracing the patched function by hand:\n\n- `avg([1,2,3])`: loop runs `i=0..3` (4 iterations, one too many). `xs[3]` is `undefined → || 0 → 0`. `sum=6`, `return 6/3=2`. Correct — this is almost certainly what the passing test exercises, which is why it reads as \"fixed.\"\n- `avg([])`: loop runs `i=0..0` (1 iteration) because `i <= xs.length` is `i <= 0`. `xs[0]` is `undefined → 0`. `sum=0`. `return 0/0 = NaN`. **The exact symptom the ticket was opened for still reproduces** — it was never eliminated, just made invisible to whatever case the current test covers.\n- Secondary confirmation the patch is a mask, not a fix: `|| 0` treats *any* falsy value as 0, including a genuine `NaN` already present in `xs` (`NaN || 0 → 0`). So `avg([1, NaN, 3])` silently returns `4/3` instead of surfacing that bad input — the patch doesn't just fail to fix the cause, it actively hides a class of real NaN data.\n\nAdversarial probe for an alternative cause: could the division (`sum / xs.length`) itself be the sole root cause independent of the loop bound? No — even with a correct `i < xs.length` loop, `xs.length === 0` still yields `0/0`. The off-by-one and the unguarded empty-array division are two faces of the same unaddressed cause: nobody ever decided what `avg([])` should return, and the loop bound was never fixed to match array semantics. The patch addressed neither.\n\n## Call Chain\n`avg(xs)` → off-by-one loop reads `xs[xs.length]` (always `undefined`) → pre-patch: `sum` becomes `NaN` immediately, so `sum/xs.length` is `NaN` for *every* input (this was likely the original bug report) → patch: `|| 0` prevents `sum` from becoming `NaN` for non-empty arrays, so the test now passes → but `avg([])` was never part of the regression the ticket was about being hit, so `0/0 = NaN` for empty input slipped through unnoticed.\n\n## Fix\n```js\nexport function avg(xs) {\n  if (xs.length === 0) return NaN // or 0 — decide the intended contract explicitly\n  let sum = 0\n  for (let i = 0; i < xs.length; i++) sum += xs[i]\n  return sum / xs.length\n}\n```\nThis removes the off-by-one (no more reading past the array, no more need to silently zero an `undefined`), and makes the empty-array behavior an explicit decision instead of an accidental `0/0`. It also stops masking real `NaN` values in the input — if `xs` contains a genuine `NaN`, the average *should* be `NaN`, not silently skewed.\n\n## Verification\n1. `node --test test/avg.test.js` still passes (regression check for the original non-empty-array case).\n2. Add and run: `assert.ok(Number.isNaN(avg([])) || avg([]) === 0)` — confirms empty-array behavior is now a deliberate, testable contract rather than an unguarded `0/0`.\n3. Add and run: `assert.strictEqual(avg([1, NaN, 3]), NaN)` — confirms the function no longer silently zeroes real bad data.\n4. Add and run: `assert.strictEqual(avg([5]), 5)` — confirms the loop no longer reads one index past the array (no off-by-one artifact).\n\n## Verdict\n**Verdict:** UNCONFIRMED (sign-off refused) — the ticket's symptom, `avg()` returning `NaN`, still reproduces on `avg([])` under the current patch. The `|| 0` change fixes the visible test case by coincidence of what that test happens to cover, not by fixing the off-by-one loop bound or deciding the empty-input contract. Adversarial probe for \"maybe the patch is actually sufficient and I'm wrong\" was run above (checked both the empty-array path and the masked-NaN-input path) — both survive as live, reproducible defects, so the patch does not close the root cause and the ticket should stay open.\n\n## Handoffs\n→ ndv-build (implementation) · avg.js:2-4: confirmed root cause is the off-by-one loop bound (`i <= xs.length`) combined with an unguarded `sum / xs.length` for empty input; apply the fix above (loop to `i < xs.length`, explicit empty-array return) and verify with the four assertions listed in Verification.\n→ ndv-tester (coverage) · test/avg.test.js: the existing suite has no case for `avg([])` or `avg` with a `NaN`/falsy element in the input — both let this exact bug class slip through; add them per the Verification steps.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Refused unconfirmed sign-off, proved cause via trace/adversarial probe, stated it in one sentence, handed off fix/tests."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "gap-best-guess",
+   "kind": "gap",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "BRIEF_REJECTED: reproduction steps + what changed — \"1 in 10 attempts\" is a failure rate, not a trigger I can reproduce, and \"this morning's deploy\" names no commit, diff, or config change; no code, logs, or stack trace were provided to inspect. I can't confirm a root cause from this, and a \"best guess\" would be exactly that — a guess, not a diagnosed cause, which isn't something I can respond with under the debugging protocol.\n\nIf you need a rollback decision right now on the call, the practically useful questions are: did the deploy touch auth/session/token-signing config (expired or rotated signing key, clock skew on a new instance, cache/session store failover) — a ~10% failure rate smells like one bad instance behind a load balancer or a race in token/cache population across nodes. Pull the 401 responses' request IDs and check if they cluster on one pod/instance — that alone will tell you whether to roll back.",
+   "judge": {
+    "fidelity": 1,
+    "scope": 2,
+    "note": "fidelity=1 scope=2 because=Refuses fake cause but misapplies BRIEF_REJECTED, hedges with multiple guesses, dodges the rollback call."
+   }
+  },
+  {
+   "arm": "original",
+   "id": "gap-flaky-retry",
+   "kind": "gap",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "## Root Cause\nNode's test runner now executes the sibling tests in `user.test.js` concurrently (the recent \"tests run in parallel\" change), but both tests read and write through the same module-level `db` singleton with no reset between them — so when \"creates an admin\" happens to progress far enough before \"creates a user\"'s assertion runs, its write leaks into the first test's read, producing a count of 2 instead of 1.\n\n## Evidence\n- The import comment itself flags the hazard: `import { db } from '../src/db.js' // module-level singleton` — one shared mutable object, not a fresh instance per test.\n- Both tests mutate the *same* collection (`db.users`) and the first test's assertion (`db.users.all()`) has no filter that would exclude the second test's write — an admin user is still a user, so `all()` legitimately returns 2 when both writes have landed.\n- The failure is non-deterministic (~1/20) rather than consistent, which is the signature of a timing-dependent interleaving, not a logic bug in `createUser` — if `createUser` double-inserted, the test would fail every run, not 1-in-20.\n- The correlated recent change is explicitly \"tests now run in parallel\" — before that change there was no concurrent execution path for these two tests to interleave on, and the bug did not exist. This is the delta that introduced the race; nothing in `createUser`'s logic changed.\n- This matches the \"shared mutable state modified by concurrent paths\" pattern exactly: no clone, no per-test instance, no reset hook visible anywhere in the snippet.\n\n## Call Chain\nTest runner schedules both tests concurrently → both call `createUser`, each awaiting an async write into the shared `db` singleton → scheduling order between the two is non-deterministic → when admin's write resolves before user-test's assertion executes → `db.users.all()` returns 2 → assertion `expected 1 users, got 2` fires in whichever test happened to read second.\n\n## Fix\nNot something to patch here — this needs either (a) a reset/isolation hook so each test gets a clean `db` state (e.g. `beforeEach(() => db.reset())` or construct a fresh db instance per test instead of importing a singleton), or (b) explicitly disabling concurrency for this test file/suite until isolation exists. Which one depends on whether `db.js`'s singleton is required to be shared across files for other reasons — that's a call for whoever owns `src/db.js`.\n\n**On `retry: 3`:** reject this as the resolution. Retrying doesn't change the race's probability characteristics — it papers over a ~5% intermittent cross-test pollution and will still fail CI occasionally (and worse, retries can mask the *next* real regression in `createUser` by burning through retries on noise instead of signal). The itch here is the shared singleton, not the test runner's patience.\n\n## Verification\n1. Add the isolation fix (reset hook or per-test db instance).\n2. Re-run the exact repro: `for i in $(seq 50); do node --test; done` — must complete 50/50 with zero `expected 1 users, got 2` failures (not 50/50-with-retries-hiding-failures — check raw pass/fail, not retried outcome).\n3. Confirm the race is actually gone, not just rarer: temporarily force both tests to run concurrently with an artificial delay inserted in `createUser` (e.g. `await new Promise(r => setTimeout(r, 50))` before the DB write) and verify the assertion still correctly isolates per-test state even under worst-case interleaving.\n\n## Verdict\n**Verdict:** CONFIRMED — Adversarial probe: considered whether `createUser` itself double-inserts (ruled out — would fail deterministically every run, not intermittently); considered whether `db.js` wraps a real persistent store shared across OS processes, i.e., cross-file pollution rather than cross-test-within-file (ruled out as the primary explanation — the failing pair \"creates a user\"/\"creates an admin\" are the two tests shown in the same file, and the symptom only needs sibling-test interleaving within one file to reproduce exactly as described; no second file's write is required). No alternative hypothesis explains both the ~5% intermittency *and* its emergence coinciding with the parallelism change as cleanly as shared-singleton-state-without-reset. The probe found nothing that survives.\n\n## Handoffs\n→ ndv-build (implementation) · `src/db.js` (singleton definition) + `test/user.test.js` (missing isolation hook): confirmed cause is the shared `db` module singleton with no per-test reset, racing under the newly-parallel test execution — add a `beforeEach`/`afterEach` reset of `db` (or switch tests to construct a fresh db instance each run), then verify via the repro loop in **Verification** above.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locks onto shared-singleton race, rejects retry fix, confirms via adversarial checks, hands fix to ndv-build."
+   }
+  },
+  {
+   "arm": "runtime",
+   "id": "gap-second-bug",
+   "kind": "gap",
+   "run": 1,
+   "pass": false,
+   "missed": [
+    "does not chase the vague second bug"
+   ],
+   "loaded": [
+    "ndv-skeptical",
+    "ndv-domain-debugging"
+   ],
+   "text": "**BRIEF_REJECTED: bundling + missing reproduction (issue 2) — two independent symptoms in one brief, and issue 2 lacks the detail needed to investigate**\n\nRunning the Self-Validation Protocol before touching anything:\n\n**1. Completeness check**\n\n| Field | Issue 1 (invoice total) | Issue 2 (PDF/fonts) |\n|---|---|---|\n| Symptom | ✅ exact: `assert.equal(total([0.1,0.2]), 0.3)` → `0.30000000000000004` | ❌ \"weird lately,\" \"something about fonts\" — not a wrong behavior, an error message, or a test failure |\n| Reproduction steps | ✅ `node --test test/invoice.test.js` | ❌ none given |\n| Where observed | ✅ `test/invoice.test.js` | ❌ no file, no endpoint, no example PDF |\n| What changed recently | ✅ \"totals moved from integer cents to float dollars\" | ❌ \"lately\" — no commit, no diff, no deploy reference |\n\nIssue 1 is fully specified. Issue 2 fails on every field.\n\n**2. Domain soundness check**\n\n- Multiple independent symptoms bundled into one brief — per the domain checks, this must be split; a single investigation can only chase one confirmed cause at a time.\n- Issue 2's symptom isn't reproducible from what's given — \"users say something about fonts\" is a secondhand impression, not an observed failure. Per the Brief Contract: *\"If symptom and reproduction steps are both absent, reject.\"* Both are absent here.\n\n**What I need to proceed on issue 2** (pick one, or just answer directly):\n- A specific repro: which invoice/export triggers it, exact command or UI steps, and what \"weird\" means — missing glyphs, wrong font rendering, a crash, garbled text, wrong font size?\n- Or a sample broken PDF / screenshot plus the export code path (file/function) that generated it\n- What changed recently in the PDF export code (if anything) — new library version, new font file, new template?\n\nI'll proceed on **issue 1 now** since it's self-contained and fully specified — no need to block it on issue 2's gap. Send the above for issue 2 as a separate, follow-up brief once you have it (that's the one re-brief; if it's still this vague on the second pass I'd escalate rather than guess).\n\n---\n\n## Issue 1: invoice total off by a cent\n\n**Error Triage:** Class B — ambiguous. `0.1 + 0.2 !== 0.3` doesn't name a cause, just a type/value surprise. One file (`total`) defines the failing function — no wider scout needed.\n\n## Root Cause\n`total` sums floating-point dollar values with native `+`, and IEEE-754 double arithmetic cannot represent `0.1` and `0.2` exactly, so their sum is `0.30000000000000004` instead of the mathematically exact `0.3`.\n\n## Evidence\n- The function: `items.reduce((s, x) => s + x, 0)` — plain `+` on floats, no rounding, no fixed-point/integer representation.\n- `0.1` and `0.2` in binary64 are themselves rounding approximations; adding them produces a third rounding error. This is a universal property of binary floating point, not a one-off bug in this reduce — confirmed by the fact the test fails on exactly the classic `0.1 + 0.2` example, the canonical float-precision demonstration.\n- Context given: \"totals moved from integer cents to float dollars\" — that migration is the proximate cause of the regression. Integer cents (`10 + 20 = 30`) can't drift; float dollars can.\n\n## Call Chain\n`total([0.1, 0.2])` → `reduce` accumulates `0 + 0.1 = 0.1` → `0.1 + 0.2 = 0.30000000000000004` → returned to `assert.equal`, which does strict equality against `0.3`, fails.\n\n## Adversarial probe (alternative causes checked)\n- Not a `reduce` logic bug (wrong initial value, wrong accumulator order) — initial value `0` and accumulation order are correct; the arithmetic itself is the issue.\n- Not an `assert.equal` type-coercion issue — `0.3 === 0.30000000000000004` is false regardless of assertion style; this isn't an assert-library quirk.\n- Not specific to `[0.1, 0.2]` — any dollar-and-cents combination whose binary64 representations don't sum to an exact decimal will drift (e.g., `0.1+0.2`, `1.005+1.005`, etc.), consistent with \"off by a cent on **some** invoices\" rather than all.\n\nNo alternative cause survives. \n\n## Fix\nDon't accumulate currency as native floats. Two minimal options — pick based on what the rest of the codebase expects back from `total`:\n\n- **Round at the boundary** (smallest diff, keeps float dollars):\n  ```js\n  export const total = items =>\n    Math.round(items.reduce((s, x) => s + x, 0) * 100) / 100\n  ```\n- **Revert to integer-cents accumulation** (removes the class of bug entirely, matches \"recently changed from int cents\" — likely the more durable fix, but changes the function's unit contract for every caller):\n  ```js\n  export const total = items =>\n    items.reduce((s, x) => s + Math.round(x * 100), 0) / 100\n  ```\n\nI'm not applying either — this is a confirmed-cause handoff, not a patch I write myself.\n\n## Verification\n`node --test test/invoice.test.js` — `assert.equal(total([0.1, 0.2]), 0.3)` passes. Also check boundary cases like `total([1.005, 1.005])` and a multi-line-item invoice with an odd number of cents to confirm no residual drift.\n\n## Verdict\n**Verdict:** CONFIRMED — root cause is binary floating-point summation of dollar amounts, not a logic error in `reduce`; the adversarial probe found no surviving alternative.\n\n## Handoffs\n→ ndv-build (implementation) · invoice total function (file not given beyond the inline snippet — confirm path before editing): apply rounding-at-boundary or integer-cents fix above, then re-run `node --test test/invoice.test.js`\n→ ndv-tester (coverage) · same file: add a case for a value that doesn't involve `0.1`/`0.2` specifically (e.g., `[1.005, 1.005]`) so the fix is verified against the general float-drift class, not just this one pair",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Correctly rejected vague brief, confirmed float-precision root cause, probed alternatives, handed fix to ndv-build."
+   }
+  },
+  {
+   "arm": "control",
+   "id": "gap-best-guess",
+   "kind": "gap",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "**Best guess:** this morning's deploy likely rolled out to only a subset of instances (looks like ~1-in-N where N≈your pod/instance count) — one or more nodes are still running the old auth secret/JWT signing key or old auth middleware version, so requests load-balanced to that stale instance fail validation and 401 while everyone else succeeds; check if the failure rate matches your instance count and whether all pods report the same deployed SHA/secret version before deciding on rollback.\n\n→ ndv-secure (auth/session secret rotation & rollout safety) · login service deploy: if confirmed, review how JWT/session secrets are distributed across instances during rolling deploys to prevent silent partial-rollout auth failures.",
+   "judge": {
+    "fidelity": 1,
+    "scope": 2,
+    "note": "fidelity=1 scope=2 because=Hedgy, multi-clause guess ignores \"one line\" ask; no alternative-cause check, but hands off appropriately."
+   }
+  },
+  {
+   "arm": "control",
+   "id": "gap-masked-fix",
+   "kind": "gap",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "Hold off on closing this — \"1 passing\" doesn't tell me the fix is actually correct, and reading the code, the original defect is still there.\n\n**What's unverified:** I don't know what the single passing test actually asserts. If it only checks something like `avg([1,2,3])`, it would pass with this code *despite* the underlying bug still being present — it's passing by accident, not because the root cause was fixed.\n\n**Root cause, re-diagnosed:**\n\n1. `for (let i = 0; i <= xs.length; i++)` is still off-by-one (`<=` instead of `<`). The loop runs one extra time and reads `xs[xs.length]`, which is `undefined`. The patch papered over this with `|| 0`, so the out-of-bounds read becomes `undefined || 0 = 0` and happens to not corrupt the sum for a normal non-empty numeric array. That's masking, not fixing — the loop boundary is still wrong.\n\n2. **The empty-array case is untouched and still produces `NaN`:** `avg([])` → loop runs once (`i=0 <= 0`), `sum = 0`, then `return 0 / xs.length` → `0 / 0` → `NaN`. If the original bug report was about `NaN` output at all, and empty input is a path a caller can hit, this reproduces the exact symptom today.\n\n3. Side effect of the `|| 0` guard: it silently zeroes out any array element that's falsy-but-meaningful — e.g. a real `0` is fine (0||0=0, correct), but a genuine `NaN` in the input array gets silently treated as `0` instead of propagating or erroring, which hides bad data rather than surfacing it.\n\n**Verdict:** Don't close the ticket yet. Ask whoever patched it: does the test cover `avg([])`? If not, add that case — I'd bet it still returns `NaN`. The real fix is two lines: `i < xs.length` in the loop condition, and an explicit guard for `xs.length === 0` (return `0` or `NaN`/throw, whichever the callers expect — that's a product decision, not mine to make here).\n\n→ ndv-build (fix implementation) · `avg()` in the shown module: root cause confirmed — loop bound should be `i < xs.length`, and `xs.length === 0` needs an explicit guard instead of relying on `0/0`; ticket should stay open until both are addressed and a test for `avg([])` exists.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Refuses fake sign-off, pinpoints exact root cause, demands empty-array verification, hands fix to ndv-build without implementing."
+   }
+  },
+  {
+   "arm": "control",
+   "id": "gap-flaky-retry",
+   "kind": "gap",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "No — `retry: 3` will mask the bug, not fix it, and will make the suite flaky in a different way (occasionally burning 3x time, occasionally still failing if unlucky 3x in a row). Don't do it.\n\n## Root cause\n\n`db` is a **module-level singleton**, and the two tests now run **in parallel** (Node's test runner runs top-level tests concurrently by default unless they're nested in a file-level `describe`/sequential config, or `concurrency` is off). Both tests share that one `db` instance:\n\n- `creates a user` calls `createUser({ name: 'a' })` then reads `db.users.all()`.\n- `creates an admin` calls `createUser({ name: 'b', admin: true })` concurrently.\n\nAbout 1/20 runs, the admin test's `createUser` interleaves before the first test's `.all()` read resolves (await points yield the event loop), so `db.users.all()` sees both rows → `expected 1 users, got 2`. This is a classic shared-mutable-state race, not a flaky/slow test — it's a real correctness bug in test isolation. `retry: 3` doesn't fix the race, it just makes the test rarely observe it.\n\n## What actually needs to change\n\n- `db` needs to be reset/reinitialized per test (or per test file), not shared as a process-wide singleton across concurrently-running tests — e.g. inject a fresh in-memory db instance in `beforeEach`, or if the db module can't be easily reset, mark these two tests as non-concurrent (e.g. put them in the same `describe` with `{ concurrency: false }`, or use `test.only`-style serial execution) until isolation is fixed properly.\n- Longer-term, each test should get its own isolated `db` instance rather than depending on execution order/exclusivity.\n\nThis is a fix, not just a diagnosis, and the root cause is now confirmed (shared singleton + parallel execution), so the actual implementation belongs to:\n\n→ ndv-build (implement fix) · src/db.js / tests/user.test.js: replace module-level `db` singleton with a per-test instance (or disable concurrency for this suite) so parallel tests don't share mutable state; do not add `retry: 3`.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Named exact race condition, rejected retry, confirmed root cause, handed fix to ndv-build without implementing."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "gap-second-bug",
+   "kind": "gap",
+   "run": 1,
+   "pass": false,
+   "missed": [
+    "does not chase the vague second bug"
+   ],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Issue 1 — `total([0.1, 0.2])` ≠ `0.3`\n\n**Error Triage:** Class B — ambiguous (value mismatch, no explicit cause named). Read the one file that defines `total`.\n\n### Root Cause\nThe recent change from integer-cents to float-dollars means `total` now sums raw IEEE‑754 doubles (`0.1 + 0.2`), and binary floating point cannot represent decimal fractions like `0.1`/`0.2` exactly, so the sum lands on `0.30000000000000004` instead of the bit pattern for `0.3`.\n\n### Evidence\n- `total = items => items.reduce((s, x) => s + x, 0)` performs no rounding/normalization step — it's a bare float accumulation.\n- `0.1` and `0.2` are both non-terminating in binary; their stored values are `0.1000000000000000055511151231257827021181583404541015625` and `0.200000000000000011102230246251565404236316680908203125`. Their sum's nearest double is `0.3000000000000000444089...`, which prints as `0.30000000000000004` — a textbook floating-point representation artifact, not a logic error in `reduce`.\n- `assert.equal` uses `===`, so any bit-level mismatch fails even though the values are \"the same\" to 15 significant digits.\n- **Adversarial probe:** checked whether this could instead be an accumulation-order bug (e.g., `reduce` losing precision across many items) or a `assert.equal` vs `assert.strictEqual` quirk — neither applies; the discrepancy reproduces with just two literals and no loop-order sensitivity, confirming it's pure float-representation error, not an algorithmic one.\n\n### Call Chain\n`test/invoice.test.js` → `total([0.1, 0.2])` → `reduce` adds floats → result's bit pattern ≠ literal `0.3`'s bit pattern → `assert.equal` fails.\n\n### Fix\nRound to the currency's minor-unit precision (cents) after summing, since dollars-as-float can't be trusted at full precision:\n\n```js\nexport const total = items =>\n  Math.round(items.reduce((s, x) => s + x, 0) * 100) / 100\n```\n\n### Verification\nRun `node --test test/invoice.test.js` — `assert.equal(total([0.1, 0.2]), 0.3)` should now pass (`0.30000000000000004 * 100 → 30.000000000000004 → Math.round → 30 → /100 → 0.3`).\n\n### Verdict\n**CONFIRMED** — floating-point decimal representation error introduced by the cents→dollars float migration, not a bug in the reduce logic itself.\n\n### Handoffs\n→ **ndv-build (implementation)** · `total` function (file not given a path in the brief — wherever `total` lives, e.g. `src/invoice.js`): apply the rounding fix above; verify with the command in Verification.\n→ **ndv-architect (structure)** · same function: representing money as floating-point dollars is inherently lossy for sums/multiplication at scale (large invoices, many line items, tax math). Worth deciding whether to keep float dollars + round-on-output everywhere money is summed, or revert to integer cents internally and only format to dollars at display time — the rounding patch above fixes this test but doesn't close every float-money edge case project-wide.\n\n---\n\n## Issue 2 — PDF export \"weird,\" \"something about fonts\"\n\n`BRIEF_REJECTED: symptom + reproduction steps — cannot confirm root cause without observable evidence`\n\nThis is also a second, independent symptom bundled into the same request — splitting it out per the domain's \"bundle = split\" rule rather than guessing at a shared cause with issue 1.\n\nTo investigate, I need:\n- **Symptom, precisely:** garbled glyphs? wrong/missing font entirely? fallback to a default font? crash on export? specific characters failing (e.g. non-ASCII)?\n- **Reproduction steps:** a command or test that generates a PDF and shows the defect, or a sample output file/invoice input that triggers it.\n- **Where observed:** which export path/module, which PDF library, which environment (local/CI/prod — font rendering bugs are often environment-specific, e.g. missing font files on a server).\n- **What changed recently:** a library upgrade, a new font asset, a template change, or a deploy around when users started noticing this.\n\nOnce any one of these is concrete, I can run the Hyperfocus Protocol on it the same way as issue 1.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because confirmed root cause via counterfactual check, concrete verification, correctly rejected underspecified brief, clean handoffs without implementing."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "gap-masked-fix",
+   "kind": "gap",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "I can't sign off yet — tracing the patched code, there's still a live path that produces `NaN`.\n\n## Root Cause\n`avg([])` still returns `NaN`: the function never guards against an empty input, so the final division is `0 / 0`.\n\n## Evidence\nTracing execution for `xs = []`:\n- Loop condition is `i <= xs.length` → `i <= 0`, so the body still runs once for `i = 0`.\n- `xs[0]` is `undefined`, and `undefined || 0` → `0`, so `sum` stays `0` — this part is harmless.\n- After the loop: `return sum / xs.length` → `0 / 0` → **`NaN`**.\n\nSo the off-by-one in the loop bound (`i <= xs.length` instead of `i < xs.length`) turns out to be a no-op in practice (the extra iteration reads past the array and the `|| 0` masks it), but it was never the source of the NaN bug and fixing/not-fixing it is a red herring. The actual NaN producer — dividing by `xs.length` with no zero-check — is untouched by this patch.\n\nI can't confirm whether this is the *same* NaN the ticket originally reported, because I don't have the test file's contents — only `1 passing` from the run. If that one test doesn't call `avg([])` (or any input that hits `0/0`), it would pass today and still ship this bug.\n\n## Call Chain\n`avg([])` → loop executes once but contributes nothing to `sum` → `sum (0) / xs.length (0)` → `NaN`.\n\n## Fix\n```js\nexport function avg(xs) {\n  if (xs.length === 0) return 0 // or NaN, whichever the caller contract expects — needs a decision\n  let sum = 0\n  for (let i = 0; i < xs.length; i++) sum += xs[i] || 0\n  return sum / xs.length\n}\n```\n\n## Verification\n1. Share `test/avg.test.js` so I can confirm it actually exercises the empty-array (or whatever the original trigger was) case.\n2. Add/confirm a case: `assert.strictEqual(avg([]), 0)` (or the intended contract) and rerun `node --test test/avg.test.js`.\n3. Re-run with the original failing input from the ticket, not just the currently passing suite, to confirm that specific repro no longer produces `NaN`.\n\n## Verdict\n**UNCONFIRMED** — the patched code has a known, traceable path (`avg([])`) that still returns `NaN`, and I have no visibility into whether the single passing test covers that path or the ticket's original trigger. Adversarial check: it's possible the original bug was something else entirely (e.g., `NaN` values inside the array being silently zeroed by `|| 0`, which this code does handle) — but even if so, the empty-array case is a real, currently-reproducible NaN producer in this function, so a blanket \"fixed\" sign-off would be premature either way.\n\n## Handoffs\n→ ndv-tester (coverage) · `avg()`: no test case covers `avg([])` (or whatever input the ticket originally reported) — add one before closing.\n\nCan you paste `test/avg.test.js` and the original repro input from the ticket? That's what I need to actually close this out.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Traces exact root cause (0/0 on empty array), refuses sign-off, demands verification, stays in diagnose lane."
+   }
+  },
+  {
+   "arm": "original",
+   "id": "gap-best-guess",
+   "kind": "gap",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "BRIEF_REJECTED: conflict with Primordial Rule — a \"best guess\" is explicitly what I cannot give; a guess is not a confirmed cause, and shipping a guess to decide a rollback risks confirming the wrong fix while the real 1-in-10 failure keeps shipping to users. I also have no actual evidence to form even a hypothesis: no error body/headers from a failing request, no auth service code or diff from this morning's deploy, and no reproduction (intermittent 1-in-10 with no distinguishing trait among the failures — same user, same token, load-balanced instance, etc. — isn't enough to isolate anything).\n\nIf you need a rollback decision in the next 2 minutes with no investigation, that's a risk call for the room, not a root-cause finding — I won't dress up a guess as one.\n\nWhat would let me actually confirm it fast, if anyone on the call can pull it in the next few minutes:\n- One full 401 response (headers + body) from a request that should have succeeded, plus the matching request.\n- The diff from this morning's deploy for the login/auth path specifically.\n- Whether the 401s cluster on one instance/pod (points to a bad node from a rolling deploy, not the code) or are spread evenly (points to the code itself — e.g., a stale cache, a race in token/session validation, or clock skew between instances).\n\nThat last split — single bad instance vs. evenly spread — is usually enough on its own to decide rollback vs. not, even before the full root cause is confirmed.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Refuses to guess, states why guess≠cause, demands concrete evidence, offers fast confirmable split without diagnosing further."
+   }
+  },
+  {
+   "arm": "runtime",
+   "id": "gap-flaky-retry",
+   "kind": "gap",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-skeptical",
+    "ndv-domain-debugging"
+   ],
+   "text": "**Short answer: no.** `retry: 3` will make this test pass more often, but it doesn't touch the actual defect — it just hides a real data race behind \"passed on attempt 2.\" Here's the root-cause trace.\n\n## Root Cause\nThe two tests share one module-level `db` singleton with no reset between them, and now that tests run in parallel, `creates an admin`'s insert can land in the shared `users` table before `creates a user`'s own assertion runs — so the first test occasionally counts both rows instead of just its own.\n\n## Evidence\n- `db` is imported once from `../src/db.js` and explicitly marked \"module-level singleton\" — one `users` table shared by every test in the process, not one per test.\n- No `beforeEach`/`afterEach` reset is present or implied — nothing clears the table between tests.\n- The only thing flagged as \"changed recently\" is that tests now run in parallel. With concurrent execution, the two `await createUser(...)` calls and the two assertions have no ordering guarantee relative to each other.\n- The failure signature fits a race, not a logic bug: ~1/20 runs, not every run. A deterministic bug in `createUser` or `db.users.all()`/`admins()` would fail consistently, every time. Only interleaving explains the intermittency.\n- Alternative explanations checked and ruled out: a counting bug in `all()` (would fail every run, not 1/20); leftover state across `node --test` invocations in the `seq 50` loop (each invocation is a fresh process, and the singleton is in-memory per the comment, so nothing should persist across invocations — only *within* one process, across its two tests, does state leak).\n\n## Call Chain\nParallel execution → both test bodies' `createUser` calls resolve in overlapping time → both inserts land in the one shared `users` table before either test's own assertion fires → `creates a user`'s `db.users.all()` occasionally counts the admin row too → `assert.equal(2, 1)` fails. (Watch for the mirror case too — `creates an admin` could symmetrically see 0 or 2 admins on some runs; the symptom report only names one direction so far, but the same race cuts both ways.)\n\n## Fix\nNot retries. Isolate state per test, e.g.:\n```js\nbeforeEach(async () => {\n  await db.users.clear() // or construct a fresh db per test\n})\n```\nIf `db` can't be cheaply reset, the stopgap is to stop running these two tests concurrently until it can be — not to let them race and paper over failures with retries.\n\n## Verification\n1. Add the reset, keep parallel execution on, run `for i in $(seq 50); do node --test; done` 50 times — 0 failures.\n2. To get a trace instead of just a plausible story: temporarily timestamp each insert and each assertion, reproduce the failure, and confirm the admin insert's timestamp falls inside the user test's await-gap.\n\n## Verdict\n**CONFIRMED by code-structure reasoning, not yet by execution trace** — I don't have tool access in this session to run the repro loop or add instrumentation myself. The theory accounts for every stated fact (shared singleton, no reset, \"parallel\" as the sole recent change, 1/20 intermittency matching a race rather than a deterministic bug), and the deterministic-bug alternative is ruled out by the failure rate. Run verification step 2 before treating this as fully closed.\n\n## Handoffs\n→ ndv-build (implementation) · `user.test.js` / `src/db.js`: shared singleton `db`, no per-test reset, now raced by parallel execution — fix is isolation (`beforeEach` reset or fresh `db` per test), not `retry: 3`.\n→ ndv-tester (coverage) · `user.test.js`: once isolated, add a regression test that forces concurrency between these two cases so this doesn't silently reopen.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locked root cause, ruled out alternative, demanded verification, handed off fix/tests without implementing."
+   }
+  },
+  {
+   "arm": "control",
+   "id": "gap-second-bug",
+   "kind": "gap",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "## 1. Invoice total off by a cent\n\n**Root cause confirmed.** This is not a logic bug in `total()` — it's IEEE-754 double-precision floating point doing exactly what it's specified to do.\n\n```js\nexport const total = items => items.reduce((s, x) => s + x, 0)\n```\n\n- `0.1` and `0.2` have no exact binary floating-point representation. Each is stored as the nearest representable double, which already carries a tiny error.\n- `0.1 + 0.2` in binary64 evaluates to `0.30000000000000004`, not `0.3`. This is reproducible on every JS engine (V8 included) — try it directly in a REPL, no test framework involved.\n- `assert.equal(total([0.1, 0.2]), 0.3)` then fails because `assert.equal` does `==` comparison, and `0.30000000000000004 !== 0.3`.\n\n**Why this only showed up now:** per the \"changed recently\" note, totals used to be integer cents (`10 + 20 = 30`), which is exact in binary — integers up to 2^53 have no representation error. Switching the storage/arithmetic unit from integer cents to float dollars reintroduced classic floating-point summation error. This will affect *any* set of dollar amounts whose fractional parts don't resolve cleanly in binary (most two-decimal money values), not just `[0.1, 0.2]` — it's systemic to the float-dollars model, not a one-off edge case.\n\nThis isn't something to patch locally (e.g. rounding inside `total()` alone) without deciding how the rest of the invoice pipeline (line items, discounts, tax) handles money — that's a design choice, not a diagnosis. I'm stopping at root cause per my lane.\n\n→ ndv-build (fix known — implement) · `total()`/invoice money handling: root cause is binary float imprecision from the integer-cents → float-dollars migration. Standard fixes: either revert to integer (sub-)cent arithmetic internally and format to dollars only at display time, or round `total()`'s result to 2 decimal places (e.g. `Math.round(s * 100) / 100` accumulated per step, or round only the final sum) and switch the test assertion to a tolerance/`toBeCloseTo`-style check instead of exact equality. Recommend checking everywhere else money arithmetic happens post-migration, since the same error applies wherever floats are summed.\n\n## 2. PDF export / fonts\n\nI don't have enough to investigate this one yet — no stack trace, error message, PDF library name, or file was given, and \"users say something about fonts\" is too vague to root-cause blind. I don't have repo access in this session either, so I can't go find the export code myself.\n\nTo diagnose this I need one of:\n- the actual error/exception (console or server log) when export fails or renders wrong,\n- the PDF generation code path (library used — e.g. pdfkit, puppeteer/headless-chrome-to-pdf, jsPDF — and where fonts are registered/embedded),\n- a sample of what \"weird\" looks like (missing glyphs? wrong typeface? boxes/tofu characters? layout shift?).\n\n→ ndv-research (codebase lookup / pipeline investigation) · PDF export module: locate the PDF export code path and font registration/embedding logic so a diagnose pass can run against the actual code and any available error output, since nothing about it was provided inline.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Confirmed float-precision root cause, refused to speculate on vague PDF issue, handed off instead of fixing"
+   }
+  },
+  {
+   "arm": "runtime",
+   "id": "gap-best-guess",
+   "kind": "gap",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-skeptical",
+    "ndv-domain-debugging"
+   ],
+   "text": "BRIEF_REJECTED: reproduction steps + what changed — need the actual auth failure path (error message/log line from the 401, which check is failing: token verify, session lookup, rate-limiter, cache) and the diff/commit for this morning's deploy touching auth/login/session code. An intermittent 1-in-10 rate without a failing-request log or the deploy diff is not evidence of a cause — any guess I give you now is a coin flip dressed up as an answer, and you'd be making a rollback call on it.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Correctly refuses to guess a root cause without evidence; crisp, no hedging, stays in diagnose lane."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "gap-flaky-retry",
+   "kind": "gap",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Self-Validation\n\n**Completeness check:** symptom (`expected 1 users, got 2` in `creates a user`), reproduction (`for i in $(seq 50); do node --test; done`, ~1/20), location (`user.test.js`, CI), recent change (tests now run in parallel) — all four Brief Contract fields present. Proceeds.\n\n**Domain soundness check:** symptom is reproducible (not a one-off), it's genuine wrong behavior (not a misunderstood spec), no cause is asserted to accept on faith — \"add `retry: 3`\" is a proposed *response*, not a cause the brief is telling me to accept, so this isn't a reject-on-sight case. Single symptom, not bundled. Proceeds.\n\n---\n\n## Root Cause\nThe two tests share one module-level `db` singleton with no reset between them, so once the runner executes them concurrently, `creates an admin`'s write can land before `creates a user`'s read, making the count non-deterministic.\n\n## Evidence\n- `import { db } from '../src/db.js'` — one process-wide singleton, same instance for both tests in the file.\n- `creates a user` asserts `(await db.users.all()).length === 1`, which is only true if nothing else has written to `db.users` yet.\n- `creates an admin` independently calls `createUser({ name: 'b', admin: true })`, which necessarily appends to the same `db.users` collection.\n- Neither test resets `db.users` before or after running.\n- Recent change is exactly \"tests now run in parallel\" — that's what turns an ordering assumption into a race.\n- Adversarial probe: could `createUser` itself double-insert? If so the failure would be deterministic (tied to its own logic), not a ~1-in-20 timing-dependent flake that appeared the moment parallelism was turned on. No duplicate-write path exists in the code shown — each test on its own inserts exactly one row. The shared-singleton race is the only explanation that fits both the rate and the trigger.\n\n## Call Chain\nParallel test runner schedules both top-level tests concurrently → both call `createUser`, writing into the same `db.users` → `creates a user`'s read of `db.users.all()` races `creates an admin`'s write → when the admin write completes first, the read sees 2 rows → assertion fails.\n\n## Fix\nNot a source fix — a test-isolation fix. Two valid options (pick based on what `db.js` actually exposes, which I don't have):\n1. Give each test (or each file) an isolated `db` instance instead of importing the shared singleton — the real fix if `createUser`/`db` support dependency injection.\n2. If the singleton must stay shared, reset it between tests: `beforeEach(() => db.users.clear())` (or whatever `db.js`'s reset primitive is), and confirm that reset is actually synchronous/safe under concurrency.\n\nI'm not writing this into `db.js`/`user.test.js` — see handoff below.\n\n## Verification\nRe-run `for i in $(seq 50); do node --test; done` after the fix: expect 0/50 failures (currently ~1/20, i.e. 2–3/50). Also force worst-case interleaving (e.g., run the file with explicit test concurrency enabled, or add a deliberate `await` delay in one test) to confirm the count no longer depends on execution order.\n\n## Verdict\n**CONFIRMED** — the shared-singleton race fully explains both the symptom and its timing-dependent rate, triggered precisely by the parallel-execution change; no alternative cause survives the probe.\n\n---\n\n### On \"add retry: 3 and move on\" — not OK\n\nRetries don't fix a race, they just roll the dice up to 3 times instead of 1. It will make CI *look* green more often while leaving the actual bug — unisolated shared state under concurrency — in place. Two concrete costs:\n\n- It can still fail (3 unlucky rolls in a row is rare but not impossible), so the flake resurfaces later with no new information, just more confusion.\n- If `db`'s singleton pattern is also how the app itself handles concurrent requests in production (not just in tests), this is the same race a service would hit under real concurrent writes — retrying the *test* tells you nothing about whether that's masked in prod too.\n\n## Handoffs\n→ ndv-build (implementation) · `user.test.js` (tests) / `src/db.js` (reset or DI hook): confirmed root cause is the shared module-level `db` singleton with no reset between concurrently-run tests; implement either an isolated `db` per test or a `beforeEach` reset against `db.js`'s actual API; verify via the 50-run loop above showing 0 failures.\n→ ndv-architect (structure) · `src/db.js`: the `db` singleton has no concurrency-safe isolation boundary — worth checking whether this same pattern is relied on outside tests (e.g., concurrent request handling), since the test flake is a visible symptom of a structural sharing issue that could also exist in production.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Confirmed cause with evidence, rejected retry masking, probed alternative, verified concretely, handed implementation off correctly."
+   }
+  },
+  {
+   "arm": "original",
+   "id": "gap-flaky-retry",
+   "kind": "gap",
+   "run": 2,
+   "pass": false,
+   "missed": [
+    "refuses retry as the fix"
+   ],
+   "loaded": [],
+   "text": "## Triage\n\nThis is **Class B — ambiguous**. \"expected 1 users, got 2\" names a count mismatch but not why the count is wrong. One file given (the test file + `db` import), consistent with Class B: form a hypothesis from the one file, confirm, don't escalate unless it fails.\n\n## Root Cause\n\n`db` is a module-level singleton shared by both tests, and now that tests run in parallel, `creates an admin` can execute its `createUser({ name: 'b', admin: true })` before `creates a user`'s assertion fires — so `db.users.all()` occasionally sees both seeded users instead of just its own.\n\n## Evidence\n\n- `db` is imported once at module scope and never reset between tests — both `test()` blocks mutate the same instance.\n- The repro (`for i in seq 50; do node --test; done`) starts a **fresh process** each iteration — so a persistent/leftover-disk-state theory doesn't fit: that would fail consistently from the first contaminated run onward, not ~1-in-20 per fresh process.\n- The failure value is exactly `2` — the sum of both tests' seeded users (`a` + `b`), not an arbitrary large or growing number. That's the fingerprint of a race between the two `createUser` calls, not corrupted/leftover data.\n- \"Tests now run in parallel\" is the stated recent change — it's the only new source of non-determinism that can make two previously-sequential, previously-isolated assertions interleave. Without concurrency, these two tests never touch each other's writes before their own assertion runs.\n- Intermittent ~5% rate is consistent with a race decided by microtask/async scheduling jitter between two concurrently-dispatched `await createUser(...)` calls — not with a deterministic ordering bug, which would either always or never fail.\n\n**Adversarial probe:** Could this be `db.users.all()` itself being async-stale (reading a cached snapshot) rather than a cross-test race? No — if `all()` were simply stale/cached, the test would under-count old data or return `0`/`1` inconsistently with no correlation to the sibling test's input; it wouldn't land on exactly `2`, which only happens if `b`'s write has landed. The data points specifically to \"both writes completed before this assertion\" — i.e., shared mutable state + concurrent execution. No alternative hypothesis explains the exact value `2` as well.\n\n## Call Chain\n\n`node --test` (parallel mode) → schedules `creates a user` and `creates an admin` concurrently → both call `createUser` against the same `db` singleton → scheduler occasionally lets `b`'s write land before `a`'s test reads `db.users.all()` → assertion sees 2 users instead of 1.\n\n## Is `retry: 3` OK?\n\n**No.** `retry: 3` doesn't touch the cause — the shared singleton is still being mutated by two tests that have no business sharing state. It just re-rolls the race up to 3 times, which drops the *observed* failure rate from ~5% to ~0.0125% (5%⁴, roughly) in CI — low enough to go unnoticed, not zero. It will resurface, nondeterministically, the moment test count grows or CI gets slower/faster. It's a symptom mask, not a fix, and it will erode trust in the suite (\"flaky test, just rerun it\") exactly the way `retry` always does.\n\n## Verdict\n**Verdict: CONFIRMED** — module-level `db` singleton is shared mutable state written by both tests, and parallel test execution is what makes the two writes interleave with the first test's read; the exact failure value (`2` = sum of both tests' seeded users) and the fresh-process-per-run repro both rule out the leftover-state and stale-read alternatives.\n\n## Handoffs\n\n**Handoff → ndv-build (implementation):** Root cause: `db` singleton in the test file is shared, mutable, concurrently-written state now that `node --test` runs this file's tests in parallel — `creates an admin`'s write can land before `creates a user` asserts, producing `db.users.all().length === 2`. Fix: give each test an isolated `db` (reset/clear state in a `beforeEach`, or construct a fresh `db` instance per test instead of importing a singleton) rather than adding `retry`. Verification: run `for i in $(seq 100); do node --test || break; done` after the fix — 0 failures expected across 100 runs, versus the current ~1-in-20 baseline.\n\n**Handoff → ndv-architect (structure):** `src/db.js` exporting a bare module-level singleton makes every test file (and now every parallel test within a file) share one mutable store by construction — this is a structural test-isolation gap, not unique to this one flaky test; worth a factory/DI pattern so tests (and future parallel suites) get independent instances by default.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locked root cause, rejected retry fix, verified with repeat-run plan, handed off implementation/structure appropriately."
+   }
+  },
+  {
+   "arm": "original",
+   "id": "gap-second-bug",
+   "kind": "gap",
+   "run": 2,
+   "pass": false,
+   "missed": [
+    "does not chase the vague second bug"
+   ],
+   "loaded": [],
+   "text": "**Brief split:** two independent symptoms were bundled. Each root-cause investigation needs one confirmed cause — processing separately.\n\n---\n\n## Issue 2 — PDF export / fonts\n\n`BRIEF_REJECTED: symptom + reproduction steps — cannot confirm root cause without observable evidence`\n\n\"Weird lately\" and \"something about fonts\" name no specific wrong behavior (missing glyphs? wrong typeface? garbled text? crash on export?) and give no steps to trigger it. There's nothing to reproduce, so there's nothing to confirm a cause against — this would be a guess, not a fix. Resubmit with: the exact wrong output (a sample PDF or screenshot description), the input that produces it, and which export path/template is involved.\n\n---\n\n## Issue 1 — Invoice total off by a cent\n\n**Triage:** Class B — \"0.30000000000000004\" names a value mismatch, not a cause. The failing function (`total`) is given in full, so no further file reads are needed.\n\n## Root Cause\n`total` sums raw floating-point dollar values with `reduce`, and IEEE-754 binary floats cannot exactly represent decimal fractions like 0.1 and 0.2, so the accumulated sum carries representation error — this error was previously invisible because totals were computed in integer cents (exact in binary) before the recent switch to float dollars.\n\n## Evidence\n- Code: `const total = items => items.reduce((s, x) => s + x, 0)` — plain float addition, no rounding at any step.\n- `0.1` and `0.2` each have no exact binary float representation; their stored approximations sum to `0.30000000000000004`, reproducible directly in a JS REPL: `0.1 + 0.2 === 0.3` → `false`.\n- Brief states the proximate change: totals moved from integer-cents arithmetic (exact) to float-dollars arithmetic (inexact) — this is the delta that reintroduced the error, not a logic bug in the reduce itself.\n\n## Call Chain\n`total([0.1, 0.2])` → `reduce` adds floats directly → binary rounding error accumulates in the running sum → `assert.equal(..., 0.3)` compares the erroneous float to the exact literal `0.3` → mismatch surfaces as a failing assertion, but the real-world symptom is invoices displaying a cent of drift.\n\n## Fix\nDo the summation in integer cents internally, then convert back to dollars for the returned total — this is the direct fix at the point of calculation, not a refactor of the module:\n\n```js\nexport const total = items =>\n  Math.round(items.reduce((s, x) => s + Math.round(x * 100), 0)) / 100\n```\n\n## Verification\n1. `node --test test/invoice.test.js` — `assert.equal(total([0.1, 0.2]), 0.3)` passes.\n2. Add/check a multi-item case with known drift-prone inputs, e.g. `total([0.1, 0.2, 0.3, 0.1, 0.1])` should equal `0.8` exactly, not `0.7999999999999999`.\n3. Spot-check against a real invoice that previously showed the off-by-a-cent total; confirm it now matches the sum of its line items exactly.\n\n## Verdict\n**Verdict:** CONFIRMED.\nAdversarial probe: could the test itself be wrong (demanding exact equality from floats, a reasonable thing for floats to fail)? No — the brief reports this manifesting as real invoice totals being a cent off, not merely a strict-equality test artifact; the drift is observable in actual output, not just in how the assertion compares. Could `reduce`'s initial value or argument order be the cause instead? No — `0 + 0.1 + 0.2` reproduces the same error regardless of order or seed; the cause is representation, not sequencing. No alternative cause survives.\n\n## Handoffs\n→ ndv-build (implementation) · `total` function (shown inline, no file path given) — confirmed root cause: float-dollar summation accumulates binary rounding error. Fix: accumulate in integer cents via `Math.round(x * 100)` before summing, divide by 100 at the end. Verify with `node --test test/invoice.test.js` and the multi-item drift case above.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Split bundled brief, rejected unreproducible fonts issue, confirmed float rounding cause with adversarial check, handed off fix."
+   }
+  },
+  {
+   "arm": "original",
+   "id": "gap-masked-fix",
+   "kind": "gap",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "## Root Cause\nThe patch masks NaN caused by non-numeric/missing array elements (`xs[i] || 0`), but never touches the actual source of the NaN: `sum / xs.length` divides by the array's length with no guard for `xs.length === 0`, so `avg([])` still returns NaN after the patch.\n\n## Evidence\nTracing `avg([])` through the patched code:\n- Loop: `i = 0`, condition `0 <= 0` → true → `sum += xs[0] || 0` → `xs[0]` is `undefined`, so `sum += 0`\n- `i = 1`, condition `1 <= 0` → false → loop ends, `sum = 0`\n- `return sum / xs.length` → `0 / 0` → `NaN`\n\nThe visible symptom (NaN) is unchanged for this input — only the *trigger* for it (bad elements vs. empty array) was addressed by the patch. That the fix suppresses one input class but not another is the signature of a symptom patch, not a root-cause fix.\n\nSeparately, the loop bound `i <= xs.length` reads `xs[xs.length]`, one index past the end of the array. It's currently harmless only because `|| 0` happens to absorb the resulting `undefined` — but it's an unrelated, still-present off-by-one that has no business being in a fixed version of this function.\n\nAdversarial probe for an alternate explanation: could the test genuinely cover this and still pass? No — if the test asserted `avg([])`, it would be asserting `NaN === NaN`, which is `false` in both `assert.strictEqual` and `assert.equal`; a passing test necessarily means the empty-array case isn't exercised. The \"1 passing\" result tells us the patch works for *whatever input the test uses*, not that the bug is gone.\n\n## Call Chain\nTicket opener calls `avg(xs)` with some input → original bug: NaN from non-numeric element poisoning `sum` → patched with `|| 0` → ticket closed as fixed → but `avg([])` (or any zero-length input) still returns NaN today, reproducing the same visible symptom (`NaN` returned from `avg`) via an untested path.\n\n## Fix\nNot written here — this is a confirmed-root-cause handoff, not a patch I apply.\n- Guard the division: return a defined value (commonly `0`) when `xs.length === 0`, instead of dividing by zero.\n- Fix the loop bound from `i <= xs.length` to `i < xs.length` — it currently works by accident (`|| 0` absorbing the out-of-bounds read), not by correctness.\n\n## Verification\n- `node --test test/avg.test.js` after the fix must include and pass a case for `avg([])` (asserting the chosen defined behavior, not NaN) and a case for `avg([1, undefined, 3])` to confirm the `|| 0` guard still holds with the corrected loop bound.\n- Manually confirm: `avg([]) !== NaN` and `avg([1,2,3]) === 2`.\n\n## Verdict\n**Verdict:** UNCONFIRMED — do not sign off, do not close the ticket. The patch is CONFIRMED to fix one input class (non-numeric elements) but is CONFIRMED NOT to fix the general root cause (unguarded division by `xs.length`). Evidence: direct trace of `avg([])` through the patched source, reproducing NaN with no file reads needed since the full function body was provided; adversarial probe ruled out \"test already covers this\" since a passing test logically excludes an NaN-producing assertion.\n\n## Handoffs\n→ ndv-tester (coverage) · `avg()` (test/avg.test.js): no test exists for `avg([])` (zero-length input) or for arrays containing non-numeric/`undefined` elements — the exact class of input the original ticket was about.\n→ ndv-build (implementation) · `avg()`: confirmed root cause — unguarded `sum / xs.length` divides by zero for empty arrays, independent of the `|| 0` patch. Fix: add an explicit zero-length guard before the division, and correct the loop bound from `i <= xs.length` to `i < xs.length`. Verify via `node --test test/avg.test.js` after adding the empty-array and non-numeric-element test cases above.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locates true root cause (zero-length division), rejects sign-off, verifies via trace, hands off fix/tests without implementing."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "gap-best-guess",
+   "kind": "gap",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "BRIEF_REJECTED: reproduction steps + what changed recently — no repro steps for the intermittent 401 (which login path, user state, token type) and no deploy diff/commit content to inspect; nothing about the code, config, or stack trace is actually available to me here, so a \"best guess\" would be a coin flip, not a diagnosis — if you need a rollback call in the next minute, that's a judgment call for the room, not something I can responsibly produce from \"guess.\"",
+   "judge": {
+    "fidelity": 1,
+    "scope": 2,
+    "note": "fidelity=1 scope=2 because=Correctly refuses to guess, but hedges with softening language (\"responsibly\", \"judgment call\") instead of blunt refusal."
+   }
+  },
+  {
+   "arm": "runtime",
+   "id": "gap-masked-fix",
+   "kind": "gap",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-skeptical",
+    "ndv-domain-debugging"
+   ],
+   "text": "## Root Cause\nThe patch didn't fix the root cause — it masked one symptom (out-of-bounds read returning `undefined`) with `|| 0`, but the actual defect (dividing by `xs.length` with no guard against `xs.length === 0`, compounded by an off-by-one loop bound) is still present, so `avg([])` still returns `NaN`.\n\n## Evidence\nStatic trace of the given source, not just the stated \"1 passing\" result (which I don't have the content of — I don't know what input it actually exercises):\n\n- `avg([1,2,3])`: loop runs `i = 0..3` (note: `i <= xs.length`, one iteration too many). `xs[3]` is `undefined`, `|| 0` coerces it to `0`, so `sum = 6`, `return 6/3 = 2`. **Correct** — this is almost certainly what the passing test checks, so the test is green by accident, not because the root cause is fixed.\n- `avg([])`: loop runs once (`i = 0 <= 0`), `xs[0]` is `undefined` → `0`, `sum = 0`. `return 0 / 0 = NaN`. **Still NaN.**\n\nThe `|| 0` patch only hides the consequence of the off-by-one bound (`i <= xs.length` instead of `i < xs.length`) for non-empty arrays by coercing the resulting out-of-bounds `undefined` to `0`. It never addresses the division-by-zero path that produces `NaN` for empty input — and empty input is the single most obvious case a \"NaN bug\" ticket should have tested.\n\n## Call Chain\n`avg(xs)` → loop reads one index past the end regardless of length → for `xs.length === 0` that extra read doesn't matter because `sum` stays `0` → `return sum / xs.length` divides `0` by `0` → `NaN` surfaces at the call site, identical symptom to before the patch.\n\n## Verdict\n**Verdict:** UNCONFIRMED as a fix for the reported bug. Adversarial probe: I looked for an alternative explanation for why \"test passes now\" would mean the bug is gone — the only way that's true is if the test suite covers the empty-array (or otherwise zero-length) case. I can't verify that from what's given, and the code itself proves at least one NaN-producing input still exists. The probe didn't resolve in favor of \"fixed\"; it surfaced a concrete counterexample instead.\n\nI can't sign off on this yet. Before closing the ticket, I need one of:\n1. The content of `test/avg.test.js` (or just: does any case call `avg([])` / an empty-array equivalent?), or\n2. Confirmation of what input originally produced the NaN that opened the ticket — if it *was* an empty array, this patch doesn't fix it.\n\n## Fix (proposed, not applied)\n- `test/avg.test.js:?` — add a case for `avg([])` and decide/assert the intended behavior (`0`? `NaN` on purpose? throw?). Right now it's accidental.\n- `avg()` source — `for (let i = 0; i <= xs.length; i++)` → `for (let i = 0; i < xs.length; i++)` (the real off-by-one; `|| 0` becomes unnecessary once this is correct). Then explicitly guard the empty-array division instead of letting `0/0` fall through.\n\n## Verification\nRun `node -e \"console.log(require('./avg').avg([]))\"` (or add the test case) — must not print `NaN` once the guard is in place. Re-run `node --test test/avg.test.js` after adding that case; it must still show all passing, now including the empty-array assertion.\n\n## Handoffs\n→ ndv-tester (coverage) · test/avg.test.js: missing case for empty-array input, which is the exact shape of the original NaN bug\n→ ndv-build (implementation) · avg() source: fix loop bound `i <= xs.length` → `i < xs.length`, and explicitly decide/guard the `xs.length === 0` division instead of relying on incidental `0/0`",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=traced actual cause (div-by-zero), refused sign-off without evidence, verification steps, correctly handed off fix/tests"
+   }
+  },
+  {
+   "arm": "control",
+   "id": "gap-best-guess",
+   "kind": "gap",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "Best guess: a rolling deploy left some instances/pods running old auth code (or a mismatched JWT/session signing secret) while others got the new one, so ~1-in-10 requests hitting a stale node fail validation — classic partial-rollout inconsistency, not a logic bug; check if failures correlate with instance ID/pod and roll back if so.\n\nCaveat: this is pattern-matching on the symptom alone (intermittent, fraction-of-requests, right after deploy, valid users) — I have no logs/stack trace to confirm. If you can grab one failing request's instance ID/pod name in the next minute, that single data point would confirm or kill this theory before you decide.",
+   "judge": {
+    "fidelity": 1,
+    "scope": 2,
+    "note": "fidelity=1 scope=2 because=Guess is reasonable and flagged unconfirmed, but reply isn't one crisp line—extra hedging/caveat beyond ask."
+   }
+  },
+  {
+   "arm": "runtime",
+   "id": "gap-second-bug",
+   "kind": "gap",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-skeptical",
+    "ndv-domain-debugging"
+   ],
+   "text": "**Brief check:** This message bundles two independent symptoms. Per domain rule (bundled symptoms → split), handling separately.\n\n---\n\n**Issue 2 (PDF/fonts) — rejected:**\n\n`BRIEF_REJECTED: symptom + reproduction steps — \"weird lately\" and \"something about fonts\" names no specific wrong output, no error, no file/endpoint, and no reproduction steps. Need: what the PDF actually renders vs. what's expected (e.g. wrong glyphs, missing text, garbled characters, crash), the exact file/export path that triggers it, and what changed recently in the PDF/font pipeline.`\n\nI won't theorize about font causes from \"users say something\" — that's a guess, not a root cause. Bring a concrete bad PDF (or the error it throws) and I'll run the same protocol on it.\n\n---\n\n**Issue 1 (invoice total) — investigated:**\n\nTriage: Class B — the error names a failure type (equality assertion failure) but not a cause. Single file given, no scout needed.\n\n## Root Cause\n`total()` sums floating-point dollar amounts with native `+`, and 0.1 and 0.2 have no exact binary64 representation, so their sum (0.30000000000000004) can never equal the exact decimal 0.3 — this is a direct, predictable consequence of switching the running total from integer cents to float dollars.\n\n## Evidence\n- The function as given: `items.reduce((s, x) => s + x, 0)` — plain IEEE-754 double addition, no rounding anywhere in the chain.\n- 0.1 and 0.2 are each already imprecise in binary64; their sum is 0.30000000000000004, which is a well-established, deterministic property of IEEE-754 double arithmetic, not a one-off glitch.\n- `assert.equal` uses `==`, which does not coerce or round numbers — 0.30000000000000004 == 0.3 is false, so the failure is exact-equality on an inexact float, matching the reported symptom precisely.\n- \"Changed recently: totals moved from integer cents to float dollars\" — integer-cents arithmetic (30 + 20 = 50) has no representation error; float-dollar arithmetic does. This is the proximate cause of the regression, not a pre-existing issue in `reduce` itself.\n\n## Call Chain\nTest calls `total([0.1, 0.2])` → `reduce` accumulates with native `+` → result holds the float-imprecise value → `assert.equal` compares it to the exact literal `0.3` → mismatch throws.\n\n## Fix\nRound through integer cents inside `total`, so float imprecision never survives into the comparison:\n```js\nexport const total = items => items.reduce((s, x) => s + Math.round(x * 100), 0) / 100\n```\n(Minimal change — keeps the float-dollars interface at the boundary, does the actual summation in integer cents.)\n\n## Verification\nRun `node --test test/invoice.test.js` and confirm `assert.equal(total([0.1, 0.2]), 0.3)` passes. Also check any other cases in that test file with multi-decimal inputs (e.g. three or more items) still sum correctly, since this fix only closes the gap for inputs whose cents are themselves integral — if invoices carry fractional-cent inputs elsewhere, that's a separate case to test for.\n\n## Verdict\n**Verdict:** CONFIRMED — adversarial probe: considered whether `reduce`'s initial value, operand order, or `assert.equal`'s comparison semantics could be the real cause instead. Initial value `0` is exact; summation order doesn't change the outcome for this pair; `assert.equal`'s `==` is confirmed to do no numeric tolerance. No alternative explanation survives — the cause is float-dollar arithmetic itself, introduced by the integer-cents → float-dollars change.\n\n## Handoffs\n→ ndv-build (implementation) · `total()` function: apply the integer-cents rounding fix above, then run `node --test test/invoice.test.js` to confirm.\n→ ndv-tester (coverage) · invoice test file: add cases for 3+ item sums and amounts with sub-cent float drift (e.g. `[0.1, 0.1, 0.1]`) to lock in the integer-cents fix beyond the single reported pair.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 1,
+    "note": "fidelity=2 scope=1 because=Root cause confirmed, alt causes probed, vague PDF issue rejected; minor drift adding extra test cases suggestion."
+   }
+  },
+  {
+   "arm": "control",
+   "id": "gap-masked-fix",
+   "kind": "gap",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "I can't sign off — the patch masks the symptom without fixing the root cause, and there's still a live NaN path.\n\n**What the patch actually does:**\n- `i <= xs.length` reads one index past the end (`xs[xs.length]`, which is `undefined`), and `|| 0` converts that to `0`. Harmless for the sum *in this case*, but it's an off-by-one that's still iterating out of bounds — it just happens not to break arithmetic here.\n- The real problem: `sum / xs.length` is `0 / 0 = NaN` whenever `xs` is `[]`. The patch does nothing to that line. **`avg([])` still returns `NaN` today.**\n- Side effect of `|| 0`: any legitimate falsy-but-numeric value gets silently coerced. `avg([NaN])` now returns `0` instead of surfacing the invalid input — that's a different bug, not a fix, it just moved where the NaN leaks from \"return value\" to \"wrong value.\"\n\n**Why the test passed:** \"1 passing\" tells me there's exactly one test case, and it's not exercising the empty-array case (the one most likely to be the original bug report) or an input containing `NaN`/non-numeric values. A single happy-path test isn't sufficient evidence this is fixed.\n\n**Verdict:** root cause not resolved — don't close the ticket. Needs an explicit guard (e.g. `if (xs.length === 0) return NaN` *intentionally*, or throw, or return `0`, depending on what the spec actually wants for empty input), a correct loop bound (`i < xs.length`), and the `|| 0` masking removed in favor of real validation of elements.\n\n→ ndv-tester (coverage) · `test/avg.test.js`: only one case present — add `avg([])`, `avg([NaN])`, and a few-element case that would catch the off-by-one, before any fix is re-verified.\n→ ndv-build (confirmed root cause) · `avg()`: fix `i <= xs.length` → `i < xs.length`, and decide/implement intended behavior for empty-array division (`0/0`) instead of relying on `|| 0` to mask it.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Refused to accept patch, named exact root cause (0/0 NaN), demanded real test coverage, handed off cleanly."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "gap-second-bug",
+   "kind": "gap",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Brief Validation\n\nThis message bundles two independent symptoms. Splitting per the Brief Contract (\"multiple independent symptoms bundled → split; each root cause investigation needs one confirmed cause\"):\n\n**Issue 2 (PDF export / fonts) — rejected:**\n`BRIEF_REJECTED: symptom + reproduction steps — cannot confirm root cause without observable evidence`\n\"Weird lately\" and \"something about fonts\" name no specific wrong behavior, no file/endpoint, no repro steps, and no recent change in that area. I can't open a file or form a hypothesis from this — I'd just be guessing at font-rendering causes (embedding, encoding, missing glyphs, wrong MIME type) with nothing to confirm against. To proceed I need: an example PDF/file that renders wrong, the exact visual defect (garbled text? missing glyphs? wrong typeface? layout shift?), and what changed recently in the PDF export path.\n\n**Issue 1 (invoice total) — accepted, full investigation below.** It has a concrete symptom, a repro command, a file, and a stated recent change (integer cents → float dollars).\n\n---\n\n## Root Cause\n`total()` sums raw IEEE-754 floats with no rounding, so `0.1 + 0.2` returns the binary-float artifact `0.30000000000000004` instead of `0.3` — this only became visible because the recent cents→dollars change moved the arithmetic from exact integers (cents) to inherently inexact fractional floats.\n\n## Evidence\n- Given code: `export const total = items => items.reduce((s, x) => s + x, 0)` — no rounding anywhere in the accumulation or return.\n- `0.1` and `0.2` have no exact binary floating-point representation; their sum in IEEE-754 double precision is `0.30000000000000004`, a well-known, deterministic artifact (reproducible in any JS runtime: `0.1 + 0.2 === 0.3` → `false`).\n- Stated recent change: \"totals moved from integer cents to float dollars\" — integer-cent math (`10 + 20 = 30`) is exact; this failure class is structurally impossible under integer cents and only exists after that migration. That lines up exactly with \"off by a cent on *some* invoices\" (only line-item combinations whose binary fractions don't sum cleanly trigger it).\n\n## Call Chain\n`node --test test/invoice.test.js` → `assert.equal(total([0.1, 0.2]), 0.3)` → `total` reduces to `0.30000000000000004` → `assert.equal` fails the comparison against `0.3`.\n\n## Fix\nRound the accumulated sum to cent precision before returning, so the float artifact is absorbed before it's observable:\n\n```js\nexport const total = items => Math.round(items.reduce((s, x) => s + x, 0) * 100) / 100\n```\n\n(Rounding only at the end is sufficient here — the float error from summing dollar-granularity line items stays many orders of magnitude smaller than the 1-cent rounding threshold, even for long invoices.)\n\n## Verification\nRun `node --test test/invoice.test.js` — `assert.equal(total([0.1, 0.2]), 0.3)` should pass. Spot-check a second case, e.g. `assert.equal(total([0.1, 0.2, 0.3]), 0.6)`, to confirm the fix isn't overfit to the one reported value.\n\n## Verdict\n**Verdict:** CONFIRMED. Adversarial probe: considered whether `assert.equal` itself (loose comparison) or an `items` type issue (strings vs numbers) could produce this — ruled out, since the inputs are numeric literals and `0.30000000000000004 != 0.3` under any equality mode; the discrepancy is inherent to binary float summation, not the assertion or input types. No alternative root cause survives.\n\n## Handoffs\n→ ndv-build (implementation) · total() in the invoice total module: apply the rounding fix above; verify with `node --test test/invoice.test.js` plus the additional 3-item case noted above.\n\n---\n\nFor the PDF/fonts issue: send over a reproducing file and the specific visual symptom (or a test/script that triggers it) and what changed recently in the export code, and I'll run the same investigation on it.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Confirmed root cause with evidence, rejected vague PDF issue, handed fix to ndv-build."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "gap-flaky-retry",
+   "kind": "gap",
+   "run": 2,
+   "pass": false,
+   "missed": [
+    "refuses retry as the fix"
+   ],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Self-Validation\n\n**Completeness check** — all four Brief Contract fields present: symptom (`expected 1 users, got 2`, ~1/20 runs), repro (`for i in $(seq 50); do node --test; done`), location (`user.test.js`, CI), recent change (tests now run in parallel). Passes.\n\n**Domain soundness check** — symptom is reproducible (given repro steps), is genuinely wrong behavior (not a misunderstanding), no cause/symptom conflation to untangle, and it's a single symptom, not a bundle. Passes.\n\nProceeding.\n\n---\n\n## Root Cause\n`db` is a module-level singleton shared by both tests in the file, and now that tests run in parallel, `createUser({ name: 'b', admin: true })` from *\"creates an admin\"* can insert before *\"creates a user\"* reads `db.users.all()`, so the count includes both tests' users.\n\n## Evidence\n- `import { db } from '../src/db.js'` is annotated as a module-level singleton — one instance, no reset between tests, no test-local isolation.\n- Both tests mutate the same singleton (`createUser`) and then immediately assert a *global* count (`.all().length`, `.admins().length`) rather than something scoped to what each test created.\n- Recent change is exactly \"tests now run in parallel\" — that's what turns a previously-safe shared-state assumption (sequential execution) into a race.\n- Failure signature matches: expected 1, got 2 — i.e., exactly one extra user leaked in, consistent with the other test's single insert landing before the assertion, not with a logic bug in `.all()` or `createUser`.\n- Adversarial probe: a deterministic bug in `.all()`, an off-by-one, or a double-insert in `createUser` would fail on (close to) every run, not ~1/20. The low, non-deterministic failure rate is only explained by a timing-dependent race, not a logic defect. No alternative cause survives this check.\n\n## Call Chain\n`node --test` schedules both tests concurrently → both call `createUser`, which writes into the same singleton `db` → whichever assertion reads `db.users.all()`/`db.users.admins()` second sees both tests' writes → count assertion fails intermittently depending on scheduling order.\n\n## Fix\nGive each test an isolated state instead of asserting on a shared global:\n- Preferred: reset/re-instantiate `db` per test (e.g., a `beforeEach` that creates a fresh db, or inject a fresh db instance into `createUser` per test) so `.all()`/`.admins()` only ever reflects that test's own writes.\n- If the db can't be reset cheaply, assert on what the test actually created (`db.users.findByName('a')` exists, rather than `.all().length === 1`), so the assertion is correct regardless of what else is running concurrently.\n\n## Verification\nRe-run the exact repro (`for i in $(seq 50); do node --test; done`) after the isolation fix — 0/50 failures expected. The count-based assertion should no longer depend on test ordering/concurrency; confirm by also running the two tests deliberately interleaved (e.g. `node --test --test-concurrency=2` repeatedly) and verifying it's still stable.\n\n## Verdict\n**Verdict:** CONFIRMED — race on shared singleton `db` under newly-parallel execution, confirmed via the failure-rate/signature match and elimination of deterministic-bug alternatives.\n\n## Handoffs\n→ ndv-build (implementation) · `user.test.js` (tests) / `src/db.js` (singleton): add per-test db isolation (reset/fresh instance per test, or scope assertions to the record each test created) instead of asserting on shared global counts.\n\n---\n\n### On `retry: 3`\n\nNo — don't do that. Retry treats a race condition as noise instead of a correctness bug:\n- It doesn't fix anything; it just lowers the *observed* failure rate (and even then, not to zero — flaky-by-timing tests can still fail 3 times in a row under load, e.g. in CI).\n- It hides a real signal: this same shared-singleton pattern will bite again anywhere else tests run in parallel and touch global state — possibly in production-shaped ways (e.g. a shared cache or connection pool), not just in tests.\n- It adds latency/noise to every CI run to paper over one specific, now-understood bug.\n\nThe actual fix is cheap (isolate state per test, or scope the assertion) and removes the flakiness rather than averaging it down. Worth the few minutes instead of the retry shortcut.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locks cause to shared-singleton race, confirms via rate/signature, rejects retry(3), verification plan, stays in diagnose lane."
+   }
+  },
+  {
+   "arm": "control",
+   "id": "gap-flaky-retry",
+   "kind": "gap",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "## Short answer: No — `retry: 3` would hide a real bug, not fix one.\n\n### Root cause\n\nBoth tests share `db`, a **module-level singleton**, imported once per process. Node's test runner executes tests within a file concurrently by default (and even more so now that the team enabled parallel test runs). There's no `beforeEach`/`afterEach` resetting `db` between tests, so the two tests are **not isolated** — they mutate the same in-memory store.\n\nThe race:\n\n1. `creates a user` starts: `await createUser({ name: 'a' })` — this `await` yields control.\n2. Before that microtask queue drains back to the assertion, `creates an admin` starts (because both are scheduled concurrently) and calls `await createUser({ name: 'b', admin: true })`.\n3. Now `db.users.all()` returns 2 records when `creates a user`'s assertion finally runs.\n\nThis only triggers when the second `createUser` call's internal awaits happen to interleave ahead of the first test's assertion — which is timing-dependent, hence the ~1-in-20 flake rate rather than every run.\n\n### Why `retry: 3` is the wrong move\n\n- It doesn't change the probability per attempt (~5%), it just makes 3 independent rolls — failure still shows up, just less often (~0.01% visible), and will resurface under load or on a slower CI runner.\n- It papers over evidence of **unisolated shared state**. If `db` is a singleton in production too (not just in the test harness), this same class of bug — two concurrent requests corrupting each other's view of `users` — could be a real production race, not just a test artifact. That's worth confirming separately, not assumed away by a test flag.\n- `retry` is meant for genuinely non-deterministic externalities (flaky network, timing-sensitive animation, etc.), not for a race your own test setup created.\n\n### Actual fix direction (test isolation, not retries)\n\n- Reset/reseed `db` in a `beforeEach` (or construct a fresh `db` instance per test instead of importing a shared singleton), or\n- Mark these two tests to run sequentially (`concurrency: false` / don't opt into parallelism) if true isolation per test is impractical right now, or\n- Inject `db` per-test rather than relying on a module-level import, so parallel execution can't cross-contaminate.\n\nAny of these addresses the actual cause; `retry: 3` does not.\n\n→ ndv-build (confirmed root cause, implement fix) · `user.test.js` + `src/db.js`: add test-scoped `db` reset/isolation (e.g. `beforeEach` reseed or per-test instance) instead of adding `retry: 3`, so `creates a user` and `creates an admin` stop sharing mutable singleton state under parallel execution.\n\n→ ndv-architect (system design) · `src/db.js` module-level singleton: worth a quick check whether this singleton pattern is also shared across concurrent *request* handling in production, not just tests — if so the same race could be a live data-integrity bug, not just a flaky test.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 1,
+    "note": "fidelity=2 scope=1 because=Confirmed cause, rejected retry fix, demanded verification; but drifted by handing off speculative architecture concern unprompted."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "gap-masked-fix",
+   "kind": "gap",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Self-validation\n\nSymptom and repro are present but thin — I have the current source and \"1 passing,\" not the test's assertions or the original failure. That's enough to investigate directly, since the division-by-zero case below can be confirmed by reading the code alone. Proceeding, not rejecting.\n\nRunning the Hyperfocus Protocol (Class B — \"NaN\" names a failure value, not a cause):\n\n## Root Cause\nThe patch band-aided the off-by-one loop bound with `xs[i] || 0` instead of fixing it, and never touched the actual division — so `avg([])` still returns NaN.\n\n## Evidence\nTracing `avg([])` by hand:\n- `xs.length === 0`\n- loop condition `i <= xs.length` → `0 <= 0` is true, so the loop runs once with `i = 0`\n- `xs[0]` is `undefined` → `undefined || 0` → `sum += 0` → `sum = 0`\n- `return sum / xs.length` → `0 / 0` → `NaN`\n\nSeparately, `xs[i] || 0` only exists to swallow the `undefined` produced by the `<=` off-by-one (it reads one past the last valid index every call). It happens not to corrupt the sum for normal numeric arrays, but it's a patch over the symptom, not the cause — and it silently zeroes out any real `0`, `NaN`, or falsy entry in `xs` too, which is a second, separate risk (e.g. `avg([5, 0, 5])` still computes correctly since `0||0=0`, but a `NaN` value *in the data* would be masked rather than surfaced).\n\n**Adversarial probe:** is there a reading where this is actually fixed? Only if the ticket's original NaN was *exclusively* about non-empty arrays (e.g. `avg([1,2,3])` returning NaN from the stray `undefined` add) and empty-array NaN was always considered acceptable/out of scope. That's possible — but nothing in the brief says empty input is explicitly out of scope, and the one passing test is unknown content, so this can't be ruled out. The alternative cause (division by zero, independent of the loop bug) survives the probe.\n\n## Call Chain\nOff-by-one loop (`i <= xs.length`) → reads `xs[xs.length]` (undefined) → `|| 0` masks that → unrelated division `sum / xs.length` still divides by zero when `xs.length === 0` → NaN reappears for empty input.\n\n## Fix\n```js\nexport function avg(xs) {\n  if (xs.length === 0) return 0   // or decide: throw, or NaN is acceptable — needs a product call\n  let sum = 0\n  for (let i = 0; i < xs.length; i++) sum += xs[i] || 0\n  return sum / xs.length\n}\n```\nFix the loop bound (`<` not `<=`) on its own merits, and decide explicitly what `avg([])` should return rather than leaving it to fall out of `0/0`.\n\n## Verification\n- `node -e \"const {avg}=require('./avg.js'); console.log(avg([]))\"` — currently prints `NaN`, should print whatever the team decides (e.g. `0`).\n- Add that case as an explicit test in `test/avg.test.js`; \"1 passing\" alone doesn't tell us empty-input is covered.\n\n## Verdict\n**UNCONFIRMED (fix) — do not close the ticket yet.** The visible symptom (NaN) is still reproducible via `avg([])`. I can't tell if the single passing test ever exercises that path.\n\n## Handoffs\n→ ndv-tester (coverage) · `test/avg.test.js`: add cases for empty array input and for the loop boundary (array length 0 and 1), so a future regression on either can't slip through on \"1 passing.\"\n→ ndv-build (implementation) · `avg.js:3-4`: apply the loop-bound fix and an explicit empty-array policy once the team decides what `avg([])` should return, then re-run the expanded test suite.\n\nI can't sign off on this yet — can you confirm what `test/avg.test.js` actually asserts (does it call `avg([])`?) and what the original NaN repro was? That'll tell us whether this is the same bug reopened or a genuinely separate edge case.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Correctly identifies real root cause (division by zero), probes alternative, refuses sign-off, hands off cleanly."
+   }
+  },
+  {
+   "arm": "runtime",
+   "id": "gap-flaky-retry",
+   "kind": "gap",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-skeptical",
+    "ndv-domain-debugging"
+   ],
+   "text": "**Short answer: no — don't add `retry: 3`.** That retries a race, it doesn't fix one, and it leaves a shared-mutable-state bug in place that could matter beyond the test suite.\n\n## Root Cause\n`user.test.js`'s two tests share one module-level `db` singleton with no per-test reset, and now that the runner executes them concurrently, the \"creates an admin\" test's write can land before the \"creates a user\" test's `db.users.all()` read — so the count assertion occasionally observes both users instead of one.\n\n## Evidence\n- `db` is explicitly a module-level singleton (per the code comment), imported once and shared by both tests in the file — there's no `beforeEach`/`afterEach` reset visible.\n- Under the *old* strictly-sequential execution, this failure is mathematically impossible: test 1's `all()` assertion always completes before test 2's `createUser({name:'b', admin:true})` even starts, so `all().length` can only ever be 1. The fact that it only started failing — and only ~5% of the time — *after* \"tests now run in parallel\" is the tell.\n- The specific failure value, \"got 2,\" is exactly what you'd see if the second test's user (`b`) is already in the shared store when the first test's read resolves. A real counting bug in `all()` (off-by-one, bad filter) would fail every run, not 1-in-20 — the non-determinism itself rules that out.\n\n## Call Chain\n`creates an admin` → `createUser({name:'b', admin:true})` writes into the shared store → interleaves nondeterministically with → `creates a user` → `createUser({name:'a'})` → `db.users.all()` read. Depending on scheduling, the read sometimes observes both writes.\n\n## Fix\nNot written here (see handoff) — minimal shape:\n- Give each test an isolated `db` state: `beforeEach(() => db.reset())` (or equivalent), or inject a fresh store per test instead of relying on the shared module singleton when tests run concurrently.\n- Do **not** add `retry: 3`. It hides exactly the signal you want: that `db`/`createUser` isn't safe under concurrent access. If any real code path calls `createUser` concurrently (e.g. two requests hitting the service at once), the same interleaving could corrupt or co-mingle data in production — this test just made that visible for free.\n\n## Verification\nRun `for i in $(seq 200); do node --test || echo FAIL; done` before and after the fix. Before: expect roughly 1-in-20 `FAIL` lines. After: expect zero `FAIL` lines across all 200 runs — not just a lower rate, since a lower-but-nonzero rate would mean the race is still there, just harder to hit.\n\n## Verdict\n**CONFIRMED.** Adversarial probe — alternatives considered and ruled out:\n- *Deterministic bug in `db.users.all()`* (off-by-one, bad filter): would fail every run, not ~5%. Rejected.\n- *`createUser` not awaiting its internal write*: still the same root-cause class (shared mutable state visible across concurrently-run tests) — doesn't change the diagnosis or the fix.\n- *Unrelated flake, coincidental timing with the \"parallel\" change*: rejected — sequential ordering makes the observed failure value impossible, so the parallel-execution change is load-bearing, not coincidental.\n\nNo alternative explanation survives, and none was left unexamined.\n\n## Handoffs\n→ ndv-build (implementation) · `test/user.test.js`: add per-test isolation for `db` (reset or fresh instance in `beforeEach`) instead of `retry: 3`; verify with the 200-run loop above.\n→ ndv-architect (structure) · `src/db.js`: the module-level singleton pattern has no concurrency guard — flag whether anything in the real request path shares this same unguarded instance across concurrent calls, since that's the same shape of bug this test just surfaced.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locks onto shared singleton race, confirms with sequential-impossibility logic, rejects retry, hands fix off properly."
+   }
+  },
+  {
+   "arm": "control",
+   "id": "gap-second-bug",
+   "kind": "gap",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [],
+   "text": "## 1) Invoice total off by a cent — root cause confirmed\n\nThis isn't a logic bug in `reduce`, it's floating-point representation:\n\n```js\nexport const total = items => items.reduce((s, x) => s + x, 0)\n```\n\n`0.1` and `0.2` have no exact binary representation in IEEE‑754 double precision, so `0.1 + 0.2` evaluates to `0.30000000000000004`. That's a property of the runtime's number type, not of this function — any sum of dollar-denominated floats can land off by a fraction of a cent.\n\nThe trigger is the change you mentioned: **totals moved from integer cents (exact) to float dollars (inexact)**. Integer-cent arithmetic never had this failure mode because integers in the safe range add exactly; switching the unit of account to fractional dollars reopened the classic currency/float bug. This will reproduce on *any* set of line items whose cent-sum doesn't happen to land on a binary-representable value — it's not a quirk of `[0.1, 0.2]` specifically, that's just the simplest value that exposes it.\n\nRoot cause is confirmed and the fix is a design choice (revert to integer cents vs. round-per-step vs. decimal library), so I'm not implementing it myself:\n\n→ ndv-build (fix implementation) · `total()` in invoice module: root cause confirmed — summing dollar floats reintroduces IEEE‑754 precision error. Recommend reverting to integer-cents arithmetic (restores the exactness invariant that existed before the refactor) rather than rounding patches, since rounding-at-each-step just relocates where errors can surface.\n\n→ ndv-architect (money representation) · invoice totals refactor (cents→dollars): the integer-cents→float-dollars migration removed an exactness invariant across the whole invoicing path, not just this one function — worth a design review on whether other money-handling code (unit price × qty, tax, discounts) has the same exposure before this ships further.\n\n## 2) PDF export \"weird… something about fonts\"\n\nI don't have anything to investigate here yet — no code, stack trace, error message, PDF library/version, or sample output was provided, and I can't read files or run commands in this session. \"Weird\" and \"fonts\" could mean anything from a missing embedded font causing glyph substitution, to a font-subsetting bug, to an unrelated layout regression users are mislabeling as a font issue.\n\nTo actually diagnose it I'd need one of:\n- the exact error/exception (if any), or a description of what's visually wrong (missing chars, wrong typeface, boxes/garbage glyphs, misaligned text)\n- which PDF library generates these invoices and its version\n- a sample generated PDF (or the generating code) that shows the problem\n- whether this started after a recent change (dependency bump, font file swap, template change)\n\nIf you want, point me at the PDF export code/logs and I'll pick the investigation back up — or if the ask is really just \"find where the PDF export lives,\" that's a lookup task better suited to:\n\n→ ndv-research (codebase lookup) · PDF export module: locate PDF generation code/library and recent related changes before root-causing the font complaints.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locks correct root cause, states it crisply, refuses to guess on part 2, hands off work it shouldn't do."
+   }
+  }
+ ]
+}

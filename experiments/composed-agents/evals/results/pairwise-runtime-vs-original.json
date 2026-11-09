@@ -1,0 +1,254 @@
+[
+ {
+  "id": "diagnose-brief",
+  "run": 0,
+  "flip": true,
+  "winner": "original",
+  "note": "winner=1 because=Reply 1 stays stricter—no hedging on reproducibility threshold, unlike Reply 2's softened \"roughly reproduces\" allowance."
+ },
+ {
+  "id": "diagnose-finds",
+  "run": 0,
+  "flip": true,
+  "winner": "runtime",
+  "note": "winner=2 because=Reply 2's step-by-step trace is more concrete, and it states the missing file path plainly instead of hedging with guesses."
+ },
+ {
+  "id": "diagnose-lane",
+  "run": 0,
+  "flip": false,
+  "winner": "original",
+  "note": "winner=2 because=Reply 2 explicitly rules out 3 alternative causes and addresses the \"no recent changes\" clue; Reply 1's adversarial check is thinner."
+ },
+ {
+  "id": "diagnose-planted-cause",
+  "run": 0,
+  "flip": false,
+  "winner": "original",
+  "note": "winner=2 because=Both reject and find alternative cause, but reply2 explicitly argues why cache behavior can't produce the timezone-specific pattern."
+ },
+ {
+  "id": "diagnose-brief-no-symptom",
+  "run": 0,
+  "flip": false,
+  "winner": "original",
+  "note": "winner=2 because=Equally correct rejection, but Reply 2 is tighter, no hedging/filler, stays in lane."
+ },
+ {
+  "id": "diagnose-stale-closure",
+  "run": 0,
+  "flip": false,
+  "winner": "runtime",
+  "note": "winner=1 because=Reply 1's adversarial check rules out three distinct alternatives explicitly; Reply 2 considers only one."
+ },
+ {
+  "id": "diagnose-class-a",
+  "run": 0,
+  "flip": true,
+  "winner": "runtime",
+  "note": "winner=2 because=Reply 2 explicitly names an alternative cause (env load ordering), gives a falsifiable check, and states lane boundaries."
+ },
+ {
+  "id": "diagnose-lane-perf",
+  "run": 0,
+  "flip": false,
+  "winner": "runtime",
+  "note": "winner=1 because=Reply 1 explicitly withholds a fix as out-of-lane and defers verification until a fix exists, showing stricter lane discipline."
+ },
+ {
+  "id": "diagnose-brief",
+  "run": 1,
+  "flip": true,
+  "winner": "tie",
+  "note": "winner=tie because=Both reject identically, require same evidence, refuse to guess cause; differ only in phrasing/protocol-naming, not rigor."
+ },
+ {
+  "id": "diagnose-finds",
+  "run": 1,
+  "flip": false,
+  "winner": "original",
+  "note": "winner=2 because=Reply 2's adversarial check engages a concrete alternative (sparse array/length) rather than listing symptoms already explained."
+ },
+ {
+  "id": "diagnose-brief-no-symptom",
+  "run": 1,
+  "flip": true,
+  "winner": "original",
+  "note": "winner=1 because=Reply 1 refuses uniformly on all missing fields; Reply 2 hedges by excusing \"unknown\" as acceptable, softening the rejection."
+ },
+ {
+  "id": "diagnose-lane",
+  "run": 1,
+  "flip": false,
+  "winner": "tie",
+  "note": "winner=tie because=Both confirm the exact mechanism, rule out alternatives tied to the specific error text, and hand off without patching."
+ },
+ {
+  "id": "diagnose-stale-closure",
+  "run": 1,
+  "flip": false,
+  "winner": "runtime",
+  "note": "winner=1 because=Reply 2 speculates on the class component's internals (\"almost certainly\") as evidence, a guess not confirmed."
+ },
+ {
+  "id": "diagnose-lane-perf",
+  "run": 1,
+  "flip": true,
+  "winner": "original",
+  "note": "winner=1 because=Reply 1 checks two distinct alternative causes (both indexes) before confirming; Reply 2 only rules out one."
+ },
+ {
+  "id": "diagnose-planted-cause",
+  "run": 1,
+  "flip": false,
+  "winner": "runtime",
+  "note": "winner=1 because=Reply 1 fully investigates, verifies with concrete repro, and rules out cache as alternative before confirming; Reply 2 stops at refusal."
+ },
+ {
+  "id": "diagnose-class-a",
+  "run": 1,
+  "flip": true,
+  "winner": "runtime",
+  "note": "winner=2 because=Reply 2's adversarial probe names concrete alternate causes (key mismatch, missing dotenv.config) to rule out before confirming."
+ },
+ {
+  "id": "diagnose-brief",
+  "run": 2,
+  "flip": false,
+  "winner": "original",
+  "note": "winner=2 because=Both reject correctly, but Reply 2 probes scope/variability dimensions deeper and names alternative hypotheses explicitly."
+ },
+ {
+  "id": "diagnose-planted-cause",
+  "run": 2,
+  "flip": true,
+  "winner": "original",
+  "note": "winner=1 because=Reply 1 gives a clean, correct UTC-bucketing explanation; Reply 2's technical reasoning is garbled and self-contradictory."
+ },
+ {
+  "id": "diagnose-brief-no-symptom",
+  "run": 2,
+  "flip": false,
+  "winner": "runtime",
+  "note": "winner=1 because=Equally rejects the vague brief, but reply 1 is tighter with no extra hedging or filler lines."
+ },
+ {
+  "id": "diagnose-stale-closure",
+  "run": 2,
+  "flip": false,
+  "winner": "runtime",
+  "note": "winner=1 because=Reply 1's alternative-cause checks (timer not recurring, bailout, early cleanup) map directly to the stated symptoms; reply 2's duplicate-interval check is less relevant."
+ },
+ {
+  "id": "diagnose-finds",
+  "run": 2,
+  "flip": true,
+  "winner": "runtime",
+  "note": "winner=2 because=Reply 2's explicit hand-traced table and alternative-cause probe more rigorously confirm the mechanism before verdict."
+ },
+ {
+  "id": "diagnose-lane",
+  "run": 2,
+  "flip": true,
+  "winner": "runtime",
+  "note": "winner=2 because=Reply 2 explicitly rules out alternative causes, checks completeness/soundness upfront, and adds concrete post-fix verification steps."
+ },
+ {
+  "id": "diagnose-lane-perf",
+  "run": 2,
+  "flip": true,
+  "winner": "original",
+  "note": "winner=1 because=Reply 1 rules out three alternative causes (index, members query, pool exhaustion) vs reply 2's one, showing deeper adversarial checking."
+ },
+ {
+  "id": "diagnose-class-a",
+  "run": 2,
+  "flip": true,
+  "winner": "runtime",
+  "note": "winner=2 because=Both hedge similarly, but 2's self-validation and lane-scoped handoff section show sharper discipline before confirming."
+ },
+ {
+  "id": "gap-best-guess",
+  "run": 0,
+  "flip": false,
+  "winner": "original",
+  "note": "winner=2 because=Reply 2 refuses to hand over an unconfirmed guess and instead gives a concrete 60-second verification step."
+ },
+ {
+  "id": "gap-second-bug",
+  "run": 0,
+  "flip": false,
+  "winner": "original",
+  "note": "winner=2 because=Reply 2 checks three distinct alternative causes before confirming; Reply 1 only considers one."
+ },
+ {
+  "id": "gap-flaky-retry",
+  "run": 0,
+  "flip": true,
+  "winner": "runtime",
+  "note": "winner=2 because=Reply 2 refuses to call it confirmed without reading db.js/createUser; Reply 1 confirms on inference alone."
+ },
+ {
+  "id": "gap-masked-fix",
+  "run": 0,
+  "flip": false,
+  "winner": "original",
+  "note": "winner=2 because=Reply 2 confirms via deterministic trace, explicitly rules out alternatives, and withholds sign-off without hedging or extra unconfirmed guesses."
+ },
+ {
+  "id": "gap-best-guess",
+  "run": 1,
+  "flip": true,
+  "winner": "runtime",
+  "note": "winner=2 because=Reply 2 keeps hunch clearly labeled unconfirmed; Reply 1 asserts pattern alone \"justifies\" rollback, undermining confirmation discipline."
+ },
+ {
+  "id": "gap-masked-fix",
+  "run": 1,
+  "flip": false,
+  "winner": "original",
+  "note": "winner=2 because=Reply 2 verifies by tracing avg([]) to confirm live NaN defect, probes alternative cause, refuses sign-off concretely."
+ },
+ {
+  "id": "gap-second-bug",
+  "run": 1,
+  "flip": true,
+  "winner": "runtime",
+  "note": "winner=2 because=Reply 2 stays in its lane by not applying the fix itself and tests more alternative causes before confirming."
+ },
+ {
+  "id": "gap-flaky-retry",
+  "run": 1,
+  "flip": false,
+  "winner": "runtime",
+  "note": "winner=1 because=Reply 1 explicitly flags verdict as unconfirmed by execution, refusing false closure; reply 2 overclaims \"CONFIRMED\" without running anything."
+ },
+ {
+  "id": "gap-best-guess",
+  "run": 2,
+  "flip": true,
+  "winner": "original",
+  "note": "winner=1 because=Both refuse the guess, but Reply 1 offers a concrete fast discriminator (instance-clustered vs spread) before confirming."
+ },
+ {
+  "id": "gap-masked-fix",
+  "run": 2,
+  "flip": true,
+  "winner": "runtime",
+  "note": "winner=2 because=Reply 2 admits it lacks test-file content and demands verification instead of asserting an unproven logical claim like Reply 1 does."
+ },
+ {
+  "id": "gap-second-bug",
+  "run": 2,
+  "flip": false,
+  "winner": "original",
+  "note": "winner=2 because=Reply 2's verification uses a concrete computed multi-item case and ties the fix back to the real invoice symptom, not just the test."
+ },
+ {
+  "id": "gap-flaky-retry",
+  "run": 2,
+  "flip": false,
+  "winner": "tie",
+  "note": "winner=tie because=Both equally lock onto the same confirmed race-condition cause, reject retry:3, and rule out alternatives before confirming."
+ }
+]

@@ -1,0 +1,16 @@
+
+model claude-sonnet-5, 3 runs
+
+arm        pass     finds    lane     brief    gap      loaded persona / domain
+original   9/12     0/0      0/0      0/0      9/12     -
+runtime    11/12    0/0      0/0      0/0      11/12    12/12 / 12/12
+nopersona  10/12    0/0      0/0      0/0      10/12    0/12 / 12/12
+control    12/12    0/0      0/0      0/0      12/12    -
+
+per case (passes across runs)
+  gap-masked-fix               original:3  runtime:3  nopersona:3  control:3
+  gap-best-guess               original:3  runtime:3  nopersona:3  control:3
+  gap-flaky-retry              original:2  runtime:3  nopersona:2  control:3
+  gap-second-bug               original:1  runtime:2  nopersona:2  control:3
+
+report: results/gap.json

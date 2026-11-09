@@ -1,0 +1,91 @@
+{
+ "description": "ndv-review cases for the swap experiment: the 3 fleet cases plus 3 added.",
+ "cases": [
+  {
+   "id": "review-finds",
+   "agent": "ndv-review",
+   "kind": "finds",
+   "input": "Review this diff from ndv-build. Priority: correctness. Constraints: async/await everywhere. Out of scope: naming.\n\n```diff\n+export async function updateProfile(repo, profile) {\n+  try {\n+    repo.save(profile)\n+  } catch (e) {\n+    logger.error(e)\n+  }\n+  return { ok: true }\n+}\n```",
+   "checks": [
+    {
+     "pattern": "await|unawaited|floating|unhandled|promise",
+     "name": "save() is not awaited, so the catch never fires"
+    }
+   ],
+   "why": "Missing await: errors become unhandled rejections and the function always reports ok."
+  },
+  {
+   "id": "review-lane",
+   "agent": "ndv-review",
+   "kind": "lane",
+   "input": "Review this diff from ndv-build. Priority: correctness. Constraints: Express. Out of scope: naming.\n\n```diff\n+router.get('/thumb', (req, res) => {\n+  exec('convert ' + req.query.file + ' -resize 64x64 out.png', () => res.sendFile('out.png'))\n+})\n```",
+   "checks": [
+    {
+     "handoff": "ndv-secure"
+    }
+   ],
+   "why": "Command injection through req.query.file: flagged Critical and handed to ndv-secure, not patched."
+  },
+  {
+   "id": "review-brief",
+   "agent": "ndv-review",
+   "kind": "brief",
+   "input": "Brief from ndv-flow:\n- Defect classes to prioritize: correctness\n- Constraints: project uses the repository pattern\n- Out of scope for this pass: style\n\nReview it.",
+   "checks": [
+    {
+     "rejected": true
+    }
+   ],
+   "why": "What was produced, and by whom, is missing."
+  },
+  {
+   "id": "review-many-small",
+   "agent": "ndv-review",
+   "kind": "finds",
+   "input": "Review this diff from ndv-build. Priority: correctness and maintainability. Constraints: TypeScript strict mode. Out of scope: performance.\n\n```diff\n--- a/src/paging.ts\n+++ b/src/paging.ts\n+export function pageOf(items: Item[], page: number) {\n+  const size = 20\n+  const unused = items.length\n+  const start = page * size\n+  return items.slice(start, start + size + 1)\n+}\n+\n+export function title(item: Item | null) {\n+  return item.name.trim()\n+}\n```",
+   "checks": [
+    {
+     "pattern": "size \\+ 1|\\+ ?1|off.by.one|21 items|one extra",
+     "name": "slice returns one extra item"
+    },
+    {
+     "pattern": "null|undefined|item\\?|optional chaining",
+     "name": "null item dereferenced"
+    },
+    {
+     "pattern": "unused",
+     "name": "unused variable"
+    },
+    {
+     "pattern": "magic|hard.?coded|20|constant|page size",
+     "name": "hard-coded page size"
+    }
+   ],
+   "why": "Total perception registers all four, minor ones included."
+  },
+  {
+   "id": "review-lane-perf",
+   "agent": "ndv-review",
+   "kind": "lane",
+   "input": "Review this diff from ndv-build. Priority: correctness. Constraints: Postgres via node-pg. Out of scope: naming.\n\n```diff\n--- a/src/orders.js\n+++ b/src/orders.js\n+export async function ordersWithItems(db, userId) {\n+  const orders = await db.query('SELECT * FROM orders WHERE user_id = $1', [userId])\n+  for (const o of orders.rows) {\n+    o.items = (await db.query('SELECT * FROM items WHERE order_id = $1', [o.id])).rows\n+  }\n+  return orders.rows\n+}\n```",
+   "checks": [
+    {
+     "handoff": "ndv-optimize"
+    }
+   ],
+   "why": "N+1 query: flag it, hand it to ndv-optimize, do not rewrite it."
+  },
+  {
+   "id": "review-brief-no-defects",
+   "agent": "ndv-review",
+   "kind": "brief",
+   "input": "Brief from ndv-flow:\n- What was produced: some changes\n- Constraints: none\n\nReview it.",
+   "checks": [
+    {
+     "rejected": true
+    }
+   ],
+   "why": "No files identified."
+  }
+ ]
+}

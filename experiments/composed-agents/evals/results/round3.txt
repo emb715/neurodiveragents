@@ -1,0 +1,12 @@
+
+model claude-sonnet-5, 3 runs. Mean share of planted items found (words). * = native identity for the domain
+
+case                       skeptical             total-perception      vigilant              
+id-review-exhaustive       94% (977)             100% (1167) *         100% (1091)           
+id-review-exhaustive-2     78% (793)             83% (937) *           83% (806)             
+id-debug-decoy-retry       100% (630) *          100% (624)            100% (764)            
+id-debug-decoy-cache       100% (690) *          100% (806)            100% (808)            
+id-sec-trust               100% (1160)           100% (1419)           100% (1259) *         
+id-sec-jwt                 100% (980)            93% (1143)            93% (1181) *          
+
+native identity 96%  vs  other identities 96%

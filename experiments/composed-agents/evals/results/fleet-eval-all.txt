@@ -1,0 +1,230 @@
+Running 56 behavior cases against: claude.sh (claude-sonnet-5) (concurrency 8)
+  1/56  2/56  3/56  4/56  5/56  6/56  7/56  8/56  9/56  10/56  11/56  12/56  13/56  14/56  15/56  16/56  17/56  18/56  19/56  20/56  21/56  22/56  23/56  24/56  25/56  26/56  27/56  28/56  29/56  30/56  31/56  32/56  33/56  34/56  35/56  36/56  37/56  38/56  39/56  40/56  41/56  42/56  43/56  44/56  45/56  46/56  47/56  48/56  49/56  50/56  51/56  52/56  53/56  54/56  55/56  56/56
+
+BEHAVIOR EVAL — claude.sh (claude-sonnet-5)
+fixture v1 · 56 cases
+
+  accuracy   98.2%  (55/56)
+
+  by kind
+    brief    100.0%  (12/12)
+    finds    100.0%  (26/26)
+    lane      94.4%  (17/18)
+
+  by agent
+    ndv-accessibility  3/3
+    ndv-architect      3/3
+    ndv-build          3/3
+    ndv-design         3/3
+    ndv-diagnose       3/3
+    ndv-explain        2/2
+    ndv-flow           5/5
+    ndv-forecast       2/2
+    ndv-honest         1/1
+    ndv-optimize       2/3
+    ndv-refactor       3/3
+    ndv-research       2/2
+    ndv-review         3/3
+    ndv-scope          2/2
+    ndv-secure         3/3
+    ndv-signal         2/2
+    ndv-telemetry      3/3
+    ndv-tester         3/3
+    ndv-upgrade        7/7
+
+  failures
+    optimize-lane  missed: handoff → ndv-secure
+      Math.random session tokens are a security finding for ndv-secure; the full-table scan is the in-lane one.
+
+  report → experiments/composed-agents/results/all-original-1.json
+Running 56 behavior cases against: claude.sh (claude-sonnet-5) (concurrency 8)
+  1/56  2/56  3/56  4/56  5/56  6/56  7/56  8/56  9/56  10/56  11/56  12/56  13/56  14/56  15/56  16/56  17/56  18/56  19/56  20/56  21/56  22/56  23/56  24/56  25/56  26/56  27/56  28/56  29/56  30/56  31/56  32/56  33/56  34/56  35/56  36/56  37/56  38/56  39/56  40/56  41/56  42/56  43/56  44/56  45/56  46/56  47/56  48/56  49/56  50/56  51/56  52/56  53/56  54/56  55/56  56/56
+
+BEHAVIOR EVAL — claude.sh (claude-sonnet-5)
+fixture v1 · 56 cases
+
+  accuracy   96.4%  (54/56)
+
+  by kind
+    brief     91.7%  (11/12)
+    finds    100.0%  (26/26)
+    lane      94.4%  (17/18)
+
+  by agent
+    ndv-accessibility  2/3
+    ndv-architect      3/3
+    ndv-build          3/3
+    ndv-design         3/3
+    ndv-diagnose       3/3
+    ndv-explain        2/2
+    ndv-flow           5/5
+    ndv-forecast       2/2
+    ndv-honest         1/1
+    ndv-optimize       3/3
+    ndv-refactor       3/3
+    ndv-research       2/2
+    ndv-review         3/3
+    ndv-scope          2/2
+    ndv-secure         3/3
+    ndv-signal         2/2
+    ndv-telemetry      3/3
+    ndv-tester         2/3
+    ndv-upgrade        7/7
+
+  failures
+    accessibility-lane  missed: handoff → ndv-secure
+      innerHTML with user-controlled bio is stored XSS: out of lane, must be handed to ndv-secure.
+    tester-brief  missed: BRIEF_REJECTED
+      What correctness means is missing.
+
+  report → experiments/composed-agents/results/all-flat-1.json
+Running 56 behavior cases against: claude.sh (claude-sonnet-5) (concurrency 8)
+  1/56  2/56  3/56  4/56  5/56  6/56  7/56  8/56  9/56  10/56  11/56  12/56  13/56  14/56  15/56  16/56  17/56  18/56  19/56  20/56  21/56  22/56  23/56  24/56  25/56  26/56  27/56  28/56  29/56  30/56  31/56  32/56  33/56  34/56  35/56  36/56  37/56  38/56  39/56  40/56  41/56  42/56  43/56  44/56  45/56  46/56  47/56  48/56  49/56  50/56  51/56  52/56  53/56  54/56  55/56  56/56
+
+BEHAVIOR EVAL — claude.sh (claude-sonnet-5)
+fixture v1 · 56 cases
+
+  accuracy   100.0%  (56/56)
+
+  by kind
+    brief    100.0%  (12/12)
+    finds    100.0%  (26/26)
+    lane     100.0%  (18/18)
+
+  by agent
+    ndv-accessibility  3/3
+    ndv-architect      3/3
+    ndv-build          3/3
+    ndv-design         3/3
+    ndv-diagnose       3/3
+    ndv-explain        2/2
+    ndv-flow           5/5
+    ndv-forecast       2/2
+    ndv-honest         1/1
+    ndv-optimize       3/3
+    ndv-refactor       3/3
+    ndv-research       2/2
+    ndv-review         3/3
+    ndv-scope          2/2
+    ndv-secure         3/3
+    ndv-signal         2/2
+    ndv-telemetry      3/3
+    ndv-tester         3/3
+    ndv-upgrade        7/7
+
+  report → experiments/composed-agents/results/all-original-2.json
+Running 56 behavior cases against: claude.sh (claude-sonnet-5) (concurrency 8)
+  1/56  2/56  3/56  4/56  5/56  6/56  7/56  8/56  9/56  10/56  11/56  12/56  13/56  14/56  15/56  16/56  17/56  18/56  19/56  20/56  21/56  22/56  23/56  24/56  25/56  26/56  27/56  28/56  29/56  30/56  31/56  32/56  33/56  34/56  35/56  36/56  37/56  38/56  39/56  40/56  41/56  42/56  43/56  44/56  45/56  46/56  47/56  48/56  49/56  50/56  51/56  52/56  53/56  54/56  55/56  56/56
+
+BEHAVIOR EVAL — claude.sh (claude-sonnet-5)
+fixture v1 · 56 cases
+
+  accuracy   98.2%  (55/56)
+
+  by kind
+    brief    100.0%  (12/12)
+    finds    100.0%  (26/26)
+    lane      94.4%  (17/18)
+
+  by agent
+    ndv-accessibility  2/3
+    ndv-architect      3/3
+    ndv-build          3/3
+    ndv-design         3/3
+    ndv-diagnose       3/3
+    ndv-explain        2/2
+    ndv-flow           5/5
+    ndv-forecast       2/2
+    ndv-honest         1/1
+    ndv-optimize       3/3
+    ndv-refactor       3/3
+    ndv-research       2/2
+    ndv-review         3/3
+    ndv-scope          2/2
+    ndv-secure         3/3
+    ndv-signal         2/2
+    ndv-telemetry      3/3
+    ndv-tester         3/3
+    ndv-upgrade        7/7
+
+  failures
+    accessibility-lane  missed: image without alt text; handoff → ndv-secure
+      innerHTML with user-controlled bio is stored XSS: out of lane, must be handed to ndv-secure.
+
+  report → experiments/composed-agents/results/all-flat-2.json
+Running 56 behavior cases against: claude.sh (claude-sonnet-5) (concurrency 8)
+  1/56  2/56  3/56  4/56  5/56  6/56  7/56  8/56  9/56  10/56  11/56  12/56  13/56  14/56  15/56  16/56  17/56  18/56  19/56  20/56  21/56  22/56  23/56  24/56  25/56  26/56  27/56  28/56  29/56  30/56  31/56  32/56  33/56  34/56  35/56  36/56  37/56  38/56  39/56  40/56  41/56  42/56  43/56  44/56  45/56  46/56  47/56  48/56  49/56  50/56  51/56  52/56  53/56  54/56  55/56  56/56
+
+BEHAVIOR EVAL — claude.sh (claude-sonnet-5)
+fixture v1 · 56 cases
+
+  accuracy   100.0%  (56/56)
+
+  by kind
+    brief    100.0%  (12/12)
+    finds    100.0%  (26/26)
+    lane     100.0%  (18/18)
+
+  by agent
+    ndv-accessibility  3/3
+    ndv-architect      3/3
+    ndv-build          3/3
+    ndv-design         3/3
+    ndv-diagnose       3/3
+    ndv-explain        2/2
+    ndv-flow           5/5
+    ndv-forecast       2/2
+    ndv-honest         1/1
+    ndv-optimize       3/3
+    ndv-refactor       3/3
+    ndv-research       2/2
+    ndv-review         3/3
+    ndv-scope          2/2
+    ndv-secure         3/3
+    ndv-signal         2/2
+    ndv-telemetry      3/3
+    ndv-tester         3/3
+    ndv-upgrade        7/7
+
+  report → experiments/composed-agents/results/all-original-3.json
+Running 56 behavior cases against: claude.sh (claude-sonnet-5) (concurrency 8)
+  1/56  2/56  3/56  4/56  5/56  6/56  7/56  8/56  9/56  10/56  11/56  12/56  13/56  14/56  15/56  16/56  17/56  18/56  19/56  20/56  21/56  22/56  23/56  24/56  25/56  26/56  27/56  28/56  29/56  30/56  31/56  32/56  33/56  34/56  35/56  36/56  37/56  38/56  39/56  40/56  41/56  42/56  43/56  44/56  45/56  46/56  47/56  48/56  49/56  50/56  51/56  52/56  53/56  54/56  55/56  56/56
+
+BEHAVIOR EVAL — claude.sh (claude-sonnet-5)
+fixture v1 · 56 cases
+
+  accuracy   96.4%  (54/56)
+
+  by kind
+    brief    100.0%  (12/12)
+    finds    100.0%  (26/26)
+    lane      88.9%  (16/18)
+
+  by agent
+    ndv-accessibility  2/3
+    ndv-architect      3/3
+    ndv-build          3/3
+    ndv-design         3/3
+    ndv-diagnose       3/3
+    ndv-explain        2/2
+    ndv-flow           5/5
+    ndv-forecast       2/2
+    ndv-honest         1/1
+    ndv-optimize       2/3
+    ndv-refactor       3/3
+    ndv-research       2/2
+    ndv-review         3/3
+    ndv-scope          2/2
+    ndv-secure         3/3
+    ndv-signal         2/2
+    ndv-telemetry      3/3
+    ndv-tester         3/3
+    ndv-upgrade        7/7
+
+  failures
+    accessibility-lane  missed: image without alt text; handoff → ndv-secure
+      innerHTML with user-controlled bio is stored XSS: out of lane, must be handed to ndv-secure.
+    optimize-lane  missed: handoff → ndv-secure
+      Math.random session tokens are a security finding for ndv-secure; the full-table scan is the in-lane one.
+
+  report → experiments/composed-agents/results/all-flat-3.json

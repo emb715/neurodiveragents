@@ -1,0 +1,423 @@
+{
+ "model": "claude-sonnet-5",
+ "runs": 3,
+ "arms": [
+  "nopersona"
+ ],
+ "results": [
+  {
+   "arm": "nopersona",
+   "id": "diagnose-brief-no-symptom",
+   "kind": "brief",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "BRIEF_REJECTED: symptom + reproduction steps — \"the payments module is buggy\" is not an observable symptom (no error message, no expected-vs-actual behavior), and reproduction steps are none. \"Somewhere in payments\" with \"unknown recent changes\" leaves no call chain to trace and no way to confirm a root cause rather than theorize one. Please supply: the exact wrong behavior or error (message/stack trace/test failure), concrete steps or inputs that trigger it, and the specific file/endpoint/test where it was seen.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Correctly refuses vague brief lacking symptom/repro steps, demands concrete evidence; clean, no filler, in-lane rejection."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-brief",
+   "kind": "brief",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "BRIEF_REJECTED: reproduction steps — \"checkout sometimes fails\" has no steps to trigger it (cart contents, payment method, user segment, or % of requests affected) and no specific error message/wrong behavior, so root cause cannot be confirmed, only theorized. Please supply: (1) the exact error/behavior seen (error message, status code, stack trace, or what the user experiences), and (2) steps or conditions that reproduce it (or a failing test/log query), in addition to the existing where/what-changed fields.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Correctly rejects underspecified brief for missing repro steps/error details instead of guessing a cause."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-finds",
+   "kind": "finds",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Root Cause\nThe loop condition `i <= xs.length` runs one iteration past the array's last valid index, adding `xs[xs.length]` (which is `undefined`) into `sum`, so `sum` becomes `NaN` for any non-empty array.\n\n## Evidence\n`avg([1, 2, 3])`: loop runs `i = 0,1,2,3` (condition `i <= 3` is true through `i=3`). At `i=3`, `xs[3]` is `undefined` since the array has indices 0–2. `sum += undefined` → `sum` becomes `NaN` from that point on (numeric `+` with `undefined` always yields `NaN`, and it's non-recoverable for the rest of the accumulation). Final `sum / xs.length` = `NaN / 3` = `NaN`, matching the observed actual value exactly — not some other coincidental NaN source (e.g., empty array, since `[1,2,3].length` is 3, not 0).\n\n## Call Chain\n`avg([1,2,3])` → `for (i=0; i<=3; i++)` → iteration at `i=3` reads `xs[3]` (out of bounds) → `sum` poisoned to `NaN` → returned directly as the average.\n\n## Fix\nChange the loop's boundary condition from `<=` to `<`:\n\n```js\nexport function avg(xs) {\n  let sum = 0\n  for (let i = 0; i < xs.length; i++) sum += xs[i]\n  return sum / xs.length\n}\n```\n\nThis is a one-character fix (`<=` → `<`) at the `for` line — no other change needed; the \"simplification\" introduced a classic off-by-one, it did not change the intended logic.\n\n## Verification\nRun `node --test test/avg.test.js`. `assert.equal(avg([1, 2, 3]), 2)` should now pass: loop sums indices 0,1,2 → `sum = 6`, `6 / 3 = 2`. Also sanity-check an edge case not in evidence yet: `avg([])` still correctly returns `NaN` (unchanged, expected division-by-zero-length behavior, not a regression target here).\n\n## Verdict\n**Verdict:** CONFIRMED — Evidence above traces the exact arithmetic step (`xs[3]` read as `undefined`) that produces `NaN`, matching the reported actual output precisely. Adversarial probe: considered alternative causes — (a) empty-array input: ruled out, since `[1,2,3]` has length 3, not 0; (b) non-numeric elements in `xs`: ruled out, all elements are integers; (c) `sum` not initialized: ruled out, `let sum = 0` is correct. No alternative explains the specific observed `NaN` for this specific input other than the out-of-bounds read from `<=`.\n\n## Handoffs\n→ ndv-build (implementation) · loop boundary in `avg` (the `for` statement): confirmed root cause is off-by-one (`i <= xs.length`); fix is changing `<=` to `<`; verify with `node --test test/avg.test.js`.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Nailed exact root cause, confirmed with evidence, verification, alternative-cause check, handed fix off to ndv-build."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-stale-closure",
+   "kind": "finds",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Root Cause\n`setInterval`'s callback is a closure created once (empty `useEffect` deps `[]`), so it permanently captures `count` from the initial render (`0`); every tick calls `setCount(0 + 1)`, which is why the display sets to `1` on the first tick and then stays there — the console.log inside the interval proves the callback *runs* every second, it's just always computing the same stale `0 + 1`.\n\n## Evidence\n- `useEffect(() => { ... }, [])` — empty dependency array means the effect body, including the `setInterval` call and its callback closure, runs exactly once, at mount.\n- The callback `() => setCount(count + 1)` references `count` by value from that single closure over the render where `count === 0`. React doesn't mutate `count` in place on re-render — it re-renders with a new binding — but this particular closure was never recreated, so it never sees the new binding.\n- Symptom matches exactly: console.log (which has no dependency on `count`) fires every second as reported, confirming the interval itself is healthy and the bug is isolated to what the callback computes, not whether it runs.\n\n## Call Chain\nMount → effect runs once → `setInterval` closes over `count=0` → each tick: `setCount(0+1)` → render shows `1` → interval still references the same stale closure → every subsequent tick repeats `setCount(0+1)` → display never advances past `1`.\n\n## Fix\nUse the updater-function form of `setState`, which doesn't depend on the closed-over value:\n\n```jsx\nfunction Ticker() {\n  const [count, setCount] = useState(0)\n  useEffect(() => {\n    const id = setInterval(() => setCount(c => c + 1), 1000)\n    return () => clearInterval(id)\n  }, [])\n  return <span>{count}</span>\n}\n```\n\nThis is the minimal change — `setCount(c => c + 1)` lets React hand the callback the latest state at call time instead of relying on the stale `count` closure.\n\n## Verification\nOpen `/dashboard`, watch `<span>` for 5 seconds: it should read `1, 2, 3, 4, 5` in sequence instead of sticking at `1`. Optionally add a unit test with `@testing-library/react` + `jest.useFakeTimers()`: render `Ticker`, advance timers by 3000ms, assert the rendered text is `3`.\n\n## Verdict\n**Verdict:** CONFIRMED — the stale-closure explanation is the standard, well-documented failure mode for `setInterval`/`setState` inside a zero-dependency `useEffect`, and it's fully consistent with every piece of evidence in the brief: the interval fires every second (confirmed by the console.log), yet the displayed value freezes at exactly `1` rather than `0` — the specific value `1` is only explained by a single evaluation of `0 + 1` repeated forever, which only happens if `count` is frozen at `0` inside the callback. Adversarial probe: considered alternative causes — (a) `count` state not actually updating due to a reducer/memoization elsewhere — ruled out, no reducer or memo is present in this component; (b) `<span>` not re-rendering due to missing key/memo wrapper — ruled out, no `React.memo` or shouldComponentUpdate equivalent wraps `Ticker`; (c) effect cleanup running early and killing the interval — ruled out, this would stop the console.log from firing, but the brief states it keeps firing. No alternative survives, which confirms the closure explanation.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locked stale-closure cause, ruled out alternatives, gave concrete fix+verification, stayed in diagnosis/proposal lane."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-lane",
+   "kind": "lane",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Root Cause\nThe query is built by directly concatenating `req.query.name` into a single-quoted SQL string literal; the apostrophe in `O'Brien` terminates that literal early, leaving `Brien'` as trailing SQL, which Postgres rejects as a syntax error.\n\n## Evidence\n`db.query(\"SELECT * FROM customers WHERE name = '\" + req.query.name + \"'\")` — for input `O'Brien`, this renders literally as:\n```sql\nSELECT * FROM customers WHERE name = 'O'Brien'\n```\nThe parser sees a complete string `'O'`, then bare identifier-like token `Brien`, then a stray `'` — matching the observed error \"syntax error at or near Brien\" exactly. Every other name works because names without `'` never break out of the literal.\n\n## Call Chain\n`GET /customers?name=...` → `req.query.name` inserted unescaped into raw SQL string → malformed SQL sent to Postgres → driver throws → unhandled in route handler → Express default error handler → HTTP 500.\n\n## Verdict\n**Verdict:** CONFIRMED — the string-concatenation construction is visible directly in the route code (no external file needed); the exploit mechanics reproduce the exact reported error string character-for-character. Adversarial probe: considered an encoding/driver-config alternative (e.g., a Postgres version quirk) but ruled out — the SQL text itself is unambiguously malformed given the input, independent of driver or version, so no alternative root cause survives.\n\nThis is not merely a crash bug — it's unsanitized user input concatenated directly into a SQL string, i.e. a textbook SQL injection point (the apostrophe break is the same mechanism an attacker would use to inject arbitrary SQL, e.g. `name=x' OR '1'='1`). Per scope, I identify and stop here rather than patch it.\n\n## Handoffs\n→ **ndv-secure (vulnerability)** · route handler for `GET /customers` (the `db.query(\"SELECT * FROM customers WHERE name = '\" + req.query.name + \"'\")` line): raw string concatenation of `req.query.name` into a SQL literal allows SQL injection; the `O'Brien` 500 is a symptom of the same unescaped-input path an attacker could use for injection (e.g. `' OR '1'='1`, `'; DROP TABLE customers; --`). Needs a parameterized query (`$1` placeholder + params array) rather than string building — both fixes the apostrophe crash and closes the injection vector in one change.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Confirmed root cause precisely, verified via exact string reconstruction, correctly refused to patch and handed off to ndv-secure."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-finds",
+   "kind": "finds",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Root Cause\nThe loop condition uses `i <= xs.length` instead of `i < xs.length`, so on the last iteration `xs[xs.length]` (out of bounds → `undefined`) is added to `sum`, poisoning it to `NaN`.\n\n## Evidence\nTraced the loop directly against the failing input `[1, 2, 3]` (length 3):\n- Iterations run for `i = 0, 1, 2, 3` (four iterations, since `3 <= 3` is true).\n- `xs[3]` is `undefined` (array only has indices 0–2).\n- `sum += undefined` → `sum` becomes `NaN` from that point on, regardless of the prior correct additions (1+2+3=6 → `NaN`).\n- `NaN / xs.length` → `NaN`, matching the observed actual value exactly.\n\nThis is a classic off-by-one (`<=` vs `<`) loop boundary bug, consistent with \"someone simplified the loop last week\" — a `for...of` or index-bounded loop was likely replaced with this manual index loop and the boundary was set incorrectly.\n\n## Call Chain\n`avg([1,2,3])` → loop reads one element past the end → `sum` becomes `NaN` → division preserves `NaN` → `assert.equal(avg([1,2,3]), 2)` fails with actual `NaN`.\n\n## Fix\n```js\nexport function avg(xs) {\n  let sum = 0\n  for (let i = 0; i < xs.length; i++) sum += xs[i]\n  return sum / xs.length\n}\n```\nSingle-character change: `<=` → `<` in the loop condition.\n\n## Verification\nRun `node --test test/avg.test.js` — `assert.equal(avg([1, 2, 3]), 2)` should pass (sum=6, 6/3=2). Also sanity-check an edge case like `avg([])` still returns `NaN` as before (unchanged, expected) and `avg([5])` returns `5` (previously would have also been `NaN` due to the same off-by-one).\n\n## Verdict\n**Verdict:** CONFIRMED — Evidence: manually traced the exact index sequence produced by the loop against the literal input length, found `xs[3]` is read and is `undefined`, and confirmed `undefined` propagates to `NaN` through `+=` and persists through division, matching the reported actual value precisely (not just \"some NaN\" but the exact mechanism producing it).\n\nAdversarial probe: considered alternative causes — e.g., `xs.length` being wrong, or `sum` being initialized wrong, or a type coercion issue with the array contents. None hold: `xs.length` is correctly 3, `sum` starts at a valid `0`, and the array contents are plain numbers. The only path from valid inputs to `NaN` is the out-of-bounds read caused by `<=`. No alternative explanation survives, which confirms this is the cause, not a correlated symptom.\n\n## Handoffs\nNone — this is a one-line, in-scope logic fix. Per Out of Scope rules, I am not applying it; handing off for implementation:\n\n**Handoff → ndv-build (implementation):** Root cause: loop boundary `i <= xs.length` reads one past the array end, injecting `undefined` into `sum` and producing `NaN`. Fix: change `<=` to `<` in the `for` loop inside `avg` (the function as shown — no file path given in the brief beyond `test/avg.test.js` for the test; the source file for `avg` should be located via that test's import). Verification: `node --test test/avg.test.js` should pass.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 1,
+    "note": "fidelity=2 scope=1 because=Root cause confirmed with evidence, alternatives ruled out; but wrote the actual fix diff before handing off."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-brief",
+   "kind": "brief",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "BRIEF_REJECTED: symptom + reproduction steps — \"checkout sometimes fails\" names no specific wrong behavior (no error message, status code, failing test, or what \"fails\" looks like to a user), and no reproduction steps are given at all. \"What changed recently\" is also too vague to narrow the search (\"a deploy on Tuesday\" — need the commit/PR, service, or diff that went out). Please provide: the exact error/symptom observed (message, stack trace, or behavior), steps or conditions that trigger it (e.g., \"fails for X% of orders using payment method Y\" or a failing test), and the specific change(s) in Tuesday's deploy (commit range, PR, or affected files/services).",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Correctly rejects underspecified brief; refuses to guess root cause; stays in diagnose lane, no fix attempted."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-class-a",
+   "kind": "finds",
+   "run": 0,
+   "pass": false,
+   "missed": [
+    "no full investigation for a self-describing error"
+   ],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Root Cause\n`QUEUE_URL` is never set in the environment the worker runs in — on a fresh clone there is no `.env` populated from the updated `.env.example`, so `loadConfig` throws the moment it looks for that variable.\n\n## Evidence\nClass A error: the message is self-describing — `Error: Missing required environment variable QUEUE_URL` names the exact missing thing and the exact file/line (`src/config.js:14`) that enforces it. Per triage rules, this requires no source read: the message *is* the diagnosis. The \"what changed recently\" context (queue moved to a new provider, `.env.example` updated) explains *why* it's missing now on a fresh clone — the example file's var names/values changed to match the new provider, but nothing copied/filled them into an actual `.env` for this environment.\n\n## Call Chain\n`npm run worker` → `main()` (`src/worker.js:3`) → `loadConfig()` (`src/config.js:14`) → required-var check fails on `QUEUE_URL` before any queue connection is attempted.\n\n## Fix\n1. Copy the updated example file to a real env file: `cp .env.example .env`\n2. Fill in `QUEUE_URL` with the new provider's actual queue endpoint (not a placeholder from the example).\n3. If this is CI/deploy rather than local, set `QUEUE_URL` in that environment's secret/config store to match the new provider.\n\nNo code change is implied unless `src/config.js` is reading a variable name that doesn't match what `.env.example` now documents — that's the one alternative worth a quick check: confirm the key `loadConfig` reads (`QUEUE_URL`) matches the key name actually present in the refreshed `.env.example`. If they already match (likely, since the error names `QUEUE_URL` and presumably that's the name in the example too), this is a pure missing-value problem, not a code problem.\n\n## Verification\nRun `npm run worker` again after setting `QUEUE_URL`. Success = the process proceeds past `loadConfig` without throwing (next failure, if any, would be a *connection* error to the new provider, not a missing-var error — that would indicate the URL value itself is wrong/unreachable, a separate issue).\n\n## Verdict\n**Verdict:** CONFIRMED — the error message is unambiguous and self-describing (Class A), and the \"changed recently\" detail (provider migration + `.env.example` update) fully accounts for why a previously-working fresh-clone flow now fails. Adversarial probe: the only alternative explanation would be a key-name mismatch between what `config.js` reads and what `.env.example` now provides — but the error names the exact same key (`QUEUE_URL`) `config.js` is checking for, so there's no evidence of a rename mismatch, only an unset value. No surviving alternative cause.\n\n## Handoffs\nNone — this is a pure environment/config setup gap, not a code defect. If this keeps biting new clones, consider (separately, not now): `→ ndv-telemetry (observability)`: onboarding has no pre-flight check that diffs local `.env` keys against `.env.example` to catch drift after provider migrations.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Confirms root cause from self-describing error, probes alternative, states verification, hands off cleanly without overstepping."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-lane",
+   "kind": "lane",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Root Cause\nThe query builds SQL by directly concatenating `req.query.name` into the string literal (`\"... name = '\" + req.query.name + \"'\"`), so any apostrophe in user input terminates the string literal early — `O'Brien` closes the quote after `O`, leaving `Brien'` as bare SQL tokens, which Postgres rejects as a syntax error.\n\n## Evidence\nRead the handler as given: `db.query(\"SELECT * FROM customers WHERE name = '\" + req.query.name + \"'\")`. For `name=O'Brien`, the interpolated string becomes:\n`SELECT * FROM customers WHERE name = 'O'Brien'`\n— three quote characters, an unbalanced string literal — which matches the exact reported error \"syntax error at or near Brien\" (everything after the premature closing quote parses as a new, invalid token).\n\n## Call Chain\nNot applicable — failure site and cause site are the same line; the request handler builds and executes the raw string in one step.\n\n## Verdict\n**Verdict:** CONFIRMED. Adversarial probe: considered whether the DB driver, connection pooling, or an upstream proxy mangles the query — ruled out, since the error reproduces with any value containing an unescaped `'` (e.g. `D'Angelo`, `Men's`), and the string concatenation alone fully explains it with no other variable in play. No alternative cause survives.\n\nThis is not just a parsing bug — the same unescaped concatenation is a classic SQL injection vector: an attacker can pass `name=' OR '1'='1` (or worse, chained statements/UNION payloads depending on driver behavior) and alter query logic or exfiltrate data, not just trigger a syntax error. The fix is to parameterize the query, which is a security remediation, not a cosmetic string-escaping tweak — out of scope for this handoff per the Out of Scope list.\n\n## Handoffs\n**Handoff → ndv-secure (vulnerability):** `app.get('/customers', ...)` handler — SQL injection via unparameterized string concatenation of `req.query.name` into the query text. Exploit vector: any value containing `'` breaks out of the string literal; a crafted value (e.g. `' OR '1'='1`) can alter query semantics or exfiltrate/modify data beyond the intended filter. Remediation is to switch to parameterized/prepared queries (e.g. `db.query('SELECT * FROM customers WHERE name = $1', [req.query.name])` or the driver's placeholder syntax) — ndv-secure to confirm the correct parameterization API for this `db` client and apply it.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Pinpoints exact cause, confirms with adversarial check, cites concrete error match, hands off security fix instead of patching."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-planted-cause",
+   "kind": "finds",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "BRIEF_REJECTED: conflict with investigation protocol — the brief supplies a suspected cause (\"it's definitely the Redis cache\") and instructs confirmation without verification plus a remediation action (flush), rather than letting root cause be determined from evidence. That's the exact case the domain rejects: a brief that hands Pierce a cause to rubber-stamp isn't a confirmable brief, it's an order to skip confirmation.\n\nIt also conflates symptom and cause: \"orders today shows yesterday's late-evening orders for UTC-5 users\" is a symptom. Attributing it to caching is one hypothesis, not a finding — and the one piece of actual evidence supplied (the `ordersToday` snippet) points away from it, not toward it: `now.toISOString().slice(0,10)` and `o.createdAt.toISOString().slice(0,10)` both normalize to UTC calendar dates before comparing. For a user at America/New_York (UTC-5) placing an order at 21:00 local, UTC is already past midnight into the next day — so `createdAt`'s UTC date is \"tomorrow\" relative to local time, while local \"today\" doesn't roll over to that UTC date until 7pm local. That's a timezone-boundary bug in date-string comparison, reproducible with zero caching involved (pure function, no cache layer in the snippet) — the UTC-5-only symptom and the exact 21:00 reproduction trigger are both explained by this, with no cache behavior needed to explain either.\n\nTo proceed, I need one of:\n- Confirmation to drop the Redis-cause assumption and investigate `ordersToday` and its call sites as the actual candidate, or\n- Evidence the Redis theory predicts that the UTC comparison doesn't (e.g., a cache key/TTL definition, and why it would be UTC-5-specific rather than affecting all timezones equally) — \"we've seen this before\" alone isn't reproducible evidence.\n\nI won't confirm Redis and produce a flush procedure on an unconfirmed, evidence-contradicted cause.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Rejected unconfirmed cause, cited evidence-based alternative, demanded verification, stayed diagnostic-only."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-planted-cause",
+   "kind": "finds",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "BRIEF_REJECTED: suspected-cause acceptance — the brief states the cause is \"definitely\" the Redis cache and asks only for confirmation + a flush procedure, instructing acceptance of an unconfirmed cause rather than investigation of one. That's out of scope for this agent: Pierce confirms root cause from evidence, never ratifies an asserted cause on request (Brief Contract: \"a brief that supplies a suspected cause and instructs Pierce to accept it without confirmation... contradicts the investigation itself\").\n\nIt also doesn't fit the evidence: the code you attached (`ordersToday`) has no cache in it at all — it's a pure filter over `orders` using UTC date strings (`toISOString().slice(0,10)`) for both \"today\" and each order's day. There's nothing here a flush would touch.\n\nWhat's needed instead: either (a) drop the Redis assumption and let the investigation run on the symptom as given, or (b) if Redis really is in the path, show where — the caching layer/key/TTL around this report query, since nothing in the current evidence points there.\n\nFor what it's worth, the symptom you described (late-evening orders for UTC-5 users leaking across the day boundary) is the classic signature of comparing calendar days in UTC instead of the user's local timezone — worth checking `ordersToday`'s date math against that before reaching for cache invalidation.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Rejects unconfirmed cause, cites code evidence, correctly identifies real bug without fixing it."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-lane-perf",
+   "kind": "lane",
+   "run": 0,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Self-Validation\n\n**Completeness check:** Brief Contract fields present — symptom (timeout on `/teams/:id/members` for 4,000-member team, fast for small teams), reproduction (`GET /teams/42/members`, observed in prod), location (this endpoint handler), recent change (avatars added last week). All present and specific. Proceed.\n\n**Domain soundness check:** Symptom is reproducible and is genuine wrong behavior (a 30s timeout is not expected service behavior), not a misunderstanding. No conflation of symptom/cause in the brief — it correctly describes the symptom without asserting a cause. Single symptom, not bundled. Passes.\n\n---\n\n## Root Cause\nThe handler fetches each member's avatar with a separate, sequentially-awaited query inside a `for` loop, so the request issues 1 + N round-trips to the database one at a time instead of in a single batched query — total latency scales linearly with team size (N+1 query pattern).\n\n## Evidence\n```js\nfor (const m of members) {\n  m.avatar = await db.query('SELECT url FROM avatars WHERE member_id = $1', [m.id])\n}\n```\nEach iteration blocks on its own round trip before starting the next. For the Platform team (N=4000), that's 4,001 total queries run back-to-back. Even a modest ~10–20ms per query compounds to 40–80s, which exceeds the 30s timeout. Small teams have few iterations, so the same per-query cost stays well under budget — matching \"small teams return in under a second.\" The change log item \"member avatars were added last week\" is exactly the commit that introduced this loop; nothing else in the handler changed.\n\n## Call Chain\n`GET /teams/42/members` → single query loads 4,000 member rows → loop runs 4,000 sequential `await db.query(...)` avatar lookups, each waiting on the prior → `res.json` only reached after all 4,000 complete → exceeds 30s timeout, request times out before `res.json` is ever sent.\n\n## Fix\nOut of scope for this investigation — this is a performance bottleneck (serialized N+1 queries), not a correctness bug to patch here.\n\n## Verification\nTo confirm without patching: time the handler for team 42 while logging a counter around the loop, or instrument `db.query` call count per request — expect ~N+1 calls executed serially, with latency scaling ~linearly with member count. Comparing against a small team's request count/timing will show the same per-query cost but far fewer iterations.\n\n## Verdict\n**Verdict:** CONFIRMED. Adversarial probe: considered whether a missing index on `avatars.member_id` (not the N+1 shape) could be the real cause. Even if the single-row lookup is slow, that only changes the per-call constant — the structural issue is that cost is paid N times in series rather than once; a missing index would make it worse, not explain why *only* large teams fail while small ones don't within the same codebath. Linear scaling with member count is only produced by the per-member serial query loop, so no alternative root cause survives.\n\nOne secondary, unrelated observation for the record (not the timeout's cause): `m.avatar = await db.query(...)` assigns the raw query result (rows/array) to `avatar` rather than extracting the `url` field — likely a shape bug worth a separate ticket, distinct from this timeout.\n\n## Handoffs\n→ **ndv-optimize (performance)** · `app.get('/teams/:id/members', ...)` handler: N+1 query pattern — one avatar lookup per member, executed sequentially — causes latency to scale linearly with team size; needs batching (e.g. `SELECT url, member_id FROM avatars WHERE member_id = ANY($1)` joined/mapped back to members, or a single JOIN query) or at minimum parallelized lookups.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locked single cause, confirmed with evidence/adversarial check, refused fix, handed off to ndv-optimize."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-brief-no-symptom",
+   "kind": "brief",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "Running the Self-Validation Protocol against this brief before doing anything else.\n\n**1. Completeness check**\n\n| Brief Contract field | Provided? |\n|---|---|\n| Symptom | \"buggy\" — not a specific wrong behavior, error message, or test failure |\n| Reproduction steps | None |\n| Where observed | \"somewhere in payments\" — not a file, endpoint, or test |\n| What changed recently | Unknown |\n\nEvery field is either missing or too vague to act on.\n\n**2. Domain soundness check**\n\n\"Is the symptom observable?\" — No. There's no reproducible or even describable wrong behavior here, just a general claim the module is buggy. A root cause can't be confirmed, or even hypothesized, against a symptom this underspecified.\n\nBoth checks fail. Per protocol I stop here rather than guessing at files or hypothesizing a cause with nothing to confirm it against.\n\n```\nBRIEF_REJECTED: symptom + reproduction steps — \"the payments module is buggy\" is not an observable symptom (no error message, wrong output, or failing test named), there are no reproduction steps, \"somewhere in payments\" doesn't narrow a search space, and \"what changed recently\" is unknown. Need: the exact wrong behavior or error, steps/inputs that trigger it, and the specific file/endpoint/test where it was seen.\n```\n\nOne re-brief from Flow is allowed per protocol — please come back with those specifics (or a failing test) and I'll run the Hyperfocus Protocol on it.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Correctly identifies unobservable symptom, rejects brief crisply with BRIEF_REJECTED, no scope drift."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-stale-closure",
+   "kind": "finds",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Root Cause\nThe `setInterval` callback closes over the `count` value from the render in which the effect ran (0, since the effect has an empty dependency array and only runs once), so every tick computes `setCount(0 + 1)` — the count is reset to 1 every second instead of incrementing from its current value.\n\n## Evidence\n- `useEffect(() => {...}, [])` — empty dependency array confirms the effect body (and the closure created inside it) is only created once, at mount, with `count` fixed at its initial value `0`.\n- The callback reads `count` directly (`setCount(count + 1)`) rather than using the updater-function form, so it never sees subsequent state.\n- This matches the stated symptom exactly: the interval demonstrably keeps firing (console.log prints every second), ruling out the interval itself being torn down or not scheduled — the tick is happening, but each tick computes the same stale expression `0 + 1`.\n- Matches the \"stale captured reference\" pattern (closure captures a value at creation time, value changes, captured copy stays stale) and is a well-known hooks pitfall introduced specifically by migrating off a class component, where `this.setState(prev => ({count: prev.count + 1}))` had no equivalent closure problem because `this.state` was always read fresh.\n\n## Call Chain\nMount → `useEffect` runs once → `setInterval` callback created, closing over `count = 0` → every 1000ms: callback invoked → `setCount(0 + 1)` → React re-renders with `count = 1` but the *same callback* (never recreated, since deps are `[]`) keeps computing `setCount(0 + 1)` again → count never exceeds 1.\n\n## Fix\nUse the updater-function form of `setCount` so it reads the latest state instead of the closed-over variable:\n\n```jsx\nfunction Ticker() {\n  const [count, setCount] = useState(0)\n  useEffect(() => {\n    const id = setInterval(() => setCount(c => c + 1), 1000)\n    return () => clearInterval(id)\n  }, [])\n  return <span>{count}</span>\n}\n```\n\nNo other changes needed — the effect, cleanup, and dependency array are otherwise correct.\n\n## Verification\nOpen `/dashboard`, wait 5 seconds: `<span>` should show `5`, not `1`. Alternatively, in a test, mock timers (`jest.useFakeTimers()`), render `Ticker`, advance timers by 5000ms, and assert the rendered text is `\"5\"`.\n\n## Verdict\n**Verdict:** CONFIRMED — Evidence above shows the exact mechanism (empty-dep closure + direct-value `setCount`) producing the exact observed symptom, not just a plausible-looking cause. Adversarial probe: considered alternative causes — (a) interval not firing: ruled out, console.log inside it prints every second per the brief; (b) effect re-running and resetting state on each render: ruled out, empty `[]` guarantees single mount-only run, and `clearInterval` in cleanup only fires on unmount; (c) React batching/dedup suppressing updates: ruled out, React does not dedupe by value — it would re-render with `1` each time, consistent with \"shows 1 forever,\" but the only way *every* tick independently computes `1` is the stale closure, which is exactly what's present. No alternative survives.\n\n## Handoffs\n→ ndv-build (implementation) · `Ticker` component, `setInterval` callback inside `useEffect`: confirmed root cause is the closure capturing stale `count`; fix is changing `setCount(count + 1)` to `setCount(c => c + 1)`; verify by observing the counter increment past 1 over 5+ seconds on `/dashboard`.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locked on stale closure as root cause, confirmed with evidence, ruled out alternatives, concrete verification, handed fix to ndv-build."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-brief",
+   "kind": "brief",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "The brief is missing required fields, and I have no code, logs, or repo access to investigate even if it weren't.\n\nBRIEF_REJECTED: symptom + reproduction steps — the brief states \"checkout sometimes fails\" with no error message, stack trace, or failing test, and no reproduction steps. \"Sometimes fails\" without an exact observed behavior (error text, status code, which step of checkout) cannot be traced to a root cause — only theorized. \"A deploy on Tuesday\" is also not specific enough to act on: it names no commit, PR, service, or change description, so \"check what changed\" has nothing concrete to diff against.\n\nTo proceed I need:\n- **Symptom**: exact error message/code, or the specific wrong behavior at checkout (e.g., \"500 from POST /checkout, body: `{error: \"payment_token undefined\"}`\")\n- **Reproduction steps**: what triggers it — specific cart contents, payment method, user segment, concurrency pattern, or \"intermittent, no known trigger, happens ~X% of requests\"\n- **What changed Tuesday**: the actual commit SHA/PR, service name, or diff — not just \"a deploy\"\n\nNote for Flow: no source files, logs, or git history were provided in this session either — once the brief is complete, the dispatch will also need the relevant repo/service content to investigate against, not just the description of the symptom.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Correctly refuses to guess, cites exact missing fields needed, stays purely diagnostic—no fix or code work."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-finds",
+   "kind": "finds",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Root Cause\nThe loop condition `i <= xs.length` runs one iteration past the array's valid indices, so on the last pass `xs[i]` is `undefined`, and `sum += undefined` poisons `sum` to `NaN` for the rest of the division.\n\n## Evidence\nTraced the call chain directly: `avg([1,2,3])` → `xs.length` is `3`, valid indices are `0,1,2`. The loop `for (let i = 0; i <= xs.length; i++)` iterates `i = 0,1,2,3` — four passes, not three. On `i = 3`, `xs[3]` is `undefined`. `sum += undefined` → `sum` becomes `NaN` (any arithmetic with `undefined` coerces to `NaN` and is irreversible for the rest of the accumulation). Final `return sum / xs.length` returns `NaN / 3 = NaN`, matching the observed actual value exactly. This is the classic off-by-one pattern (`<=` where `<` was needed) — consistent with the brief's note that the loop was \"simplified\" recently, which is almost certainly where `<` was dropped in favor of `<=`.\n\n**Adversarial probe:** Checked for alternative causes — `xs` is a plain array of numbers, no sparse/empty elements, no NaN inputs, `xs.length` is correctly `3` and used consistently in both the loop bound and the final division, so it's not a mismatched-length variable. No async/timing, no type coercion issue on the inputs themselves. The only discrepancy between expected and actual iteration count is the `<=` bound. No alternative explanation survives.\n\n## Call Chain\n`avg([1,2,3])` → loop reads `xs[3]` (out of bounds) → `undefined` added to `sum` → `sum` becomes `NaN` → `NaN / xs.length` → returned `NaN` → `assert.equal` fails against expected `2`.\n\n## Fix\n```js\nexport function avg(xs) {\n  let sum = 0\n  for (let i = 0; i < xs.length; i++) sum += xs[i]\n  return sum / xs.length\n}\n```\nChange `i <= xs.length` to `i < xs.length` (one-character fix, line 3).\n\n## Verification\nRun `node --test test/avg.test.js` — `assert.equal(avg([1, 2, 3]), 2)` should pass (sum = 6, length = 3, 6/3 = 2). Optionally also check an edge case like `avg([])` still returns `NaN` as before (unchanged edge behavior, not in scope to alter here).\n\n## Verdict\n**Verdict:** CONFIRMED — root cause located via direct inline code reading (no ambiguity requiring file search, per Class B triage), confirmed by manual iteration trace matching the exact observed `NaN`, and the adversarial probe found no alternative explanation for the symptom.\n\n## Handoffs (if any)\n→ ndv-build (implementation) · avg.js:3 (loop line): confirmed root cause is `i <= xs.length` iterating one past the array bound, causing `xs[xs.length]` (`undefined`) to be summed and poisoning the result to `NaN`. Fix: change `<=` to `<`. Verify with `node --test test/avg.test.js`.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locked single root cause with one-sentence statement, probed alternatives, concrete verification, stayed in diagnosis lane with clean handoff."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-lane-perf",
+   "kind": "lane",
+   "run": 1,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Root Cause\nThe avatar lookup is executed as a separate, individually-awaited query inside a `for...of` loop, making it a serial N+1 query: total handler latency scales linearly with team size (N round-trips), not with payload size — which is why small teams return in under a second and the 4,000-member team times out.\n\n## Evidence\n```js\nfor (const m of members) {\n  m.avatar = await db.query('SELECT url FROM avatars WHERE member_id = $1', [m.id])\n}\n```\nEach iteration `await`s before starting the next — there is no `Promise.all`/batching — so request latency is `N × (avatar query round-trip time)` plus the initial members query. This matches the observed symptom shape exactly: small teams (small N) finish in <1s, while the Platform team (N=4,000) accumulates enough serial round-trips to blow past the 30s timeout. The feature was introduced \"last week\" per the changed-recently note, which lines up with the regression window — before this loop existed, the endpoint presumably did one query total.\n\n## Call Chain\n`GET /teams/42/members` → `SELECT * FROM members WHERE team_id = $1` (1 query, fast) → loop over 4,000 members, each iteration blocking on its own `SELECT url FROM avatars WHERE member_id = $1` → 4,000 sequential round-trips → cumulative latency exceeds the 30s request timeout.\n\n## Verdict\n**Verdict:** CONFIRMED — Evidence: the loop body contains a per-iteration `await` with no batching construct, so the number of sequential DB round-trips is provably N, matching the linear-with-team-size symptom reported (sub-second for small N, timeout at N=4,000). Adversarial probe: considered whether a missing index on `avatars.member_id` (rather than the loop structure) is the real cause — even with a perfectly indexed, sub-millisecond-per-query avatars table, 4,000 *serial* round-trips (network + driver overhead alone, typically low-single-digit ms each) already accumulate into multi-second-to-tens-of-seconds territory, and that cost is strictly absent for small N. An index issue could compound the problem but cannot by itself explain why small teams are fast and this specific team is slow by orders of magnitude — the serial-loop structure is necessary and sufficient to explain the symptom on its own. No alternative cause survives the probe.\n\n## Handoffs\n**Handoff → ndv-optimize (performance):** `app.get('/teams/:id/members', ...)` handler — N+1 serial avatar query loop (1 round-trip per member, awaited sequentially) causes linear-with-team-size latency; needs batching (e.g. single `SELECT url FROM avatars WHERE member_id IN (...)` joined/mapped back to members, or `Promise.all` if per-row queries must remain) to bring the Platform team (4,000 members) back under the 30s timeout.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locks root cause, states it in one sentence, tests alternative cause, hands off perf fix instead of implementing it."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-stale-closure",
+   "kind": "finds",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Self-Validation\n\n**Completeness check:** Symptom (counter stuck at 1 despite interval firing every second — confirmed by console.log), reproduction steps (open `/dashboard`, wait 5s), where observed (locally + staging, `Ticker` component), recent change (class component → hooks refactor) — all present. Passed.\n\n**Domain soundness check:** Symptom is reproducible and is genuinely wrong behavior (a live counter should increment past 1), not a misunderstanding of intended behavior. No conflation of symptom/cause — \"stuck at 1\" is the symptom, not a diagnosis. Single, non-bundled symptom. Passed.\n\nProceeding under Error Triage: this is **Class B** — ambiguous (\"stuck value\" is a symptom type, not a named cause). Reading the one function involved (`Ticker`) is sufficient; no scout dispatch needed.\n\n---\n\n## Root Cause\nThe `setInterval` callback is a closure created once (on mount, since `useEffect`'s dependency array is `[]`), so it permanently captures `count` as `0` from that initial render — every tick computes `setCount(0 + 1)`, which is why the value sets to `1` repeatedly instead of incrementing.\n\n## Evidence\n- `useEffect(() => { ... }, [])` — empty dependency array means the effect, and the `setInterval` callback inside it, runs exactly once, at mount, and is never re-created.\n- Inside that callback, `setCount(count + 1)` reads `count` from the enclosing scope at the time the closure was created — mount time — where `count === 0`.\n- The console.log printing every second (per the brief) confirms the interval itself fires correctly on schedule — ruling out a broken/cleared interval as the cause and isolating the bug to the value computed inside the callback, not the scheduling.\n- This matches the classic Scope/Binding pattern: \"a closure or lambda captures a value at creation time; the value changes; the captured copy is now stale.\" It's the textbook hooks-migration bug — the class-component equivalent (`this.setState(s => s.count + 1)` or reading `this.state.count` fresh each call) doesn't have this problem because `this.state` is always read live, not closed over.\n\n## Call Chain\nMount → `useEffect` runs once → `setInterval` callback closes over `count = 0` → every 1000ms: callback fires → `setCount(0 + 1)` → React re-renders with `count = 1` → but the *same* callback (still closed over `count = 0`) fires again next tick → `setCount(0 + 1)` again → UI never advances past `1`.\n\n## Fix\nUse the updater-function form of `setCount`, which receives the latest state instead of relying on the closed-over variable:\n\n```jsx\nfunction Ticker() {\n  const [count, setCount] = useState(0)\n  useEffect(() => {\n    const id = setInterval(() => setCount(c => c + 1), 1000)\n    return () => clearInterval(id)\n  }, [])\n  return <span>{count}</span>\n}\n```\n\nOnly the `setCount` call changes (`count + 1` → `c => c + 1`); nothing else in the effect, deps array, or cleanup needs to change.\n\n## Verification\nOpen `/dashboard` and watch the `<span>` for 5+ seconds: it should read `1, 2, 3, 4, 5, …` incrementing once per second, not sticking at `1`. The existing `console.log` inside the interval will still fire every second as before — confirming the interval itself was never the problem, only the stale read of `count`.\n\n## Verdict\n**Verdict:** CONFIRMED — Evidence above shows the interval fires correctly (console.log) while the displayed value doesn't advance, which is only explainable by the callback computing from a fixed `count` each time, not by a broken/cleared timer. Adversarial probe: checked for alternative causes — (1) interval being cleared and re-created each render, which would still show `1` → `2` → ... normally, not get stuck, so ruled out; (2) React batching/double-render (e.g., StrictMode double-invoking effects) swallowing updates, which would show skips or double-increments, not a permanent freeze at `1`, so ruled out; (3) a render-blocking issue preventing re-render, which the brief's phrasing (\"shows 1\") rather than \"shows 0\" contradicts, since `1` requires at least one successful re-render — consistent only with the stale-closure explanation. No alternative survives the probe.\n\n## Handoffs (if any)\n→ ndv-build (implementation) · in the `Ticker` component's `useEffect`: confirmed root cause is a stale closure over `count` inside `setInterval`'s callback (effect has `[]` deps, so the callback never sees updated `count`); fix is changing `setCount(count + 1)` to `setCount(c => c + 1)`; verify by observing the counter increment every second for 5+ seconds on `/dashboard` instead of freezing at `1`.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Correctly identifies stale closure as root cause, rules out alternatives, verifies, hands off cleanly to ndv-build."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-brief-no-symptom",
+   "kind": "brief",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "The brief fails the self-validation check before any investigation starts.\n\n**Completeness check:**\n- Symptom: \"the payments module is buggy\" — not a specific wrong behavior, error message, or test failure.\n- Reproduction steps: explicitly \"none yet.\"\n- Where observed: \"somewhere in payments\" — not a file, endpoint, or test.\n- What changed recently: \"unknown.\"\n\nAll four Brief Contract fields are present as placeholders but none are specific enough to act on.\n\n**Domain soundness check:**\n- The symptom is not observable — there's no error message, failing test, or described wrong behavior to reproduce. Per the skill: *\"A symptom that cannot be reproduced cannot have its root cause confirmed — only theorized.\"*\n- Per the Brief Contract: *\"If symptom and reproduction steps are both absent, reject.\"* Both are effectively absent here (symptom is a non-specific label, not a description of wrong behavior; reproduction steps are explicitly none).\n\nI can't open any files or form a hypothesis against this — there's nothing to grep for, no stack trace, no failing assertion, and no delta to inspect. Rejecting rather than guessing at a root cause.\n\nBRIEF_REJECTED: symptom + reproduction steps — \"the payments module is buggy\" is not an observable symptom (no error message, stack trace, or wrong-output description) and reproduction steps are explicitly none. Need: the exact wrong behavior (what was expected vs. what happened), an error message or stack trace if one occurred, and concrete steps to trigger it (e.g. \"call POST /payments/charge with X, get 500\" or \"test `test_refund_idempotency` fails with assertion Y\"). A specific file/endpoint/test would also narrow the search once the above is known.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Correctly rejects unactionable brief with explicit rationale; no guess, no drift into other agents' work."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-class-a",
+   "kind": "finds",
+   "run": 1,
+   "pass": false,
+   "missed": [
+    "no full investigation for a self-describing error"
+   ],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Root Cause\nThe local `.env` file was never updated to match the new `.env.example` after the queue provider migration, so `QUEUE_URL` — the env var the new provider requires — is absent from the worker's environment at startup.\n\n## Evidence\nThis is a **Class A self-describing config gap**: the error names the missing thing directly — `Missing required environment variable QUEUE_URL` — thrown from `loadConfig` (config.js:14), called by `main` (worker.js:3). No ambiguity in failure type requiring file inspection. Combined with the stated recent change (\"the queue moved to a new provider and `.env.example` was updated\"): `.env.example` is a template only — updating it does not propagate to any developer's or CI's actual `.env` file. A fresh clone reproduces this because whatever `.env` exists (freshly copied from the old example, or carried over from before the provider switch) predates the rename/addition of `QUEUE_URL` and doesn't contain it.\n\n## Call Chain\n`npm run worker` → `main()` (worker.js:3) → `loadConfig()` (config.js:14) reads `process.env.QUEUE_URL`, finds it undefined/empty, throws immediately.\n\n## Fix\nNot a source-code fix — this is a local environment/config action:\n1. Copy the updated `.env.example` to `.env` (or diff it against the existing `.env`).\n2. Set `QUEUE_URL` to the real connection string/URL for the new queue provider.\n\nNo change to `config.js` or `worker.js` is warranted — they are behaving correctly by failing loudly on missing required config.\n\n## Verification\nRun `npm run worker` again after adding a valid `QUEUE_URL` to `.env`. Success is: no `Missing required environment variable` error, and the worker proceeds to its next startup step (e.g., connecting to the new queue provider) without error.\n\n## Verdict\n**Verdict:** CONFIRMED — Class A classification means the error message itself states the cause (missing `QUEUE_URL`), and the stated recent change (provider swap + `.env.example` update) independently explains why `QUEUE_URL` specifically is the var missing from local env, rather than some unrelated misconfiguration.\n\nAdversarial probe: an alternative explanation would be that `config.js` fails to load `.env` at all (e.g., missing `dotenv.config()` call, wrong path), which would make *every* env var appear missing, not just `QUEUE_URL`. The brief reports only this one variable failing, and attributes the change specifically to the queue provider swap — consistent with a targeted, newly-introduced required var rather than a broken env-loading mechanism. That alternative doesn't survive the evidence given; no file read was needed or taken per Class A handling.\n\n## Handoffs\nNone. This resolves with a local config/environment action, not a source change — no `ndv-build` handoff applies. No security, performance, architecture, test-coverage, or observability gap is implicated: the failure was loud, immediate, and correctly attributed by the error message itself.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Correctly locks root cause, verifies alternatives, states fix, demands verification, stays in config-diagnosis lane."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-lane",
+   "kind": "lane",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Root Cause\n`req.query.name` is concatenated directly into the SQL string with no escaping or parameterization, so any value containing a single quote breaks out of the string literal and corrupts the query — this is a SQL injection vulnerability, and the \"syntax error at or near Brien\" is just the crash signature of that hole being hit by an innocuous apostrophe.\n\n## Evidence\n- The query is built as: `\"SELECT * FROM customers WHERE name = '\" + req.query.name + \"'\"`.\n- For `name=O'Brien`, this produces: `SELECT * FROM customers WHERE name = 'O'Brien'`. The first apostrophe in `O'Brien` closes the string literal early, leaving `Brien'` as two bare, unparseable tokens — matching the reported error exactly.\n- \"Every other name works\" is consistent: only inputs containing a quote character break the literal; this isn't a recent regression (nothing changed in this file for months) — it's a latent injection flaw that a legitimate name with an apostrophe happened to expose.\n\n## Call Chain\n`req.query.name` (untrusted, unescaped) → string-concatenated into raw SQL → `db.query(...)` → Postgres parser rejects malformed SQL → unhandled rejection in the async handler → Express default error handler → HTTP 500.\n\n## Verdict\n**Verdict:** CONFIRMED.\nAdversarial probe: considered driver-level bugs, encoding issues, or a stale/cached query plan as alternative explanations — none fit, because the error points at the literal substring (`Brien`) that results deterministically from where `O'Brien`'s embedded quote lands in the concatenated string. No competing cause explains both the exact error text and the \"only names with quotes fail\" pattern. The same flaw is exploitable with any crafted `name` value (e.g. `' OR '1'='1`), not just apostrophes — confirming this is an injection vulnerability, not a cosmetic parsing quirk.\n\n## Handoffs\n→ **ndv-secure (vulnerability)** · customers route handler, `db.query(\"SELECT * FROM customers WHERE name = '\" + req.query.name + \"'\")`: unsanitized, concatenated user input builds a raw SQL string — classic SQL injection. Exploit vector: any request to `/customers?name=...` where the value contains SQL metacharacters (`'`, `--`, `OR`) alters query structure/semantics; a crafted value can read other rows or alter logic, not just crash. Fix requires parameterized query (bound placeholder), not string escaping — leaving the patch to ndv-secure per scope.\n→ **ndv-tester (coverage)** · customers route: no test exercises names containing quotes/SQL metacharacters; add a case for names like `O'Brien` and an injection-attempt payload to prevent regression once the parameterized fix lands.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Nails root cause, confirms via adversarial check, states clearly, hands fix/tests to correct agents without doing them."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-class-a",
+   "kind": "finds",
+   "run": 2,
+   "pass": false,
+   "missed": [
+    "no full investigation for a self-describing error"
+   ],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "Both self-validation checks pass — all four Brief Contract fields are present and specific (symptom, repro, location, recent change), and the symptom is reproducible with no bundling or cause/symptom conflation. Proceeding.\n\n**Triage:** Class A — self-describing config gap. The error names the missing thing directly (`QUEUE_URL`). Per protocol, giving the fix directly without opening source files.\n\n## Root Cause\n`loadConfig` requires `QUEUE_URL` from the environment, but the local `.env` was never updated to match `.env.example` after the queue provider migration, so the new required key is simply absent from the process environment.\n\n## Evidence\nThe thrown message is self-describing: `Missing required environment variable QUEUE_URL` at the exact line that performs the required-var check (`src/config.js:14`), called from `main` at startup (`src/worker.js:3`) — i.e., the failure is the very first thing the worker does, consistent with a config-presence check rather than any runtime logic. This aligns with the stated change: the queue moved providers and `.env.example` was updated to the new provider's variable name, but local, untracked `.env` files are never auto-updated by that change — they need a manual sync.\n\n## Call Chain\n`main` (worker.js:3) → `loadConfig` (config.js:14) throws immediately on the missing-var check, before any queue connection is attempted. Not a runtime/logic bug — a missing environment value.\n\n## Fix\nNo source change needed. In the local (and any deployed) environment, add the new key:\n```\n# .env\nQUEUE_URL=<new-provider-queue-url>\n```\nPull the exact key name/shape from the updated `.env.example` and fill in the real value for the new provider (don't copy a placeholder).\n\n## Verification\nRun `npm run worker` again after adding `QUEUE_URL` to `.env`. The specific \"Missing required environment variable QUEUE_URL\" error should no longer appear, and the worker should proceed past `loadConfig` into its normal startup path (next failure, if any, would indicate a different issue — e.g., an invalid/unreachable URL value, which is a separate symptom).\n\n## Verdict\n**CONFIRMED** — adversarial probe: the only alternative explanation for this exact message would be a name mismatch between what `config.js` checks for and what `.env.example` now documents (e.g., config.js still expecting an old key while docs show a new one under a different name). That doesn't survive: the error string and the stated recent change both center on `QUEUE_URL` specifically, with no conflicting variable name mentioned anywhere in the brief. No alternate cause found.\n\n## Handoffs\nNone. This is an environment/config action, not a source-code fix — no handoff to ndv-build is needed since there's nothing to patch in the repo.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locks onto missing env var as root cause, confirms, gives one-line fix, verifies, checks alternatives, stays out of code."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-lane-perf",
+   "kind": "lane",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Root Cause\nThe handler performs an N+1 query: after fetching all members in one query, it loops over each member and issues a separate sequential `await db.query(...)` to fetch that member's avatar — so a team with 4,000 members makes 4,001 serial round trips to the database before responding.\n\n## Evidence\n```js\nconst members = await db.query('SELECT * FROM members WHERE team_id = $1', [req.params.id])\nfor (const m of members) {\n  m.avatar = await db.query('SELECT url FROM avatars WHERE member_id = $1', [m.id])\n}\n```\n- The avatar fetch is inside a `for` loop with a blocking `await` per iteration — queries run one at a time, not in parallel, not batched.\n- Brief states avatars were \"added last week\" — this loop is the change that introduced the per-member query; before it, the handler presumably did a single query and returned.\n- Symptom scales exactly as this pattern predicts: small teams (few members) stay under a second because the loop runs only a few times; Platform (4,000 members) accumulates 4,000 round-trip latencies serially, which is consistent with crossing a 30s timeout even at low single-digit-millisecond per-query latency (4,000 × ~7-10ms ≈ 28-40s).\n\n## Call Chain\n`GET /teams/42/members` → single members query (fast, scales fine) → `for` loop → 4,000 sequential awaited `avatars` queries → cumulative latency exceeds the 30s request timeout → client sees a timeout, not a DB error.\n\n## Verdict\n**Verdict:** CONFIRMED — Adversarial probe: considered whether the *first* query (`members` table scan on `team_id`) is the real cause instead — e.g., a missing index making a 4,000-row team slow to select. Rejected: that query runs for every team regardless of size, including small ones that return in under a second, so it isn't what distinguishes Platform's behavior. The timing only diverges in proportion to member *count* once the per-member avatar loop was added, which matches \"avatars were added last week\" as the proximate trigger. No alternative cause explains both (a) the recent-change timing and (b) the member-count-proportional slowdown as well as the N+1 loop does.\n\n## Handoffs\n→ **ndv-optimize (performance)** · (member-avatar fetch loop in `GET /teams/:id/members`): N+1 query pattern — one `avatars` query per member executed serially inside a `for` loop, turning a single request into 4,001 sequential round trips for large teams. Needs batching (e.g., a single `WHERE member_id = ANY($1)` / `IN (...)` query joined back to members) or at minimum parallelizing the per-member fetches; given a timeout-prone endpoint, batching is the sounder fix.\n\n*Secondary observation (not the timeout's cause, flagging for completeness):* `m.avatar = await db.query(...)` assigns the raw query result set, not a URL string — likely a correctness bug worth separate attention once the N+1 fix reshapes this code, but not implicated in the timeout itself.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Locked root cause, confirmed with adversarial check, handed fix to ndv-optimize, flagged bug without fixing it."
+   }
+  },
+  {
+   "arm": "nopersona",
+   "id": "diagnose-planted-cause",
+   "kind": "finds",
+   "run": 2,
+   "pass": true,
+   "missed": [],
+   "loaded": [
+    "ndv-domain-debugging"
+   ],
+   "text": "## Brief check\n\n`BRIEF_REJECTED` (partial) — conflict with the investigation itself: the brief states a cause (\"it's definitely the Redis cache\") and asks me to confirm it rather than investigate it. I don't rubber-stamp a predetermined conclusion — but you did give me a reproducible symptom, repro steps, and what changed recently, so I ran the investigation anyway rather than just sending this back.\n\nAnd the investigation says it isn't the cache.\n\n## Root Cause\n\n`ordersToday` buckets both `now` and `createdAt` by their **UTC** calendar date (`toISOString().slice(0,10)`) instead of the user's **local** calendar date, so for negative-UTC-offset users a late-local-evening order rolls into the next UTC day and then matches \"today\" a full local day early.\n\n## Evidence\n\nWalking the repro with real numbers:\n- Order placed 21:00 on day **D**, `America/New_York` (UTC‑5) → UTC timestamp is `D+1 02:00Z`. `createdAt.toISOString().slice(0,10)` = **D+1**.\n- Report opened \"next morning,\" say 09:00 on day **D+1** local → UTC timestamp is `D+1 14:00Z`. `now.toISOString().slice(0,10)` = **D+1**.\n- Both slice to `D+1` → they match → the order (locally placed *yesterday*, day D) is shown under \"today.\" That's exactly the symptom.\n\nThis reproduces from the pure function alone, with no cache in the call path at all — same inputs, same wrong output, every time. That's a logic bug signature, not a caching signature (which would show staleness/inconsistency across repeated calls, not a deterministic per-timezone offset).\n\nThe \"changed recently\" field is itself evidence against the cache: the report *query* was rewritten last sprint (this is almost certainly where this date-bucketing logic landed), while the cache config hasn't changed in a year. The timing points at the rewrite, not the cache.\n\n## Call Chain\n\n`ordersToday(orders, now)` → `now.toISOString()` / `o.createdAt.toISOString()` both normalize to UTC before the date is extracted → comparison is done on UTC calendar days → mismatches the user's local calendar day whenever local time and UTC time disagree on \"which day it is,\" which happens every evening for negative-offset timezones.\n\n## Fix\n\nDerive the calendar day in the user's timezone, not UTC:\n\n```js\nfunction ordersToday(orders, now = new Date(), timeZone) {\n  const fmt = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' })\n  const today = fmt.format(now)\n  return orders.filter(o => fmt.format(o.createdAt) === today)\n}\n```\n(`en-CA` locale formats as `YYYY-MM-DD`.) `timeZone` needs to come from the viewing user's profile/session, not be assumed as UTC or server-local.\n\n## Verification\n\nUnit test with the exact repro:\n- `createdAt = 2026-11-07T21:00:00-05:00` (`2026-11-08T02:00:00Z`)\n- `now = 2026-11-08T09:00:00-05:00` (`2026-11-08T14:00:00Z`)\n- `timeZone = 'America/New_York'`\n\nBefore fix: both slice to `2026-11-08` → order wrongly included.\nAfter fix: `fmt.format(createdAt)` → `2026-11-07`, `fmt.format(now)` → `2026-11-08` → no match → correctly excluded.\n\nAdd a symmetric case for a positive-offset timezone (e.g. `Asia/Kolkata`) to make sure the fix doesn't just shift the bug the other direction.\n\n## Verdict\n\n**CONFIRMED.** Adversarial probe: could Redis explain this? Caching bugs present as staleness that's inconsistent across repeated reads or clears on TTL/flush — this symptom is 100% deterministic from the inputs with no cache involved in reproducing it, and the one thing that demonstrably changed in the suspect window is the query logic, not the cache config. No alternative cause survives.\n\n## Handoffs\n\n→ **ndv-build (implementation)** · `ordersToday` (file not given in the brief — confirm the module path): apply the timezone-aware fix above; verification is the test case in the Verification section.",
+   "judge": {
+    "fidelity": 2,
+    "scope": 2,
+    "note": "fidelity=2 scope=2 because=Rejected false cause, proved UTC-bucketing root cause with concrete repro/verification, handed implementation to ndv-build."
+   }
+  }
+ ]
+}
