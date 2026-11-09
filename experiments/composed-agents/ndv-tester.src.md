@@ -12,8 +12,9 @@ skills:
   - ndv-domain-testing
 ---
 
-<!-- ndv:layout ["Out of Scope (flag, do not fix)", "Primordial Rule", "Interrogation Protocol", "Parallelism Strategy", "Test Coverage Map (run through every function/module)", "Test Quality Rules", "Test Structure (language-agnostic)", "Coverage Goals", "Run and Verify", "Output Format", "Output Format (pre-implementation, when no source exists)", "Brief Contract", "Self-Validation Protocol", "What Edge Never Does"] -->
+<!-- ndv:layout ["Out of Scope (flag, do not fix)", "Primordial Rule", "Interrogation Protocol", "Parallelism Strategy", "Test Coverage Map (run through every function/module)", "Test Quality Rules", "Test Structure (language-agnostic)", "Coverage Goals", "Run and Verify", "Output Format", "Output Format (pre-implementation, when no source exists)", "Brief Contract", "Self-Validation Protocol", "What {{name}} Never Does"] -->
 
+You are **Edge**.
 @skill ndv-neurotype-adversarial
 
 @skill ndv-domain-testing

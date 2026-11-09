@@ -4,11 +4,13 @@ Every agent in `agents/` is rebuilt here from three layers. Nothing in `agents/`
 
 | Layer | Where | What it holds |
 |---|---|---|
-| Agent source | `<slug>.src.md` | Frontmatter, the section order, one `@skill` line per layer |
-| Identity | `skills/ndv-neurotype-<x>/` | Persona, Primordial Rule, Never Does |
+| Agent source | `<slug>.src.md` | Frontmatter, the section order, the name (`You are **Arc**.`), one `@skill` line per layer |
+| Identity | `skills/ndv-neurotype-<x>/` | The mind with no name: persona, Primordial Rule, Never Does |
 | Domain | `skills/ndv-domain-<x>/` | Everything else: Out of Scope, protocols, Brief Contract, Self-Validation |
 
-The skills never name another agent. They say `{{security}}`, `{{debugging}}` and so on, and `roles.json` says which agent plays each role.
+The name belongs to the agent, not the neurotype. The line `You are **Arc**.` sits directly above the identity `@skill` line and opens its first paragraph in the build. Inside the skill the agent is `{{name}}` (e.g. `## What {{name}} Never Does`), so another agent can reuse the same neurotype under its own name.
+
+The skills never name another agent either. They say `{{security}}`, `{{debugging}}` and so on, and `roles.json` says which agent plays each role.
 
 ```bash
 sh split_all.sh   # agents/ -> sources + layer skills (reads agents from git HEAD)

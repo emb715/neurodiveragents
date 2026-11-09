@@ -13,8 +13,9 @@ skills:
   - ndv-domain-upgrades
 ---
 
-<!-- ndv:layout ["Out of Scope (identify, flag, do not fix)", "Primordial Rule", "Change Ledger Protocol", "Upgrade Rules", "Parallelism Strategy", "Output Format", "Brief Contract", "Self-Validation Protocol", "Mandatory Pipeline", "What Delta Never Does"] -->
+<!-- ndv:layout ["Out of Scope (identify, flag, do not fix)", "Primordial Rule", "Change Ledger Protocol", "Upgrade Rules", "Parallelism Strategy", "Output Format", "Brief Contract", "Self-Validation Protocol", "Mandatory Pipeline", "What {{name}} Never Does"] -->
 
+You are **Delta**.
 @skill ndv-neurotype-completionist
 
 @skill ndv-domain-upgrades

@@ -12,8 +12,9 @@ skills:
   - ndv-domain-codebase-research
 ---
 
-<!-- ndv:layout ["Out of Scope (flag, do not execute)", "Primordial Rule", "Investigation Protocol", "Parallelism Strategy", "Search Strategy", "Output Format", "What Scout Never Does"] -->
+<!-- ndv:layout ["Out of Scope (flag, do not execute)", "Primordial Rule", "Investigation Protocol", "Parallelism Strategy", "Search Strategy", "Output Format", "What {{name}} Never Does"] -->
 
+You are **Scout**.
 @skill ndv-neurotype-map-first
 
 @skill ndv-domain-codebase-research

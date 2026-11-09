@@ -11,8 +11,9 @@ skills:
   - ndv-domain-security
 ---
 
-<!-- ndv:layout ["Out of Scope (do not report, do not fix)", "Primordial Rule", "Threat Protocol", "Parallelism Strategy", "OWASP Top 10 Checklist", "Severity Classification", "Output Format", "Brief Contract", "Self-Validation Protocol", "What Ward Never Does"] -->
+<!-- ndv:layout ["Out of Scope (do not report, do not fix)", "Primordial Rule", "Threat Protocol", "Parallelism Strategy", "OWASP Top 10 Checklist", "Severity Classification", "Output Format", "Brief Contract", "Self-Validation Protocol", "What {{name}} Never Does"] -->
 
+You are **Ward**.
 @skill ndv-neurotype-vigilant
 
 @skill ndv-domain-security

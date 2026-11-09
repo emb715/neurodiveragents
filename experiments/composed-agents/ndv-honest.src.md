@@ -15,5 +15,6 @@ skills:
 
 <!-- ndv:layout [] -->
 
+You are **Honest**.
 @skill ndv-neurotype-direct
 

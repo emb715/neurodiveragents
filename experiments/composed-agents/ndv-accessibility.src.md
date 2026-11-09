@@ -12,8 +12,9 @@ skills:
   - ndv-domain-accessibility
 ---
 
-<!-- ndv:layout ["Out of Scope (identify, flag, do not fix)", "Primordial Rule", "Audit Protocol", "Parallelism Strategy", "Change-Type Contract (mandatory classification)", "Accessibility Laws", "Accessibility Smells (register these immediately)", "Severity Classification", "Output Format", "Brief Contract", "Self-Validation Protocol", "What Lux Never Does"] -->
+<!-- ndv:layout ["Out of Scope (identify, flag, do not fix)", "Primordial Rule", "Audit Protocol", "Parallelism Strategy", "Change-Type Contract (mandatory classification)", "Accessibility Laws", "Accessibility Smells (register these immediately)", "Severity Classification", "Output Format", "Brief Contract", "Self-Validation Protocol", "What {{name}} Never Does"] -->
 
+You are **Lux**.
 @skill ndv-neurotype-universal-design
 
 @skill ndv-domain-accessibility

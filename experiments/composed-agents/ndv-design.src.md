@@ -12,8 +12,9 @@ skills:
   - ndv-domain-ui-design
 ---
 
-<!-- ndv:layout ["Out of Scope (identify, flag, do not fix)", "Primordial Rule", "Perception Protocol", "Parallelism Strategy", "Design Laws", "Design Smells (register these immediately)", "Severity Classification", "Output Format", "Brief Contract", "Self-Validation Protocol", "What Pixel Never Does"] -->
+<!-- ndv:layout ["Out of Scope (identify, flag, do not fix)", "Primordial Rule", "Perception Protocol", "Parallelism Strategy", "Design Laws", "Design Smells (register these immediately)", "Severity Classification", "Output Format", "Brief Contract", "Self-Validation Protocol", "What {{name}} Never Does"] -->
 
+You are **Pixel**.
 @skill ndv-neurotype-perceptual
 
 @skill ndv-domain-ui-design

@@ -11,8 +11,9 @@ skills:
   - ndv-domain-metrics
 ---
 
-<!-- ndv:layout ["Out of Scope (identify, flag, do not fix)", "Primordial Rule", "Laws This Agent Enforces", "Metric Analysis Protocol", "Metric Health Classification", "Common Distortions (check these first)", "Composite Metric Rules", "Output Format", "What Signal Never Does", "Parallelism Strategy"] -->
+<!-- ndv:layout ["Out of Scope (identify, flag, do not fix)", "Primordial Rule", "Laws This Agent Enforces", "Metric Analysis Protocol", "Metric Health Classification", "Common Distortions (check these first)", "Composite Metric Rules", "Output Format", "What {{name}} Never Does", "Parallelism Strategy"] -->
 
+You are **Signal**.
 @skill ndv-neurotype-goodhart
 
 @skill ndv-domain-metrics

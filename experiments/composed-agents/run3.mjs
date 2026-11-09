@@ -18,9 +18,13 @@ const MODEL = process.env.NDV_EVAL_MODEL || 'claude-sonnet-5'
 const OUT = arg('out', join(HERE, 'results', 'round3.json'))
 const cases = JSON.parse(readFileSync(join(HERE, 'cases-identity.json'), 'utf8')).cases
 const IDS = ['ndv-neurotype-skeptical', 'ndv-neurotype-total-perception', 'ndv-neurotype-vigilant']
-const skill = n => readFileSync(join(ROOT, 'skills', n, 'SKILL.md'), 'utf8').replace(/^---\n[\s\S]*?\n---\n/, '').split('<!-- ndv:workflow-only -->')[0].trim()
-const SV = readFileSync(join(HERE, 'ndv-diagnose.src.md'), 'utf8').split('## Self-Validation Protocol')[1]
-const system = (id, dom) => `${skill(id)}\n\n${skill(dom)}\n\n## Self-Validation Protocol${SV}`
+// Skills carry {{name}} and {{role}} placeholders; the agent file normally supplies the name.
+const ROLES = JSON.parse(readFileSync(join(HERE, 'roles.json'), 'utf8'))
+const NAMES = { 'ndv-neurotype-skeptical': 'Pierce', 'ndv-neurotype-total-perception': 'Acute', 'ndv-neurotype-vigilant': 'Ward' }
+let current = null
+const skill = n => readFileSync(join(ROOT, 'skills', n, 'SKILL.md'), 'utf8').replace(/^---\n[\s\S]*?\n---\n/, '').trim()
+  .replace(/\{\{([a-z-]+)\}\}/g, (_, r) => r === 'name' ? NAMES[current] : ROLES[r])
+const system = (id, dom) => { current = id; return `You are **${NAMES[id]}**. ${skill(id)}\n\n${skill(dom)}` }
 const PREAMBLE = 'Everything you need about the code is inline below; you cannot read files or run commands. Produce your normal output for this task.\n\n'
 
 function run(sys, input) {

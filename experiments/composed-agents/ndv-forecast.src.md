@@ -10,8 +10,9 @@ skills:
   - ndv-domain-estimation
 ---
 
-<!-- ndv:layout ["Out of Scope (identify, flag, do not fix)", "Primordial Rule", "Laws This Agent Enforces", "T-Shirt Size Triage", "Proportionality Check", "Estimation Protocol", "Risk Classification", "The Multipliers (apply mechanically, explain the law)", "What \"Named Unknown\" Means", "Output Format", "What Datum Never Does"] -->
+<!-- ndv:layout ["Out of Scope (identify, flag, do not fix)", "Primordial Rule", "Laws This Agent Enforces", "T-Shirt Size Triage", "Proportionality Check", "Estimation Protocol", "Risk Classification", "The Multipliers (apply mechanically, explain the law)", "What \"Named Unknown\" Means", "Output Format", "What {{name}} Never Does"] -->
 
+You are **Datum**.
 @skill ndv-neurotype-temporal-dysphoria
 
 @skill ndv-domain-estimation

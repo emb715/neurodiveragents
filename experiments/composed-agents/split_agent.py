@@ -3,21 +3,21 @@
   python3 -I split_agent.py <agent-slug> <neurotype> <module-skill|-> <domain-name|-> ["<agent description>"]
 
   e.g. split_agent.py ndv-diagnose skeptical ndv-skeptical debugging "..."
-  module "-": no published module yet, the neurotype skill has no workflow-only part
+  module "-": no published cognitive module for this neurotype yet
   domain "-": the agent is identity only (ndv-honest)
 
-identity -> skills/ndv-neurotype-<x>/SKILL.md  intro + Primordial Rule + Never Does;
-            then, below a workflow-only marker, the published module's text
-            (skills/<module-skill>, left untouched) for use outside the agent
+identity -> skills/ndv-neurotype-<x>/SKILL.md  intro (without "You are **Name**.") + Primordial
+            Rule + Never Does. The published module (skills/<module-skill>) is
+            only recorded in metadata; its text is not copied.
 domain   -> skills/ndv-domain-<x>/SKILL.md     every other section, Self-Validation included
 agent    -> <slug>.src.md (this folder)         frontmatter, skills list, section
-            layout and one @skill line per layer
+            layout, the name ("You are **Name**.") and one @skill line per layer
 
 The skills name no other agent. Wherever the agent file names another agent
 (slug or character), the skill says {{role}} instead, and compose.mjs fills it
-from roles.json when it builds the agent. The agent's own character name stays
-in the identity layer (it is the persona) and becomes "this agent" in the
-domain layer. Nothing else in the text changes.
+from roles.json when it builds the agent. The agent's own name lives only in
+the agent source: the identity layer says {{name}} and the domain layer says
+"this agent". Nothing else in the text changes.
 """
 import glob
 import json
@@ -32,7 +32,6 @@ slug, neuro, module, dname = sys.argv[1:5]
 adesc = sys.argv[5] if len(sys.argv) > 5 else ''
 ident = 'ndv-neurotype-' + neuro
 domain = None if dname == '-' else 'ndv-domain-' + dname
-WORKFLOW_ONLY = '<!-- ndv:workflow-only -->'
 # Fixed phrases where a character name is an ordinary word; never rewritten.
 PROTECT = ['| Signal |', '### Flow', 'Signal-to-noise', 'signal-to-noise', 'Edge case', 'Boy Scout', 'Complexity Signal']
 
@@ -69,12 +68,14 @@ character = re.search(r'You are \*\*(\w+)\*\*', intro).group(1)
 own_role = ROLE_OF[slug]
 
 
-def roles(text, keep_own_name):
+def roles(text, identity):
     masks = {}
     for i, ph in enumerate(PROTECT):
         masks[f'\x00{i}\x00'] = ph
         text = text.replace(ph, f'\x00{i}\x00')
-    if not keep_own_name:
+    if identity:
+        text = re.sub(rf"\b{character}\b", '{{name}}', text)
+    else:
         text = re.sub(rf"\b{character}'s\b", "this agent's", text)
         text = re.sub(rf"\b{character}\b", 'this agent', text)
     for name, other in CHARS.items():
@@ -92,40 +93,29 @@ is_identity = lambda p: title(p) in ('Primordial Rule', f'What {character} Never
 identity_secs = [roles(p, True) for p in rest if is_identity(p)]
 domain_secs = [roles(p, False) for p in rest if not is_identity(p)]
 layout = [roles(title(p), is_identity(p)) for p in rest]
-intro = roles(intro, True)
+NAME_LINE = f'You are **{character}**.'
+assert intro.startswith(NAME_LINE + ' '), f'{slug}: intro does not open with {NAME_LINE}'
+intro = roles(intro[len(NAME_LINE) + 1:], True)
 
 nl = '\n\n'
 persona = f'''---
 name: {ident}
 description: >
-  Identity layer: {character}'s mind, the {own_role} role. Loaded by name
+  Identity layer: the mind behind the {own_role} role. Loaded by name
   from an agent file or a brief's Load line, never by task matching. Also
   usable as a cognitive module in any workflow step.
 user-invocable: false
 metadata:
   type: neurotype
   layer: identity
-  role: {own_role}
-  character: {character}
-  module: {module}
+  home-role: {own_role}
+  related-module: {module}
 ---
 
 {intro}
 
 {nl.join(identity_secs)}
 '''
-if module != '-':
-    module_text = head(f'skills/{module}/SKILL.md').split('---\n', 2)[2].strip()
-    persona += f'''
-{WORKFLOW_ONLY}
-
-## Cognitive Core
-
-The same mind outside its home domain. When this skill is loaded into a step outside the {own_role} role, apply this:
-
-{module_text}
-'''
-
 dom = f'''---
 name: {domain}
 description: >
@@ -145,11 +135,11 @@ metadata:
 layers = [ident] + ([domain] if domain else [])
 agent = ('---\n' + fm + '\nskills:\n' + ''.join(f'  - {l}\n' for l in layers) + '---\n\n'
          + '<!-- ndv:layout ' + json.dumps(layout) + ' -->\n\n'
-         + ''.join(f'@skill {l}\n\n' for l in layers))
+         + NAME_LINE + '\n' + ''.join(f'@skill {l}\n\n' for l in layers))
 
 for name, text in ((ident, persona),) + (((domain, dom),) if domain else ()):
     os.makedirs(os.path.join(ROOT, 'skills', name), exist_ok=True)
     open(os.path.join(ROOT, 'skills', name, 'SKILL.md'), 'w').write(text)
 open(os.path.join(HERE, f'{slug}.src.md'), 'w').write(agent)
-used = sorted(set(re.findall(r'\{\{([a-z-]+)\}\}', persona.split(WORKFLOW_ONLY)[0] + (dom if domain else ''))))
+used = sorted(set(re.findall(r'\{\{([a-z-]+)\}\}', persona + (dom if domain else ''))) - {'name'})
 print(f'{slug}: {character}, role {own_role}; refers to {len(used)} roles')

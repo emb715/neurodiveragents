@@ -11,14 +11,13 @@ import { execFileSync } from 'node:child_process'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(HERE, '..', '..')
-const MARK = '<!-- ndv:workflow-only -->'
 const fm = t => Object.fromEntries([...(t.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '').matchAll(/^\s*([a-z-]+):\s*(.+)$/gm)].map(m => [m[1], m[2].trim()]))
 const body = t => t.replace(/^---\n[\s\S]*?\n---\n/, '')
 const skill = n => readFileSync(join(ROOT, 'skills', n, 'SKILL.md'), 'utf8')
 // Fixed phrases where a character name is an ordinary word (same list as split_agent.py).
 const PROTECT = ['| Signal |', '### Flow', 'Signal-to-noise', 'signal-to-noise', 'Edge case', 'Boy Scout', 'Complexity Signal']
 const ROLES = JSON.parse(readFileSync(join(HERE, 'roles.json'), 'utf8'))
-const fill = t => t.replace(/\{\{([a-z-]+)\}\}/g, (_, r) => ROLES[r])
+const fill = (t, name) => t.replace(/\{\{([a-z-]+)\}\}/g, (_, r) => r === 'name' ? name : ROLES[r])
 // every agent slug and character name in the fleet
 const AGENTS = readdirSync(join(ROOT, 'agents')).filter(f => /^ndv-.*\.md$/.test(f)).map(f => f.slice(0, -3))
 const CHARS = Object.fromEntries(AGENTS.map(a => [a, readFileSync(join(ROOT, 'agents', a + '.md'), 'utf8').match(/You are \*\*(\w+)\*\*/)?.[1]]).filter(([, c]) => c))
@@ -45,33 +44,35 @@ for (const src of sources) {
     assert.deepEqual(listed, refs, 'frontmatter skills: matches the @skill lines, in order')
   })
 
-  test(`${slug}: identity skill carries the whole persona`, () => {
+  test(`${slug}: the name lives in the agent file, the rest of the persona in the identity skill`, () => {
+    const name = text.match(/^You are \*\*(\w+)\*\*\.\n@skill (\S+)$/m)
+    assert.ok(name, '"You are **Name**." sits directly above the identity @skill line')
+    assert.equal(name[2], refs[0])
     const id = skill(refs[0])
     assert.equal(fm(id).layer, 'identity')
-    const core = body(id).split(MARK)[0]
-    assert.match(core, /You are \*\*\w+\*\*/, 'persona paragraph')
-    assert.match(core, /^## Primordial Rule$|PRIMORDIAL RULE:/m, 'Primordial Rule')
-    if (refs.length > 1) assert.match(core, /^## What \w+ Never Does$/m, 'Never Does')
-    const module = fm(id).module
-    assert.equal(id.includes(MARK), module !== '-', 'workflow-only part exactly when a published module exists')
+    assert.doesNotMatch(body(id), /You are \*\*/, 'no name line in the identity skill')
+    assert.match(body(id), /^## Primordial Rule$|PRIMORDIAL RULE:/m, 'Primordial Rule')
+    if (refs.length > 1) assert.match(body(id), /^## What \{\{name\}\} Never Does$/m, 'Never Does')
+    assert.ok(!body(id).includes('## Cognitive Core'), 'one persona text, no second copy')
   })
 
   test(`${slug}: skills name no other agent, only roles that resolve`, () => {
-    const own = skill(refs[0]).match(/You are \*\*(\w+)\*\*/)[1]
     for (const r of refs) {
-      const t = body(skill(r)).split(MARK)[0]
+      const t = body(skill(r))
       if (r !== refs[0]) assert.equal(fm(skill(r)).layer, 'domain')
-      assert.deepEqual(namesIn(t, r === refs[0] ? own : null), [], `${r} names other agents`)
-      for (const [, role] of t.matchAll(/\{\{([a-z-]+)\}\}/g)) assert.ok(ROLES[role], `${r}: {{${role}}} is in roles.json`)
+      assert.deepEqual(namesIn(t, null), [], `${r} names an agent`)
+      for (const [, role] of t.matchAll(/\{\{([a-z-]+)\}\}/g)) assert.ok(role === 'name' || ROLES[role], `${r}: {{${role}}} is in roles.json`)
     }
   })
 
-  test(`${slug}: the inline build contains the identity verbatim and nothing workflow-only`, () => {
+  test(`${slug}: the inline build contains the name and the identity verbatim`, () => {
     const built = execFileSync('node', [join(HERE, 'compose.mjs'), join(HERE, src), '--inline'], { encoding: 'utf8' })
-    for (const part of sectionsOf(body(skill(refs[0])).split(MARK)[0]))
-      assert.ok(built.includes(fill(part)), `identity part reaches the build unchanged: ${part.slice(0, 60)}`)
-    assert.ok(!built.includes('## Cognitive Core'), 'workflow-only section stays out')
-    assert.ok(!/^@skill /m.test(built), 'no unresolved @skill lines')
+    const name = text.match(/^You are \*\*(\w+)\*\*\.$/m)[1]
+    const [first, ...rest] = sectionsOf(body(skill(refs[0])))
+    assert.ok(built.includes(`You are **${name}**. ${fill(first, name)}`), 'name line and persona paragraph join in the build')
+    for (const part of rest)
+      assert.ok(built.includes(fill(part, name)), `identity part reaches the build unchanged: ${part.slice(0, 60)}`)
+        assert.ok(!/^@skill /m.test(built), 'no unresolved @skill lines')
     assert.ok(!/\{\{[a-z-]+\}\}/.test(built), 'no unresolved roles')
     assert.ok(!/^skills:/m.test(built), 'no skills: frontmatter in the flat build')
   })

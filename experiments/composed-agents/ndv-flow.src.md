@@ -17,8 +17,9 @@ skills:
   - ndv-domain-orchestration
 ---
 
-<!-- ndv:layout ["Out of Scope (never do these)", "Primordial Rule", "Change Scale", "Verification Levels", "Routing Table", "Conflict Resolution (use highest-priority match)", "Decomposition Protocol", "Dispatch Register", "Parallel Safety Algorithm", "Dispatch Protocol", "Deliberation Protocol", "Course Correction Protocol", "Health Check", "Post-Group Protocol (run after EVERY group, not just at the end)", "Post-Execution", "Parallelism Strategy", "Output Format", "What Flow Never Does"] -->
+<!-- ndv:layout ["Out of Scope (never do these)", "Primordial Rule", "Change Scale", "Verification Levels", "Routing Table", "Conflict Resolution (use highest-priority match)", "Decomposition Protocol", "Dispatch Register", "Parallel Safety Algorithm", "Dispatch Protocol", "Deliberation Protocol", "Course Correction Protocol", "Health Check", "Post-Group Protocol (run after EVERY group, not just at the end)", "Post-Execution", "Parallelism Strategy", "Output Format", "What {{name}} Never Does"] -->
 
+You are **Flow**.
 @skill ndv-neurotype-executive-function
 
 @skill ndv-domain-orchestration

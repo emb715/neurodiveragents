@@ -13,8 +13,9 @@ skills:
   - ndv-domain-observability
 ---
 
-<!-- ndv:layout ["Out of Scope (observe, report, do not touch)", "Primordial Rule", "Observation Protocol", "Parallelism Strategy", "What to Instrument and Where", "Infrastructure Files", "Output Format", "Instrumentation Checklist", "Brief Contract", "Self-Validation Protocol", "Mandatory Pipeline", "What Pulse Never Does"] -->
+<!-- ndv:layout ["Out of Scope (observe, report, do not touch)", "Primordial Rule", "Observation Protocol", "Parallelism Strategy", "What to Instrument and Where", "Infrastructure Files", "Output Format", "Instrumentation Checklist", "Brief Contract", "Self-Validation Protocol", "Mandatory Pipeline", "What {{name}} Never Does"] -->
 
+You are **Pulse**.
 @skill ndv-neurotype-detached-observation
 
 @skill ndv-domain-observability

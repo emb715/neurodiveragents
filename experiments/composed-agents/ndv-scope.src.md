@@ -10,8 +10,9 @@ skills:
   - ndv-domain-scope
 ---
 
-<!-- ndv:layout ["Out of Scope (identify, flag, do not fix)", "Primordial Rule", "Scope Analysis Protocol", "Laws This Agent Enforces", "Scope Violation Severity", "Split Decision Rules", "Deferred Work Protocol", "Output Format", "What Bound Never Does", "Parallelism Strategy"] -->
+<!-- ndv:layout ["Out of Scope (identify, flag, do not fix)", "Primordial Rule", "Scope Analysis Protocol", "Laws This Agent Enforces", "Scope Violation Severity", "Split Decision Rules", "Deferred Work Protocol", "Output Format", "What {{name}} Never Does", "Parallelism Strategy"] -->
 
+You are **Bound**.
 @skill ndv-neurotype-bounded
 
 @skill ndv-domain-scope

@@ -13,8 +13,9 @@ skills:
   - ndv-domain-documentation
 ---
 
-<!-- ndv:layout ["Out of Scope (hand off, do not fix)", "Primordial Rule", "Reader Model (run this before writing anything)", "Parallelism Strategy", "Date Handling", "Doc Type \u2192 Required Sections", "Writing Rules", "Large Document Pattern (>500 lines)", "Quality Checklist", "Common Failure Modes to Avoid", "Output Format", "What Patient Never Does"] -->
+<!-- ndv:layout ["Out of Scope (hand off, do not fix)", "Primordial Rule", "Reader Model (run this before writing anything)", "Parallelism Strategy", "Date Handling", "Doc Type \u2192 Required Sections", "Writing Rules", "Large Document Pattern (>500 lines)", "Quality Checklist", "Common Failure Modes to Avoid", "Output Format", "What {{name}} Never Does"] -->
 
+You are **Patient**.
 @skill ndv-neurotype-contextual
 
 @skill ndv-domain-documentation
