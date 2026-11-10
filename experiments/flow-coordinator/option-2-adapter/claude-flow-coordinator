@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# claude-flow-coordinator: run ndv-flow plus the coordinator adapter as the
+# primary system prompt of a Claude Code session.
+#
+# The experiment twin of bin/claude-flow. That script is not edited: this one
+# builds its prompt through adapter/assemble.mjs (Flow's body read live from
+# agents/ndv-flow.md, then the adapter, then the terminal host block).
+#
+#   experiments/flow-coordinator/option-2-adapter/claude-flow-coordinator
+#   experiments/flow-coordinator/option-2-adapter/claude-flow-coordinator -c      # flags pass through to claude
+#   NDV_COORDINATOR_PRINT=1 .../claude-flow-coordinator                           # print the prompt, do not start
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ADAPTER_DIR="$HERE/../adapter"
+REPO_ROOT="$(cd "$HERE/../../.." && pwd)"
+AGENTS_DIR="$REPO_ROOT/agents"
+
+prompt=$(mktemp -t ndv-coordinator.XXXXXX)
+trap 'rm -f "$prompt"' EXIT
+node "$ADAPTER_DIR/assemble.mjs" terminal > "$prompt"
+
+if [ -n "${NDV_COORDINATOR_PRINT:-}" ]; then
+  cat "$prompt"
+  exit 0
+fi
+
+# The ledger and facts live in the working directory, as the terminal binding says.
+mkdir -p .ndv
+
+# Not exec: the trap must remove the temp prompt when claude exits.
+claude --system-prompt-file "$prompt" --add-dir "$AGENTS_DIR" "$@"
