@@ -15,6 +15,7 @@
  *   --max-threads <n>      threads running at once (default 4)
  *   --quiet-minutes <n>    minutes before a check-in (default 120)
  *   --no-worktrees         run every thread in --repo itself
+ *   --quiet                hide the progress lines (tool calls, heartbeats)
  */
 
 import { resolve, join } from 'node:path'
@@ -40,7 +41,7 @@ const host = new Host({
   repoRoot: repo,
   agentsDir,
   runner: new SdkRunner({ coordinatorModel: arg('coordinator-model'), workerModel: arg('worker-model'), cwd: repo }),
-  surface: terminalSurface(),
+  surface: terminalSurface({ quiet: process.argv.includes('--quiet') }),
   maxThreads: Number(arg('max-threads', '4')),
   quietMs: Number(arg('quiet-minutes', '120')) * 60_000,
   worktrees: !process.argv.includes('--no-worktrees'),
@@ -50,4 +51,5 @@ const host = new Host({
 const resumed = host.start()
 if (resumed.length) process.stdout.write(`Resumed ${resumed.map(i => 'T' + i).join(', ')} from the ledger.\n`)
 host.startTimer()
+process.stdout.write('Coordinator ready. Type a message; /ledger, /t <id> <text>, /d <id> <answer>, /quit.\n')
 attachTerminal(host)

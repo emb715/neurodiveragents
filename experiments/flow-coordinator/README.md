@@ -37,10 +37,13 @@ For a claude.ai project, paste the block in `option-2-adapter/project-instructio
 ```bash
 cd experiments/flow-coordinator/option-3-sdk-host
 npm install
-npm test                                            # 21 tests, fake model, no tokens
+npm test                                            # 24 tests, fake model, no tokens
 node src/cli.js --repo /path/to/project             # real run: chat in the terminal
+node src/cli.js --repo /path/to/project --quiet     # same, without the progress lines
 node src/cli.js --print-prompt                      # the coordinator's system prompt
 ```
+
+While it works, the terminal prints dim, timestamped progress lines: when the coordinator starts on an event, each tool it calls ("coordinator: starting a thread: ndv-build on src/a.ts"), each tool a thread calls ("T1 ndv-build: reading reset.ts"), when a thread finishes, and a "still working" line every 15 seconds. They are not part of the chat and are never sent to the coordinator. `--quiet` turns them off.
 
 In the terminal chat: plain text goes to the coordinator, `/t 3 <text>` writes into thread T3, `/d 1 <answer>` answers decision D1, `/ledger` prints the ledger. State lives in `<repo>/.ndv/coordinator/`; each thread works on branch `ndv/T<ID>` in its own worktree. Merging those branches back is yours to do.
 

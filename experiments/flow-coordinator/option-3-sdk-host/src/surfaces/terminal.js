@@ -13,9 +13,13 @@
 
 import readline from 'node:readline'
 
-export function terminalSurface({ output = process.stdout } = {}) {
+export function terminalSurface({ output = process.stdout, quiet = false } = {}) {
   const say = s => output.write(`\n${s}\n> `)
+  const dim = s => (output.isTTY ? `\x1b[2m${s}\x1b[22m` : s)
+  const time = () => new Date().toTimeString().slice(0, 8)
   return {
+    // Progress lines: dim, timestamped, one per action. --quiet turns them off.
+    status: quiet ? undefined : line => output.write(`\r${dim(`  ${time()}  ${line}`)}\n> `),
     post: text => say(`coordinator: ${text}`),
     askDecision: d => say([
       `decision D${d.id}: ${d.question}`,

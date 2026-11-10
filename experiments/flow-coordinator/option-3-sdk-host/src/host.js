@@ -24,6 +24,7 @@ import * as P from './prompts.js'
 import { createWorktree } from './worktree.js'
 import { relativize, relativeFiles } from './guard.js'
 import { REPO_ROOT } from '../../adapter/assemble.mjs'
+import { describeTool } from './progress.js'
 
 // Host-neutral tool specs. runners/sdk.js turns them into MCP tools; the
 // scripted runner calls the handlers directly.
@@ -73,14 +74,20 @@ export const TOOL_SPECS = {
 
 const HOUR = 60 * 60 * 1000
 const PERSON_WAITS = new Set(['chat', 'decision-answered'])
+const WAKE_LABEL = {
+  chat: 'your message', 'person-in-thread': 'your note to a thread', 'thread-finished': 'a thread finished',
+  'thread-replied': 'a thread replied', 'thread-rejected': 'a thread rejected its brief', 'thread-quiet': 'a thread went quiet',
+  'thread-incomplete': 'a thread was closed', 'thread-failed': 'a thread failed', 'decision-answered': 'your decision',
+  'host-restarted': 'restart',
+}
 
 export class Host {
   constructor({
     storeDir, runner, surface, repoRoot = REPO_ROOT, agentsDir = P.DEFAULT_AGENTS_DIR,
     coordinatorPrompt, maxThreads = 4, quietMs = 2 * HOUR, worktrees = true, now = () => Date.now(),
-    log = () => {},
+    log = () => {}, heartbeatMs = 15_000,
   }) {
-    Object.assign(this, { storeDir, runner, surface, repoRoot, agentsDir, maxThreads, quietMs, worktrees, now, log })
+    Object.assign(this, { storeDir, runner, surface, repoRoot, agentsDir, maxThreads, quietMs, worktrees, now, log, heartbeatMs })
     mkdirSync(join(storeDir, 'threads'), { recursive: true })
     this.coordinatorPrompt = coordinatorPrompt ?? P.coordinatorSystemPrompt(agentsDir)
     this.ledger = new Ledger(join(storeDir, 'ledger.json'))
@@ -255,6 +262,7 @@ export class Host {
   #launch(row, prompt, { resume = false } = {}) {
     const ctrl = new AbortController()
     this.ledger.update(row.id, { lastActivity: this.now(), checkedIn: false })
+    this.#status(`T${row.id} ${row.agent}: ${resume ? 'resumed' : 'started'}`)
     const promise = (async () => {
       try {
         const res = await this.runner.worker({
@@ -266,6 +274,10 @@ export class Host {
           cwd: row.cwd ?? this.repoRoot,
           sessionId: resume ? row.sessionId : undefined,
           signal: ctrl.signal,
+          onProgress: (name, input) => {
+            const d = describeTool(name, input)
+            if (d) this.#status(`T${row.id} ${row.agent}: ${d}`)
+          },
           onActivity: sid => {
             row.lastActivity = this.now()
             row.checkedIn = false
@@ -300,6 +312,7 @@ export class Host {
     if (sessionId) row.sessionId = sessionId
     const r = readReply(text, row.id)
     const base = { id: row.id, agent: row.agent }
+    this.#status(`T${row.id} ${row.agent}: ${r.rejected ? 'rejected its brief' : r.complete ? 'finished' : 'replied'}`)
 
     if (r.rejected) {
       const count = row.rejections + 1
@@ -333,6 +346,13 @@ export class Host {
     }
   }
 
+  // ─── progress ──────────────────────────────────────────────────────────────
+
+  // Surfaces that can show progress implement status(); others never see it.
+  #status(line) {
+    if (line) this.surface.status?.(line)
+  }
+
   // ─── coordinator wakes ─────────────────────────────────────────────────────
 
   #enqueue(event) {
@@ -353,12 +373,24 @@ export class Host {
     let posted = false
     const post = tools.post_message.handler
     tools.post_message.handler = a => { posted = true; return post(a) }
-    const res = await this.runner.coordinator({
-      prompt,
-      systemPrompt: this.coordinatorPrompt,
-      sessionId: this.state.coordinatorSession,
-      tools,
-    })
+    const started = Date.now() // wall clock: the heartbeat is for a person watching
+    this.#status(`coordinator is working (${WAKE_LABEL[event.type] ?? event.type})`)
+    const beat = this.heartbeatMs > 0 ? setInterval(() => {
+      this.#status(`coordinator still working, ${Math.round((Date.now() - started) / 1000)}s`)
+    }, this.heartbeatMs) : null
+    beat?.unref?.()
+    let res
+    try {
+      res = await this.runner.coordinator({
+        prompt,
+        systemPrompt: this.coordinatorPrompt,
+        sessionId: this.state.coordinatorSession,
+        tools,
+        onProgress: (name, input) => this.#status(describeTool(name, input) && `coordinator: ${describeTool(name, input)}`),
+      })
+    } finally {
+      clearInterval(beat)
+    }
     // Found in the first live run: asked a plain question, the coordinator
     // answered in its final text instead of calling post_message, and the
     // person saw nothing. When the person is the one waiting, forward it.

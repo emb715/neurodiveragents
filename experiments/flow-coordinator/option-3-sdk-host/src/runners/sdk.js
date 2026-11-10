@@ -16,6 +16,7 @@
 import { query, createSdkMcpServer, tool } from '@anthropic-ai/claude-agent-sdk'
 import { z } from 'zod'
 import { workerPermission } from '../guard.js'
+import { toolCalls } from '../progress.js'
 
 const READ_ONLY = ['Read', 'Glob', 'Grep']
 
@@ -30,12 +31,13 @@ function zodShape(params) {
   }))
 }
 
-async function collect(q, onActivity) {
+async function collect(q, onActivity, onProgress) {
   let sessionId
   let text = ''
   for await (const m of q) {
     if (m.session_id) sessionId = m.session_id
     onActivity?.(sessionId)
+    for (const call of toolCalls(m)) onProgress?.(call.name, call.input)
     if (m.type === 'result') {
       if (m.subtype !== 'success' || m.is_error) throw new Error(`session ended: ${m.subtype}`)
       text = m.result
@@ -49,7 +51,7 @@ export class SdkRunner {
     Object.assign(this, { coordinatorModel, workerModel, cwd, maxTurns })
   }
 
-  async coordinator({ prompt, systemPrompt, sessionId, tools }) {
+  async coordinator({ prompt, systemPrompt, sessionId, tools, onProgress }) {
     const server = createSdkMcpServer({
       name: 'coordinator',
       version: '0.0.0',
@@ -73,10 +75,10 @@ export class SdkRunner {
         ...(this.maxTurns ? { maxTurns: this.maxTurns } : {}),
       },
     })
-    return collect(q)
+    return collect(q, null, onProgress)
   }
 
-  async worker({ systemPrompt, prompt, cwd, tools, sessionId, signal, onActivity }) {
+  async worker({ systemPrompt, prompt, cwd, tools, sessionId, signal, onActivity, onProgress }) {
     const abortController = new AbortController()
     signal?.addEventListener('abort', () => abortController.abort(), { once: true })
     const q = query({
@@ -94,6 +96,6 @@ export class SdkRunner {
         ...(this.maxTurns ? { maxTurns: this.maxTurns } : {}),
       },
     })
-    return collect(q, onActivity)
+    return collect(q, onActivity, onProgress)
   }
 }

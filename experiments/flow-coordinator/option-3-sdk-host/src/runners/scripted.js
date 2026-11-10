@@ -16,10 +16,11 @@ export class ScriptedRunner {
     this.toolCalls = []
   }
 
-  async coordinator({ prompt, sessionId, tools }) {
+  async coordinator({ prompt, sessionId, tools, onProgress }) {
     this.wakes.push(prompt)
     const call = async (name, args) => {
       this.toolCalls.push({ name, args })
+      onProgress?.(`mcp__coordinator__${name}`, args)
       return tools[name].handler(args)
     }
     const text = await this.coordinatorScript({ prompt, call, wake: this.wakes.length })
@@ -30,6 +31,7 @@ export class ScriptedRunner {
     this.workerCalls.push(args)
     const sid = args.sessionId ?? `worker-T${args.id}`
     args.onActivity?.(sid)
+    args.onProgress?.('Read', { file_path: 'README.md' })
     const out = await new Promise((resolve, reject) => {
       args.signal?.addEventListener('abort', () => reject(new Error('aborted')), { once: true })
       Promise.resolve(this.workerScript(args)).then(resolve, reject)

@@ -59,6 +59,10 @@ After the fixes, the same two runs behaved: the question was answered in the cha
 
 `bin/claude-flow` calls `mktemp -t claude-flow`, which is BSD syntax. GNU `mktemp` refuses a template without `XXX` (`mktemp: too few X's in template 'claude-flow'`), so the script exits before starting Claude. It works on macOS. This is in the shipped script, not the experiment; the experiment's own launcher uses `mktemp -t ndv-coordinator.XXXXXX`, which works on both. Not fixed here, since this branch doesn't touch shipped files.
 
+### 2026-11-10: the terminal looked frozen
+
+EMB's first real run: after typing a message, nothing showed until the coordinator posted, which can take a minute or more while threads run. Both runners now report each tool call, and the host turns them into progress lines on any surface that implements `status()` (the terminal does; `--quiet` turns it off). A heartbeat line every 15 seconds covers a model that is thinking without calling tools. The lines show what is being done, not the model's reasoning: the SDK doesn't stream the coordinator's thinking, and printing its draft text would show the person words the coordinator didn't choose to send.
+
 ### Not measured yet
 
 - Option 2 inside a claude.ai project. It needs the project-instructions block pasted by hand, and the coordinator there can't be scored by this harness.

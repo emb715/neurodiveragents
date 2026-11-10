@@ -12,6 +12,7 @@ import { ScriptedRunner } from '../src/runners/scripted.js'
 import { readReply, parseHandoffs, parseFiles } from '../src/protocol.js'
 import { agentTools, DEFAULT_AGENTS_DIR } from '../src/prompts.js'
 import { createWorktree } from '../src/worktree.js'
+import { describeTool } from '../src/progress.js'
 import { hostBlocks, adapterBody } from '../../adapter/assemble.mjs'
 
 const HOUR = 3_600_000
@@ -362,5 +363,45 @@ test('absolute repo paths in a brief and in FILES become repo-relative', async (
   await host.idle()
   assert.match(runner.workerCalls[0].prompt, /^Write hello\.txt/)
   assert.deepEqual(host.ledger.get('1').files, ['hello.txt', 'b.txt'])
+  cleanup()
+})
+
+// ─── progress lines (EMB: "it doesn't show thinking or processing") ──────────
+
+test('describeTool: one short line per tool, none for what the surface already prints', () => {
+  assert.equal(describeTool('mcp__coordinator__start_thread', { agent: 'ndv-build', files: ['src/a.ts'] }), 'starting a thread: ndv-build on src/a.ts')
+  assert.equal(describeTool('mcp__coordinator__message_thread', { id: '2' }), 'writing to thread T2')
+  assert.equal(describeTool('Read', { file_path: '/repo/src/deep/file.ts' }), 'reading file.ts')
+  assert.equal(describeTool('mcp__coordinator__post_message', { text: 'hi' }), null)
+  assert.equal(describeTool('mcp__coordinator__request_decision', {}), null)
+  assert.ok(describeTool('Bash', { command: 'x'.repeat(200) }).length <= 70, 'long commands are clipped')
+})
+
+test('a surface with status() sees the coordinator and each worker at work', async () => {
+  const lines = []
+  const { host, cleanup } = setup({
+    coordinator: async ({ call, wake }) => {
+      if (wake === 1) await call('start_thread', { agent: 'ndv-build', brief: 'A', files: ['src/a.ts'] })
+    },
+    worker: async ({ id }) => done(id),
+    surface: { post: () => {}, askDecision: () => {}, status: l => lines.push(l) },
+  })
+  host.chat('fix it')
+  await host.idle()
+  const all = lines.join('\n')
+  assert.match(all, /coordinator is working \(your message\)/)
+  assert.match(all, /coordinator: starting a thread: ndv-build on src\/a\.ts/)
+  assert.match(all, /T1 ndv-build: started/)
+  assert.match(all, /T1 ndv-build: reading README\.md/)
+  assert.match(all, /T1 ndv-build: finished/)
+  assert.match(all, /coordinator is working \(a thread finished\)/)
+  cleanup()
+})
+
+test('a surface without status() is left alone', async () => {
+  const { host, posts, cleanup } = setup({ coordinator: async () => 'ok' })
+  host.chat('hi')
+  await host.idle()
+  assert.deepEqual(posts, ['ok'])
   cleanup()
 })
