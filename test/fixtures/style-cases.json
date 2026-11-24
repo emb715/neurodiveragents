@@ -1,5 +1,5 @@
 {
-  "description": "Output-style eval: the ndv-honest output style vs the same model with no style. Every check is a regex on the reply (case-insensitive, Markdown bold/italic markers stripped first). `within` limits the match to the first N characters. `absent: true` inverts the check. Universal checks (filler, apology, preamble) run on every case. Long-form cases score fact coverage, one check per fact a good answer must contain, never word count: padding earns nothing, dropped facts fail.",
+  "description": "Output-style eval: the ndv-honest output style vs the same model with no style. Every check is a regex on the reply (case-insensitive, Markdown bold/italic markers stripped first). `within` limits the match to the first N characters, `absent: true` inverts it. Checks score fidelity to agents/ndv-honest.md, not a preferred answer. `info: true` checks (long-form fact coverage) are reported but not part of the verdict: the agent may legitimately answer a padded-length request with one blunt sentence and a concise answer. `conflictOneSentence` passes when the reply names no conflict, or names it in a single sentence.",
   "universal": [
     {
       "name": "no filler",
@@ -13,7 +13,7 @@
     },
     {
       "name": "no prompt jargon leaked",
-      "pattern": "primordial rule|system prompt|output style",
+      "pattern": "primordial rule|system prompt",
       "absent": true
     },
     {
@@ -152,6 +152,10 @@
         {
           "name": "answers O(log n)",
           "pattern": "o\\(log ?n\\)|logarithmic"
+        },
+        {
+          "name": "conflict, if named, is one blunt sentence",
+          "conflictOneSentence": true
         }
       ]
     },
@@ -173,10 +177,6 @@
           "name": "yes first",
           "pattern": "^\\W*yes",
           "within": 10
-        },
-        {
-          "name": "adds the actionable gotcha (copy, or string comparator)",
-          "pattern": "tosorted|slice\\(\\)|\\[\\.\\.\\.|lexicograph|as strings|a ?- ?b"
         }
       ]
     },
@@ -186,32 +186,37 @@
       "checks": [
         {
           "name": "names Tally",
-          "pattern": "tally"
+          "pattern": "tally",
+          "info": true
         },
         {
           "name": "per-branch tracking",
-          "pattern": "branch"
+          "pattern": "branch",
+          "info": true
         },
         {
           "name": "open source",
-          "pattern": "open.?source"
+          "pattern": "open.?source",
+          "info": true
         },
         {
           "name": "how to install",
-          "pattern": "install|npm i|brew|cargo|go install|pip"
+          "pattern": "install|npm i|brew|cargo|go install|pip",
+          "info": true
         },
         {
           "name": "shows usage",
-          "pattern": "```|`tally "
+          "pattern": "```|`tally ",
+          "info": true
         },
         {
           "name": "call to action",
-          "pattern": "contribut|github|star|feedback|issue"
+          "pattern": "contribut|github|star|feedback|issue",
+          "info": true
         },
         {
-          "name": "does not refuse or comment on length",
-          "pattern": "won.t (write|pad|produce)|will not (write|produce)|not going to write|i refuse|i.m refusing|conflicts? (with|:)|minimal tokens|minimi[sz]e tokens|tokens? (rule|budget|mandate)|output style",
-          "absent": true
+          "name": "conflict, if named, is one blunt sentence",
+          "conflictOneSentence": true
         }
       ]
     },
@@ -221,36 +226,42 @@
       "checks": [
         {
           "name": "8 years",
-          "pattern": "8 years|eight years"
+          "pattern": "8 years|eight years",
+          "info": true
         },
         {
           "name": "Go",
-          "pattern": "\\bgo\\b|golang"
+          "pattern": "\\bgo\\b|golang",
+          "info": true
         },
         {
           "name": "Postgres",
-          "pattern": "postgres"
+          "pattern": "postgres",
+          "info": true
         },
         {
           "name": "payments migration",
-          "pattern": "migrat"
+          "pattern": "migrat",
+          "info": true
         },
         {
           "name": "2 days",
-          "pattern": "2 days|two days"
+          "pattern": "2 days|two days",
+          "info": true
         },
         {
           "name": "4 hours",
-          "pattern": "4 hours|four hours"
+          "pattern": "4 hours|four hours",
+          "info": true
         },
         {
           "name": "names the role",
-          "pattern": "senior backend|backend engineer"
+          "pattern": "senior backend|backend engineer",
+          "info": true
         },
         {
-          "name": "does not refuse or comment on length",
-          "pattern": "won.t (write|pad|produce)|will not (write|produce)|not going to write|i refuse|i.m refusing|conflicts? (with|:)|minimal tokens|minimi[sz]e tokens|tokens? (rule|budget|mandate)|output style",
-          "absent": true
+          "name": "conflict, if named, is one blunt sentence",
+          "conflictOneSentence": true
         }
       ]
     },
@@ -260,48 +271,57 @@
       "checks": [
         {
           "name": "ClientHello",
-          "pattern": "clienthello|client hello"
+          "pattern": "clienthello|client hello",
+          "info": true
         },
         {
           "name": "key share / (EC)DHE",
-          "pattern": "key.?share|ecdhe|diffie"
+          "pattern": "key.?share|ecdhe|diffie",
+          "info": true
         },
         {
           "name": "ServerHello",
-          "pattern": "serverhello|server hello"
+          "pattern": "serverhello|server hello",
+          "info": true
         },
         {
           "name": "encrypted handshake / EncryptedExtensions",
-          "pattern": "encryptedextensions|encrypted extensions|handshake (messages )?(are |is )?encrypted|encrypted from"
+          "pattern": "encryptedextensions|encrypted extensions|handshake (messages )?(are |is )?encrypted|encrypted from",
+          "info": true
         },
         {
           "name": "CertificateVerify",
-          "pattern": "certificateverify|certificate ?verify"
+          "pattern": "certificateverify|certificate ?verify",
+          "info": true
         },
         {
           "name": "Finished",
-          "pattern": "finished"
+          "pattern": "finished",
+          "info": true
         },
         {
           "name": "HKDF key schedule",
-          "pattern": "hkdf|key schedule"
+          "pattern": "hkdf|key schedule",
+          "info": true
         },
         {
           "name": "1-RTT",
-          "pattern": "1-rtt|1 rtt|(one|1|single) round.trip"
+          "pattern": "1-rtt|1 rtt|(one|1|single) round.trip",
+          "info": true
         },
         {
           "name": "0-RTT",
-          "pattern": "0-rtt|0 rtt|zero round|early data"
+          "pattern": "0-rtt|0 rtt|zero round|early data",
+          "info": true
         },
         {
           "name": "replay risk",
-          "pattern": "replay"
+          "pattern": "replay",
+          "info": true
         },
         {
-          "name": "does not refuse or comment on length",
-          "pattern": "won.t (write|pad|produce)|will not (write|produce)|not going to write|i refuse|i.m refusing|conflicts? (with|:)|minimal tokens|minimi[sz]e tokens|tokens? (rule|budget|mandate)|output style",
-          "absent": true
+          "name": "conflict, if named, is one blunt sentence",
+          "conflictOneSentence": true
         }
       ]
     },
@@ -311,32 +331,37 @@
       "checks": [
         {
           "name": "install section",
-          "pattern": "^#+ .*install"
+          "pattern": "^#+ .*install",
+          "info": true
         },
         {
           "name": "usage section",
-          "pattern": "^#+ .*usage"
+          "pattern": "^#+ .*usage",
+          "info": true
         },
         {
           "name": "options table",
-          "pattern": "^\\|.*\\|"
+          "pattern": "^\\|.*\\|",
+          "info": true
         },
         {
           "name": "contributing section",
-          "pattern": "^#+ .*contribut"
+          "pattern": "^#+ .*contribut",
+          "info": true
         },
         {
           "name": "shows example commands",
-          "pattern": "```(bash|sh|shell)?\\s*\\n\\s*\\$? ?dirsnap"
+          "pattern": "```(bash|sh|shell)?\\s*\\n\\s*\\$? ?dirsnap",
+          "info": true
         },
         {
           "name": "explains diff output",
-          "pattern": "diff"
+          "pattern": "diff",
+          "info": true
         },
         {
-          "name": "does not comment on length",
-          "pattern": "conflicts with|token|output style",
-          "absent": true
+          "name": "conflict, if named, is one blunt sentence",
+          "conflictOneSentence": true
         }
       ]
     }

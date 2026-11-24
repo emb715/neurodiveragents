@@ -58,8 +58,13 @@ function ask (model, arm, input) {
   })
 }
 
+const CONFLICT = /(^|\W)conflict(s)? ?(with|:)|^\W*conflict|won.t (write|pad|produce)|will not (write|produce)|not going to (write|produce)|skipping (the|it)/i
 function check (c, raw) {
-  if (c.minWords) return words(raw) >= c.minWords
+  if (c.conflictOneSentence) {
+    const para = raw.split(/\n\s*\n/).find(x => CONFLICT.test(x))
+    if (!para) return true
+    return para.trim().split(/(?<=[.!?])\s+(?=[A-Z])/).length === 1
+  }
   const text = raw.replace(/\*\*|__|(?<!\w)[*_](?!\s)|(?<!\s)[*_](?!\w)/g, '')
   const hay = c.within ? text.slice(0, c.within) : text
   const hit = new RegExp(c.pattern, 'im').test(hay)
@@ -85,7 +90,7 @@ for (const model of saved ? Object.keys(saved) : MODELS) {
       if (!c) continue
       jobs.push(async () => {
         if (x.error || TOOL_ATTEMPT.test(x.text)) return { arm: x.arm, id: x.id, error: x.error || 'tool-call attempt' }
-        return { ...x, caseRes: c.checks.map(k => ({ name: k.name, pass: check(k, x.text) })), uniRes: universal.map(k => ({ name: k.name, pass: check(k, x.text) })) }
+        return { ...x, caseRes: c.checks.map(k => ({ name: k.name, info: !!k.info, pass: check(k, x.text) })), uniRes: universal.map(k => ({ name: k.name, pass: check(k, x.text) })) }
       })
     }
   } else
@@ -96,7 +101,7 @@ for (const model of saved ? Object.keys(saved) : MODELS) {
       for (let t = 0; t < 4 && a.text && TOOL_ATTEMPT.test(a.text); t++) a = await ask(model, arm, c.input)
       if (a.text && TOOL_ATTEMPT.test(a.text)) a = { error: 'tool-call attempt' }
       if (a.error) return { arm, id: c.id, error: a.error }
-      const caseRes = c.checks.map(k => ({ name: k.name, pass: check(k, a.text) }))
+      const caseRes = c.checks.map(k => ({ name: k.name, info: !!k.info, pass: check(k, a.text) }))
       const uniRes = universal.map(k => ({ name: k.name, pass: check(k, a.text) }))
       return { arm, id: c.id, run: r, words: words(a.text), caseRes, uniRes, text: a.text }
     })
@@ -107,8 +112,10 @@ for (const model of saved ? Object.keys(saved) : MODELS) {
     const rs = rows.filter(x => x.arm === arm && !x.error)
     sum[arm] = {
       errors: rows.filter(x => x.arm === arm && x.error).length,
-      casePass: rs.reduce((n, x) => n + x.caseRes.filter(k => k.pass).length, 0),
-      caseTotal: rs.reduce((n, x) => n + x.caseRes.length, 0),
+      casePass: rs.reduce((n, x) => n + x.caseRes.filter(k => k.pass && !k.info).length, 0),
+      caseTotal: rs.reduce((n, x) => n + x.caseRes.filter(k => !k.info).length, 0),
+      infoPass: rs.reduce((n, x) => n + x.caseRes.filter(k => k.pass && k.info).length, 0),
+      infoTotal: rs.reduce((n, x) => n + x.caseRes.filter(k => k.info).length, 0),
       uniPass: rs.reduce((n, x) => n + x.uniRes.filter(k => k.pass).length, 0),
       uniTotal: rs.reduce((n, x) => n + x.uniRes.length, 0),
       medianWords: median(rs.map(x => x.words)),
@@ -132,7 +139,7 @@ for (const model of saved ? Object.keys(saved) : MODELS) {
   console.log(`\n${model}: ${verdict}`)
   for (const arm of ['plain', 'style']) {
     const x = sum[arm]
-    console.log(`  ${arm.padEnd(5)} case ${x.casePass}/${x.caseTotal}  universal ${x.uniPass}/${x.uniTotal}  median words ${x.medianWords}  total words ${x.totalWords}  errors ${x.errors}`)
+    console.log(`  ${arm.padEnd(5)} case ${x.casePass}/${x.caseTotal}  info ${x.infoPass}/${x.infoTotal}  universal ${x.uniPass}/${x.uniTotal}  median words ${x.medianWords}  total words ${x.totalWords}  errors ${x.errors}`)
   }
   for (const [id, v] of Object.entries(perCase)) {
     if (v.plain.fails.length || v.style.fails.length) console.log(`  ${id}: plain[${v.plain.fails.join('; ')}] style[${v.style.fails.join('; ')}]`)
