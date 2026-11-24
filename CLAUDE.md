@@ -73,7 +73,7 @@ All agents default to parallel execution for 4-8 independent files/items.
 
 ### Stack
 
-- **Runtime:** Node.js ≥ 18 for users; Node 26 (`.nvmrc`) for development and CI. ESM (`"type": "module"`)
+- **Runtime:** Node.js ≥ 24 (`.nvmrc` pins 24 for development and CI). ESM (`"type": "module"`)
 - **Test runner:** `node --test` (built-in, no Jest/Vitest)
 - **Dependencies:** `@clack/prompts`, `picocolors` — no build step for the fleet itself
 - **Package manager:** pnpm (version pinned in `packageManager`). `pnpm install` once after cloning.
@@ -195,7 +195,7 @@ Scoring is deterministic: every check is a pattern on the output (`scripts/behav
 1. Edit `agents/ndv-[name].md` (model file — source of truth)
 2. Update routing in `CLAUDE.md`, `agents/ndv-flow.md`, `bin/ndv.js` (NDV_BLOCK + Copilot header), `commands/opencode/ndv-help.md`, `humans/ndv-agents.md`. The ndv block in `CLAUDE.md` and `NDV_BLOCK` must stay byte-identical.
 3. Edit `humans/ndv-[name].human.md` (human file — written after model file is stable)
-4. Run `pnpm run validate`. The pre-commit hook and CI (Node 26, ubuntu-latest) run the same command.
+4. Run `pnpm run validate`. The pre-commit hook and CI (Node 24, ubuntu-latest) run the same command.
 5. If routing changed, run `pnpm run eval:gate` before the next release.
 6. For a new agent, or an edit to one added after the original 18: re-run `pnpm run eval:behavior:compare -- --agent ndv-[name] --record` on two models. It must say `EARNS` on both.
 
