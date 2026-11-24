@@ -60,7 +60,7 @@ Anthropic's help article doesn't say whether custom styles sync between web, des
 
 `npm run eval:style -- --models claude-sonnet-5,claude-opus-5 --runs 3` runs `test/fixtures/style-cases.json` through the Claude Code CLI with and without the style installed. Regex checks only, no model judge. Checks score fidelity to `agents/ndv-honest.md`, not a preferred answer. Long-form fact coverage is reported (`info`) but kept out of the verdict, because the agent may answer a padded-length request with one blunt sentence and a concise answer. EARNS means no fewer passed checks than plain, and a median reply at most 80% of plain's length.
 
-Result on 2026-11-24, 16 cases, 3 runs per arm:
+Result on 16 cases, 3 runs per arm:
 
 | Model | Plain: checks · info · median words | Style: checks · info · median words | Verdict |
 |---|---|---|---|
@@ -68,5 +68,3 @@ Result on 2026-11-24, 16 cases, 3 runs per arm:
 | Sonnet 5 | 68/69 · 87/87 · 87 | 69/69 · 75/87 · 36 | EARNS |
 
 What the info gap is: on "explain TLS 1.3 in at least 500 words", Sonnet 5 with the style named the conflict in one sentence in all 3 runs, then gave a compressed answer or none (33 to 272 words, 18 of 30 facts). That is the agent's own rule ("A task that conflicts with it gets one blunt sentence naming the conflict, not obedience"). Opus 5 delivered the full length. Blog post, cover letter and README requests were delivered on both models.
-
-The claude.ai path was not measured: its system prompt can't be reproduced locally.
