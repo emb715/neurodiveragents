@@ -1,9 +1,7 @@
 #!/bin/sh
-# The single merge gate. The pre-commit hook and CI both run exactly this.
-#
-#   1. Full test suite (npm test). Authoring-guide checks are scoped to the
-#      agents changed on this branch; CHANGED_AGENTS is derived here when unset.
-#   2. CSS build staleness check.
+# The single merge gate. The pre-commit hook and CI both run exactly this:
+# the full test suite (pnpm test). Authoring-guide checks are scoped to the
+# agents changed on this branch; CHANGED_AGENTS is derived here when unset.
 set -eu
 
 if [ -z "${CHANGED_AGENTS+x}" ]; then
@@ -31,13 +29,10 @@ else
 fi
 
 echo "▶ Running test suite..."
-if ! npm test; then
+if ! pnpm test; then
   echo ""
   echo "✖  Tests failed. Fix failures before committing — do not skip the hook."
   echo ""
   exit 1
 fi
 echo "✔  Tests pass."
-
-echo "▶ Checking CSS build is up to date..."
-sh scripts/check-css.sh

@@ -261,11 +261,11 @@ describe('routing fixture: canonical vs judgment basis', () => {
 
 // ─── 8. Eval baseline matches this fixture ───────────────────────────────────
 //
-// `npm run eval:gate` compares a release candidate against
+// `pnpm run eval:gate` compares a release candidate against
 // routing-baseline.json. A baseline recorded against a different fixture
 // compares different tests, so the gate reports INCONCLUSIVE — at release
 // time. Catching the mismatch here moves that discovery to the PR that
-// edited the fixture: re-run `npm run eval:baseline` and commit the result.
+// edited the fixture: re-run `pnpm run eval:baseline` and commit the result.
 
 describe('routing fixture: eval baseline is current', () => {
   const BASELINE_PATH = join(ROOT, 'test', 'fixtures', 'routing-baseline.json')
@@ -273,7 +273,7 @@ describe('routing fixture: eval baseline is current', () => {
   const fixtureSha = createHash('sha256').update(readFileSync(FIXTURE_PATH, 'utf8')).digest('hex').slice(0, 16)
 
   test('routing-baseline.json exists', () => {
-    assert.ok(existsSync(BASELINE_PATH), 'test/fixtures/routing-baseline.json is missing — run npm run eval:baseline')
+    assert.ok(existsSync(BASELINE_PATH), 'test/fixtures/routing-baseline.json is missing — run pnpm run eval:baseline')
   })
 
   const baselineFile = existsSync(BASELINE_PATH) ? JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) : { models: {} }
@@ -286,7 +286,7 @@ describe('routing fixture: eval baseline is current', () => {
     test(`${model} — baseline was recorded against the current fixture`, () => {
       assert.equal(b.fixture_sha, fixtureSha,
         `${model}: baseline fixture_sha ${b.fixture_sha} ≠ current ${fixtureSha}. ` +
-        `The fixture changed after the baseline was recorded — run npm run eval:baseline and commit routing-baseline.json.`)
+        `The fixture changed after the baseline was recorded — run pnpm run eval:baseline and commit routing-baseline.json.`)
     })
 
     test(`${model} — baseline carries a canonical floor and an escalation ceiling`, () => {

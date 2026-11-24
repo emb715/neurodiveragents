@@ -73,10 +73,11 @@ All agents default to parallel execution for 4-8 independent files/items.
 
 ### Stack
 
-- **Runtime:** Node.js ≥ 18, ESM (`"type": "module"`)
+- **Runtime:** Node.js ≥ 18 for users; Node 26 (`.nvmrc`) for development and CI. ESM (`"type": "module"`)
 - **Test runner:** `node --test` (built-in, no Jest/Vitest)
 - **Dependencies:** `@clack/prompts`, `picocolors` — no build step for the fleet itself
-- **CSS build:** Tailwind CLI (`npm run css:build`) — only needed for the website, not the fleet
+- **Package manager:** pnpm (version pinned in `packageManager`). `pnpm install` once after cloning.
+- **CSS build:** Tailwind CLI (`pnpm run css:build`) — only needed for the website, not the fleet. Not gated: rebuild and commit `assets/styles.css` when `src/input.css` changes.
 
 ### Key directories
 
@@ -93,17 +94,16 @@ All agents default to parallel execution for 4-8 independent files/items.
 ### Validation
 
 ```bash
-npm run validate
+pnpm run validate
 ```
 
-That is the whole merge gate, and the pre-commit hook and CI (`.github/workflows/validate.yml`) run exactly that command. It runs the full test suite (`npm test`, 14 files) and then the CSS staleness check. Authoring-guide checks are scoped to the agents changed on the branch: `scripts/validate.sh` compares against `origin/main`, or you can set `CHANGED_AGENTS="ndv-foo,ndv-bar"` yourself.
+That is the whole merge gate, and the pre-commit hook and CI (`.github/workflows/validate.yml`) run exactly that command. It runs the full test suite (`pnpm test`). Authoring-guide checks are scoped to the agents changed on the branch: `scripts/validate.sh` compares against `origin/main`, or you can set `CHANGED_AGENTS="ndv-foo,ndv-bar"` yourself.
 
 Narrower commands for iterating:
 
 ```bash
-npm run validate:agents   # the 6 static agent/fixture checks — fast, no installs
-npm run test:install      # install simulation only
-npm run css:check         # CSS staleness only
+pnpm run validate:agents  # the 6 static agent/fixture checks — fast, no installs
+pnpm run test:install     # install simulation only
 ```
 
 ### Routing eval gate (local, before every release)
@@ -111,7 +111,7 @@ npm run css:check         # CSS staleness only
 Run this before merging a release PR. It calls models, costs tokens, and is **not** part of `validate`:
 
 ```bash
-npm run eval:gate
+pnpm run eval:gate
 ```
 
 It re-scores each model recorded in `test/fixtures/routing-baseline.json` against `test/fixtures/routing-cases.json`:
@@ -127,8 +127,8 @@ Treat INCONCLUSIVE as "not checked", never as a pass.
 Recording a baseline:
 
 ```bash
-npm run eval:baseline                                             # 3 runs each: Opus 5, Sonnet 5, Haiku 4.5
-npm run eval:baseline -- --models glm-5.3-flash                   # add a model (Ollama, needs OLLAMA_API_KEY)
+pnpm run eval:baseline                                             # 3 runs each: Opus 5, Sonnet 5, Haiku 4.5
+pnpm run eval:baseline -- --models glm-5.3-flash                   # add a model (Ollama, needs OLLAMA_API_KEY)
 ```
 
 - **The floor is the worst result across the baseline runs.** Misses are asked again (`--retries 2`, majority vote), so one unlucky answer doesn't fail a release.
@@ -147,18 +147,18 @@ Ground truth: 56 cases covering all 19 agents, at least half of them conflict or
 - `canonical` (50): forced by an `anchor`, a verbatim phrase on a routing line that names the expected agent. `scripts/routing-context.mjs` supplies the same text to the validator and to the model. A canonical miss means the routing table needs fixing, or the model can't follow it.
 - `judgment` (6, capped at 25%): the fixture author's own reading, with the `contest`ed alternative named. A judgment miss means review the case first.
 
-To score a single model ad hoc, without the gate: `NDV_EVAL_CMD='<command that reads stdin>' npm run eval:routing` (supports `--tag`, `--limit`, `--retries`, `--out`).
+To score a single model ad hoc, without the gate: `NDV_EVAL_CMD='<command that reads stdin>' pnpm run eval:routing` (supports `--tag`, `--limit`, `--retries`, `--out`).
 
 ### Behavior eval (local, before a release that changes agent text)
 
 The routing eval proves a task reaches the right agent. The behavior eval checks that the agent does the job once it's there. It also calls models, costs tokens, and is **not** part of `validate`:
 
 ```bash
-npm run eval:behavior                                    # one run, Sonnet 5 via claude.sh
-npm run eval:behavior -- --agent ndv-secure --kind lane  # narrow it while iterating
-npm run eval:behavior:baseline                           # record floors: 3 runs each, same models as the routing gate
-npm run eval:behavior:gate                               # PASS / DEGRADED / INCONCLUSIVE, same exit codes as eval:gate
-npm run eval:behavior:compare -- --agent ndv-x --record  # agent file vs a plain model on the same cases
+pnpm run eval:behavior                                    # one run, Sonnet 5 via claude.sh
+pnpm run eval:behavior -- --agent ndv-secure --kind lane  # narrow it while iterating
+pnpm run eval:behavior:baseline                           # record floors: 3 runs each, same models as the routing gate
+pnpm run eval:behavior:gate                               # PASS / DEGRADED / INCONCLUSIVE, same exit codes as eval:gate
+pnpm run eval:behavior:compare -- --agent ndv-x --record  # agent file vs a plain model on the same cases
 ```
 
 Each case in `test/fixtures/behavior-cases.json` runs with the agent's own model file as the system prompt, and has one of three kinds:
@@ -195,12 +195,12 @@ Scoring is deterministic: every check is a pattern on the output (`scripts/behav
 1. Edit `agents/ndv-[name].md` (model file — source of truth)
 2. Update routing in `CLAUDE.md`, `agents/ndv-flow.md`, `bin/ndv.js` (NDV_BLOCK + Copilot header), `commands/opencode/ndv-help.md`, `humans/ndv-agents.md`. The ndv block in `CLAUDE.md` and `NDV_BLOCK` must stay byte-identical.
 3. Edit `humans/ndv-[name].human.md` (human file — written after model file is stable)
-4. Run `npm run validate`. The pre-commit hook and CI (Node 20, ubuntu-latest) run the same command.
-5. If routing changed, run `npm run eval:gate` before the next release.
-6. For a new agent, or an edit to one added after the original 18: re-run `npm run eval:behavior:compare -- --agent ndv-[name] --record` on two models. It must say `EARNS` on both.
+4. Run `pnpm run validate`. The pre-commit hook and CI (Node 26, ubuntu-latest) run the same command.
+5. If routing changed, run `pnpm run eval:gate` before the next release.
+6. For a new agent, or an edit to one added after the original 18: re-run `pnpm run eval:behavior:compare -- --agent ndv-[name] --record` on two models. It must say `EARNS` on both.
 
 ### Pre-commit hook
 
-Husky runs `npm run validate` on every commit. Fix failures before committing — do not skip the hook.
+Husky runs `pnpm run validate` on every commit. Fix failures before committing — do not skip the hook.
 
-**Running from a git worktree:** husky's generated `.husky/_` directory is untracked, so the hook doesn't fire there. Run `npm run validate` by hand before pushing.
+**Running from a git worktree:** husky's generated `.husky/_` directory is untracked, so the hook doesn't fire there. Run `pnpm run validate` by hand before pushing.

@@ -1,3 +1,3 @@
 #!/bin/sh
 # Same gate as CI — see scripts/validate.sh.
-npm run validate
+pnpm run validate

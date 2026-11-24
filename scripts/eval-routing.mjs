@@ -6,16 +6,16 @@
  * using test/fixtures/routing-cases.json as ground truth. This is the artifact
  * that turns "works with any model" from a claim into a number per model.
  *
- * Opt-in: NOT part of `npm test`. It costs tokens and needs a model.
+ * Opt-in: NOT part of `pnpm test`. It costs tokens and needs a model.
  * test/validate-routing.test.js gates the fixture statically and for free.
  *
  * Provider-agnostic by design — no SDK, no dependency. It shells out to any
  * command that reads a prompt on stdin and writes text to stdout:
  *
- *   npm run eval:routing                                  # default: claude -p
- *   NDV_EVAL_CMD='claude -p --model claude-opus-5' npm run eval:routing
- *   NDV_EVAL_CMD='opencode run' npm run eval:routing
- *   NDV_EVAL_CMD='ollama run llama3.3' npm run eval:routing
+ *   pnpm run eval:routing                                  # default: claude -p
+ *   NDV_EVAL_CMD='claude -p --model claude-opus-5' pnpm run eval:routing
+ *   NDV_EVAL_CMD='opencode run' pnpm run eval:routing
+ *   NDV_EVAL_CMD='ollama run llama3.3' pnpm run eval:routing
  *
  * Flags:
  *   --label <name>       name for this run in the report (default: the command)
@@ -38,7 +38,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 
 // Local eval configuration: .env at the repo root (gitignored; .env.example is
 // the contract). Shell variables take precedence. Loaded here as well as in
-// the gate so `npm run eval:routing` standalone sees the same values.
+// the gate so `pnpm run eval:routing` standalone sees the same values.
 const ENV_FILE = join(ROOT, '.env')
 if (existsSync(ENV_FILE) && typeof process.loadEnvFile === 'function') process.loadEnvFile(ENV_FILE)
 

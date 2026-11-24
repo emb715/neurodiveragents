@@ -2,10 +2,10 @@
 /**
  * eval-gate.mjs — pre-release routing regression gate (local only).
  *
- *   npm run eval:baseline                    # record: 3 runs per default model
- *   npm run eval:baseline -- --models glm-5.3-flash --runs 3
- *   npm run eval:gate                        # compare: 1 run per baselined model
- *   npm run eval:gate -- --models claude-haiku-4-5-20251001
+ *   pnpm run eval:baseline                    # record: 3 runs per default model
+ *   pnpm run eval:baseline -- --models glm-5.3-flash --runs 3
+ *   pnpm run eval:gate                        # compare: 1 run per baselined model
+ *   pnpm run eval:gate -- --models claude-haiku-4-5-20251001
  *
  * Baseline (test/fixtures/routing-baseline.json), per model:
  *   canonical.floor     lowest canonical accuracy seen across baseline runs
@@ -92,7 +92,7 @@ if (unknown.length) {
   process.exit(2)
 }
 if (models.length === 0) {
-  console.error('No baseline recorded yet. Run: npm run eval:baseline')
+  console.error('No baseline recorded yet. Run: pnpm run eval:baseline')
   process.exit(2)
 }
 
@@ -201,7 +201,7 @@ if (BASELINE_MODE) {
       (judgmentEscalations.some(n => n > 0) ? `, judgment-contested ${judgmentEscalations.join(' / ')}` : ''))
   }
 
-  baseline.description = 'Routing eval baseline. Written by `npm run eval:baseline`, read by `npm run eval:gate`. Do not edit by hand.'
+  baseline.description = 'Routing eval baseline. Written by `pnpm run eval:baseline`, read by `pnpm run eval:gate`. Do not edit by hand.'
   const ordered = { description: baseline.description, models: Object.fromEntries(Object.entries(baseline.models).sort()) }
   writeFileSync(BASELINE, JSON.stringify(ordered, null, 2) + '\n')
   console.log(`\nBaseline written → ${BASELINE}`)

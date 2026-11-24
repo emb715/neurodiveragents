@@ -124,10 +124,10 @@ describe('behavior fixture: coverage', () => {
 
 describe('behavior fixture: baseline', () => {
   test('a committed baseline was recorded against this fixture', (t) => {
-    if (!existsSync(BASELINE_PATH)) return t.skip('no baseline recorded yet — run npm run eval:behavior:baseline')
+    if (!existsSync(BASELINE_PATH)) return t.skip('no baseline recorded yet — run pnpm run eval:behavior:baseline')
     const baseline = JSON.parse(readFileSync(BASELINE_PATH, 'utf8'))
     const sha = createHash('sha256').update(RAW).digest('hex').slice(0, 16)
-    assert.equal(baseline.fixture_sha, sha, 'the fixture changed after the baseline was recorded: re-run npm run eval:behavior:baseline')
+    assert.equal(baseline.fixture_sha, sha, 'the fixture changed after the baseline was recorded: re-run pnpm run eval:behavior:baseline')
     assert.equal(baseline.total, cases.length)
   })
 })
@@ -158,7 +158,7 @@ describe('behavior evidence: agents added after the original 18 earn their place
 
     test(`${slug} has current agent-vs-control evidence: EARNS on ${MIN_EVIDENCE_MODELS}+ models`, () => {
       const e = evidence[slug]
-      const run = `npm run eval:behavior:compare -- --agent ${slug} --record (per model, with NDV_EVAL_MODEL)`
+      const run = `pnpm run eval:behavior:compare -- --agent ${slug} --record (per model, with NDV_EVAL_MODEL)`
       assert.ok(e, `no evidence for ${slug}. Run: ${run}`)
       const agentSha = createHash('sha256').update(agentText(slug)).digest('hex').slice(0, 16)
       assert.equal(e.agent_sha, agentSha, `${slug}.md changed after its evidence was recorded. Re-run: ${run}`)
