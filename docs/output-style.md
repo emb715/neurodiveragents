@@ -7,7 +7,7 @@ Ndv-honest's voice, without the agent: every reply in your main session is direc
 | Surface | Mechanism | Installable from a file? |
 |---|---|---|
 | Claude Code CLI, VS Code | Output style, a Markdown file | Yes |
-| Claude desktop, Code tab | Same output style file; selected only through `outputStyle` in settings | Yes |
+| Claude desktop, Code tab | Same output style file; the Settings picker lists built-ins only, so select it through `outputStyle` in settings | Yes |
 | claude.ai web, desktop Chat, mobile | Custom style | No. Paste the instructions by hand |
 | Cowork | Not documented | No |
 | OpenCode, Cursor, Copilot | No output-style concept | No. Use the `ndv-honest` agent |
@@ -26,7 +26,7 @@ Select it:
 
 - CLI: `/output-style ndv-honest`, or `/config` → **Output style**. Restart first if Claude Code was running when the file was installed.
 - VS Code: `/` → **Output styles**.
-- Claude desktop (Code tab): there is no picker and `/output-style` is not documented there. Set `"outputStyle": "ndv-honest"` in `~/.claude/settings.json`. The desktop app reads the same settings files as the CLI, so the global file and `~/.claude/output-styles/` apply to it.
+- Claude desktop: **Settings → Code → Output style** applies to new Code sessions, but its list shows only the built-in styles (Default, Concise, Explanatory, Learning, Proactive). For ndv-honest, set `"outputStyle": "ndv-honest"` in `~/.claude/settings.json`. The desktop app reads the same settings files as the CLI, so the global file and `~/.claude/output-styles/` apply to it.
 - Default everywhere: `"outputStyle": "ndv-honest"` in `~/.claude/settings.json`. The value is case-sensitive; a typo silently falls back to Default.
 
 `keep-coding-instructions: true` keeps Claude Code's software-engineering instructions, so only the voice changes.
