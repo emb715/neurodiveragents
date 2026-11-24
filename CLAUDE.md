@@ -187,6 +187,8 @@ Scoring is deterministic: every check is a pattern on the output (`scripts/behav
 | `test/transform-skill.test.js` | Adversarial unit tests for `transformAgentToSkill()` purity, determinism, boundary, and degradation behavior |
 | `test/transform-opencode.test.js` | Unit tests for `transformForOpenCode()` — the ndv-flow path-hint injection is gated on the exact bare filename, fails closed, and always injects the literal `<name>` placeholder |
 | `test/entry-guard.test.js` | Regression test for the entry-point symlink guard — invoking `bin/ndv.js` via a symlink still runs the command dispatcher |
+| `test/output-style.test.js` | `output-styles/ndv-honest.md` frontmatter, and the claude.ai paste block in `docs/output-style.md` matches the style body |
+| `test/install-output-style.test.js` | `ndv install claude` installs output styles (project and global), never selects one, refreshes stale fleet copies, keeps a user's own file, never writes through a symlink |
 
 ### Adding or changing an agent
 
