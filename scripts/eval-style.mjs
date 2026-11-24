@@ -38,7 +38,8 @@ const fixture = JSON.parse(readFileSync(FIXTURE, 'utf8'))
 const { universal } = fixture
 const cases = ONLY ? fixture.cases.filter(c => ONLY.includes(c.id)) : fixture.cases
 // A reply that tries to call a tool (tools are disabled) carries no answer: retry it.
-const TOOL_ATTEMPT = /<invoke|function_calls>/
+// Also catches tool calls written as prose, which name the temp working dir.
+const TOOL_ATTEMPT = /<invoke|function_calls>|ndv-style\.|\*\*?tool(:| use)|"name": ?"bash"/i
 
 function ask (model, arm, input) {
   const dir = mkdtempSync(join(tmpdir(), 'ndv-style.'))
@@ -58,6 +59,7 @@ function ask (model, arm, input) {
 }
 
 function check (c, raw) {
+  if (c.minWords) return words(raw) >= c.minWords
   const text = raw.replace(/\*\*|__|(?<!\w)[*_](?!\s)|(?<!\s)[*_](?!\w)/g, '')
   const hay = c.within ? text.slice(0, c.within) : text
   const hit = new RegExp(c.pattern, 'im').test(hay)
@@ -91,7 +93,7 @@ for (const model of saved ? Object.keys(saved) : MODELS) {
     if (saved) break
     jobs.push(async () => {
       let a = await ask(model, arm, c.input)
-      for (let t = 0; t < 2 && a.text && TOOL_ATTEMPT.test(a.text); t++) a = await ask(model, arm, c.input)
+      for (let t = 0; t < 4 && a.text && TOOL_ATTEMPT.test(a.text); t++) a = await ask(model, arm, c.input)
       if (a.text && TOOL_ATTEMPT.test(a.text)) a = { error: 'tool-call attempt' }
       if (a.error) return { arm, id: c.id, error: a.error }
       const caseRes = c.checks.map(k => ({ name: k.name, pass: check(k, a.text) }))
