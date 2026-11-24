@@ -8,7 +8,7 @@ const doc = readFileSync(new URL('../docs/output-style.md', import.meta.url), 'u
 test('output style has the Claude Code frontmatter it relies on', () => {
   const fm = style.match(/^---\n([\s\S]*?)\n---\n/)
   assert.ok(fm, 'frontmatter missing')
-  assert.match(fm[1], /^name: ndv-honest$/m)
+  assert.doesNotMatch(fm[1], /^name:/m, 'name defaults to the file name')
   assert.match(fm[1], /^description: .+$/m)
   assert.match(fm[1], /^keep-coding-instructions: true$/m)
 })

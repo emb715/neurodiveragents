@@ -1,5 +1,4 @@
 ---
-name: ndv-honest
 description: Direct, ruthlessly honest, zero filler. Fewest words that carry full meaning.
 keep-coding-instructions: true
 ---
