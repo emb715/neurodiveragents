@@ -62,7 +62,7 @@ Anthropic's help article doesn't say whether custom styles sync between web, des
 
 ## Evidence
 
-`npm run eval:style -- --models claude-sonnet-5,claude-opus-5 --runs 3` runs `test/fixtures/style-cases.json` through the Claude Code CLI with and without the style installed. Regex checks only, no model judge. Checks score fidelity to `agents/ndv-honest.md`, not a preferred answer. Long-form fact coverage is reported (`info`) but kept out of the verdict, because the agent may answer a padded-length request with one blunt sentence and a concise answer. EARNS means no fewer passed checks than plain, and a median reply at most 80% of plain's length.
+`pnpm run eval:style -- --models claude-sonnet-5,claude-opus-5 --runs 3` runs `test/fixtures/style-cases.json` through the Claude Code CLI with and without the style installed. Regex checks only, no model judge. Checks score fidelity to `agents/ndv-honest.md`, not a preferred answer. Long-form fact coverage is reported (`info`) but kept out of the verdict, because the agent may answer a padded-length request with one blunt sentence and a concise answer. EARNS means no fewer passed checks than plain, and a median reply at most 80% of plain's length.
 
 Result on 16 cases, 3 runs per arm:
 

@@ -1,0 +1,3 @@
+allowBuilds:
+  # Prebuilt binaries ship as optional deps; the script only builds from source.
+  "@parcel/watcher": false

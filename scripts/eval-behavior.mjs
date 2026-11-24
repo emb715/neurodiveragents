@@ -14,11 +14,11 @@
  * No model judge: every check is a pattern on the output, so a score can be
  * reproduced from the saved report and argued with line by line.
  *
- *   npm run eval:behavior                                   # one run, default model
- *   npm run eval:behavior -- --agent ndv-secure --kind lane
- *   npm run eval:behavior:baseline                          # record floors (3 runs per model)
- *   npm run eval:behavior:gate                              # compare against the floors
- *   npm run eval:behavior:compare -- --agent ndv-upgrade    # agent file vs control, same cases
+ *   pnpm run eval:behavior                                   # one run, default model
+ *   pnpm run eval:behavior -- --agent ndv-secure --kind lane
+ *   pnpm run eval:behavior:baseline                          # record floors (3 runs per model)
+ *   pnpm run eval:behavior:gate                              # compare against the floors
+ *   pnpm run eval:behavior:compare -- --agent ndv-upgrade    # agent file vs control, same cases
  *
  * Control arm (--arm control, and both arms under --compare): the same case,
  * the same model, with the agent file replaced by a plain prompt that still
@@ -333,7 +333,7 @@ if (MODE === 'compare') {
   if (process.argv.includes('--record')) {
     // One entry per agent, one row per model. Pinned to the agent file and to
     // that agent's cases, so editing either makes the evidence stale.
-    const ev = existsSync(EVIDENCE) ? JSON.parse(readFileSync(EVIDENCE, 'utf8')) : { description: 'Agent-vs-control evidence. Written by npm run eval:behavior:compare -- --record. Do not edit by hand.', agents: {} }
+    const ev = existsSync(EVIDENCE) ? JSON.parse(readFileSync(EVIDENCE, 'utf8')) : { description: 'Agent-vs-control evidence. Written by pnpm run eval:behavior:compare -- --record. Do not edit by hand.', agents: {} }
     for (const a of agents) {
       const entry = ev.agents[a] ?? {}
       const pin = { agent_sha: agentSha(a), cases_sha: casesSha(a) }
@@ -396,7 +396,7 @@ if (MODE === 'baseline') {
 
 // MODE === 'gate'
 if (!existsSync(BASELINE)) {
-  console.log('INCONCLUSIVE — no behavior baseline recorded. Run npm run eval:behavior:baseline first.')
+  console.log('INCONCLUSIVE — no behavior baseline recorded. Run pnpm run eval:behavior:baseline first.')
   process.exit(2)
 }
 const baseline = JSON.parse(readFileSync(BASELINE, 'utf8'))

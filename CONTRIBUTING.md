@@ -189,4 +189,4 @@ Release PRs (`chore(main): release x.y.z`) can be merged with any method — squ
 - Minor (1.x.0): new agent, new tool support, behavioral improvement to existing agent
 - Major (x.0.0): breaking change to install format, agent command renamed, neurotype framework changed
 
-release-please (`.github/workflows/release.yml`) maintains the version bump, changelog, tag, and GitHub Release through its release PR; merging that PR is the release action. npm publishing is manual — the workflow has no publish step.
+release-please (`.github/workflows/release.yml`) maintains the version bump, changelog, tag, and GitHub Release through its release PR; merging that PR is the release action. npm publishing is manual (`pnpm publish`) — the workflow has no publish step.

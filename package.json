@@ -40,7 +40,6 @@
     "test": "node --test test/install.test.js test/validate-schema.test.js test/validate-authoring.test.js test/validate-contracts.test.js test/validate-coherence.test.js test/install-router-skills.test.js test/transform-skill.test.js test/transform-opencode.test.js test/entry-guard.test.js test/install-additions.test.js test/install-commands.test.js test/install-opencode-global.test.js test/validate-routing.test.js test/validate-flow-protocol.test.js test/validate-behavior.test.js test/eval-gate.test.js test/output-style.test.js test/install-output-style.test.js",
     "validate": "sh scripts/validate.sh",
     "validate:agents": "node --test test/validate-schema.test.js test/validate-authoring.test.js test/validate-contracts.test.js test/validate-coherence.test.js test/validate-routing.test.js test/validate-flow-protocol.test.js test/validate-behavior.test.js",
-    "css:check": "sh scripts/check-css.sh",
     "test:install": "node --test test/install.test.js",
     "eval:routing": "node scripts/eval-routing.mjs",
     "eval:baseline": "node scripts/eval-gate.mjs --baseline",
@@ -50,14 +49,15 @@
     "eval:behavior:gate": "node scripts/eval-behavior.mjs --gate",
     "eval:behavior:compare": "node scripts/eval-behavior.mjs --compare",
     "eval:style": "node scripts/eval-style.mjs",
-    "css:build": "npx @tailwindcss/cli -i ./src/input.css -o ./assets/styles.css --minify",
-    "css:watch": "npx @tailwindcss/cli -i ./src/input.css -o ./assets/styles.css --watch",
-    "build": "npm run css:build",
+    "css:build": "tailwindcss -i ./src/input.css -o ./assets/styles.css --minify",
+    "css:watch": "tailwindcss -i ./src/input.css -o ./assets/styles.css --watch",
+    "build": "pnpm run css:build",
     "pre-commit": "sh .husky/pre-commit"
   },
   "license": "MIT",
+  "packageManager": "pnpm@12.23.0",
   "engines": {
-    "node": ">=18"
+    "node": ">=24"
   },
   "dependencies": {
     "@clack/prompts": "^1.3.0",
