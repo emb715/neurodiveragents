@@ -612,6 +612,16 @@ function installAgents(toolName, target, isGlobal, s = null) {
     }
   }
 
+  // Claude Code: install output styles (installed, never selected: the user picks one with /output-style)
+  if (toolName === 'claude') {
+    const destStylesDir = isGlobal ? join(HOME, '.claude', 'output-styles') : '.claude/output-styles'
+    const { written, kept } = writeClaudeOutputStyles(destStylesDir)
+    if (written > 0) console.log(`  Output style(s) installed to ${destStylesDir}/ — select with /output-style ndv-honest`)
+    if (kept.length > 0) {
+      console.warn(`  ⚠ ${kept.join(', ')} in ${destStylesDir} is not a fleet output style and was left in place.`)
+    }
+  }
+
   // Auto-install router skills (fleet entry points — mandatory for skill-supporting tools)
   const skillTarget = SKILL_TARGETS[toolName] ?? null
   if (skillTarget?.autoInstallRouters) {
@@ -710,6 +720,36 @@ function writeClaudeAgentFiles(dir, agentFiles) {
     written++
   }
   return { written, replacedLinks, keptFiles, keptDangling }
+}
+
+// Write output-styles/*.md into dir. Same rules as writeClaudeAgentFiles: a
+// symlink at the destination is removed first (a dangling one is left alone),
+// and a regular file is overwritten only when it is a fleet copy, recognised by
+// its opening line. Output styles have no name: key; the file stem is the name.
+function writeClaudeOutputStyles(dir) {
+  const srcDir = join(AGENTS_DIR, '..', 'output-styles')
+  if (!existsSync(srcDir)) return { written: 0, kept: [] }
+  const styles = readdirSync(srcDir).filter(f => f.endsWith('.md'))
+  mkdirSync(dir, { recursive: true })
+  let written = 0
+  const kept = []
+  for (const style of styles) {
+    const src = readFileSync(join(srcDir, style), 'utf8')
+    const marker = (extractFrontmatter(src)?.body ?? src).trim().split('\n')[0]
+    const dest = join(dir, style)
+    let stat = null
+    try { stat = lstatSync(dest) } catch { /* absent */ }
+    if (stat?.isSymbolicLink()) {
+      if (!existsSync(dest)) { kept.push(style); continue }
+      unlinkSync(dest)
+    } else if (stat) {
+      const existing = readFileSync(dest, 'utf8')
+      if (!(extractFrontmatter(existing)?.body ?? existing).trim().startsWith(marker)) { kept.push(style); continue }
+    }
+    writeFileSync(dest, src)
+    written++
+  }
+  return { written, kept }
 }
 
 async function install(toolName, isGlobal = false, interactive = false) {
@@ -1267,7 +1307,7 @@ function help() {
     help            Show this help
 
   Tools (install):
-    claude      Claude Code    →  .claude/agents/ + CLAUDE.md  [+ .claude/skills/]
+    claude      Claude Code    →  .claude/agents/ + .claude/output-styles/ + CLAUDE.md  [+ .claude/skills/]
     opencode    OpenCode       →  .opencode/agents/ + .opencode/AGENTS.md  [+ .opencode/skills/]
     cursor      Cursor         →  .cursor/rules/ + .cursor/rules/ndv.mdc
     copilot     GitHub Copilot →  .github/copilot-instructions.md
@@ -1278,7 +1318,7 @@ function help() {
 
   Flags:
     --global, -g   Install into your home config dir — available in every project
-                   install:        claude → ~/.claude/agents/  [+ ~/.claude/skills/]
+                   install:        claude → ~/.claude/agents/ + ~/.claude/output-styles/  [+ ~/.claude/skills/]
                                    opencode → ~/.config/opencode/agents/  [+ ~/.config/opencode/skills/]
                                    cursor → ~/.cursor/rules/
                    install-skills: claude → ~/.claude/skills/

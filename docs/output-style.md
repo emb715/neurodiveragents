@@ -12,13 +12,15 @@ Ndv-honest's voice, without the agent: every reply in your main session is direc
 
 ## Claude Code
 
+`npx neurodiveragents install claude` (or `--global`) installs it to `.claude/output-styles/` (or `~/.claude/output-styles/`) with the agents. It is installed, not selected. Manual alternative:
+
 ```bash
 mkdir -p ~/.claude/output-styles
 curl -fsSL https://raw.githubusercontent.com/emb715/neurodiveragents/main/output-styles/ndv-honest.md \
   -o ~/.claude/output-styles/ndv-honest.md
 ```
 
-Project-only: put the file in `.claude/output-styles/` instead. Restart Claude Code, then:
+Restart Claude Code, then:
 
 - `/output-style ndv-honest`, or `/config` → **Output style**
 - Default for every session: `"outputStyle": "ndv-honest"` in `~/.claude/settings.json` (case-sensitive; a typo silently falls back to Default)
