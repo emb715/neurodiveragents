@@ -1,5 +1,5 @@
 {
-  "description": "Output-style eval: the ndv-honest output style vs the same model with no style. Every check is a regex on the reply (case-insensitive, Markdown bold/italic markers stripped first). `within` limits the match to the first N characters. `absent: true` inverts the check. Universal checks (filler, apology, preamble) run on every case. `minWords` passes when the reply has at least that many words (75% of a requested length).",
+  "description": "Output-style eval: the ndv-honest output style vs the same model with no style. Every check is a regex on the reply (case-insensitive, Markdown bold/italic markers stripped first). `within` limits the match to the first N characters. `absent: true` inverts the check. Universal checks (filler, apology, preamble) run on every case. Long-form cases score fact coverage, one check per fact a good answer must contain, never word count: padding earns nothing, dropped facts fail.",
   "universal": [
     {
       "name": "no filler",
@@ -185,12 +185,32 @@
       "input": "Write a 600-word blog post announcing the launch of Tally, our open-source CLI that tracks time spent per git branch. Audience: developers. Reply with the text here in chat; don't create files.",
       "checks": [
         {
-          "name": "at least 450 words",
-          "minWords": 450
+          "name": "names Tally",
+          "pattern": "tally"
         },
         {
-          "name": "does not refuse or push back on length",
-          "pattern": "won.t (write|pad)|will not write|not going to write|refus|skipping (the|it)|conflicts with",
+          "name": "per-branch tracking",
+          "pattern": "branch"
+        },
+        {
+          "name": "open source",
+          "pattern": "open.?source"
+        },
+        {
+          "name": "how to install",
+          "pattern": "install|npm i|brew|cargo|go install|pip"
+        },
+        {
+          "name": "shows usage",
+          "pattern": "```|`tally "
+        },
+        {
+          "name": "call to action",
+          "pattern": "contribut|github|star|feedback|issue"
+        },
+        {
+          "name": "does not refuse or comment on length",
+          "pattern": "won.t (write|pad|produce)|will not (write|produce)|not going to write|i refuse|i.m refusing|conflicts? (with|:)|minimal tokens|minimi[sz]e tokens|tokens? (rule|budget|mandate)|output style",
           "absent": true
         }
       ]
@@ -200,16 +220,36 @@
       "input": "Write a cover letter of about 400 words for a senior backend engineer role at a fintech. I have 8 years of Go and Postgres experience and led a payments migration that cut settlement time from 2 days to 4 hours.",
       "checks": [
         {
-          "name": "at least 300 words",
-          "minWords": 300
+          "name": "8 years",
+          "pattern": "8 years|eight years"
         },
         {
-          "name": "uses the migration fact",
+          "name": "Go",
+          "pattern": "\\bgo\\b|golang"
+        },
+        {
+          "name": "Postgres",
+          "pattern": "postgres"
+        },
+        {
+          "name": "payments migration",
+          "pattern": "migrat"
+        },
+        {
+          "name": "2 days",
+          "pattern": "2 days|two days"
+        },
+        {
+          "name": "4 hours",
           "pattern": "4 hours|four hours"
         },
         {
-          "name": "does not refuse or push back on length",
-          "pattern": "won.t (write|pad)|will not write|not going to write|refus|skipping (the|it)|conflicts with",
+          "name": "names the role",
+          "pattern": "senior backend|backend engineer"
+        },
+        {
+          "name": "does not refuse or comment on length",
+          "pattern": "won.t (write|pad|produce)|will not (write|produce)|not going to write|i refuse|i.m refusing|conflicts? (with|:)|minimal tokens|minimi[sz]e tokens|tokens? (rule|budget|mandate)|output style",
           "absent": true
         }
       ]
@@ -219,16 +259,48 @@
       "input": "Explain in depth, in at least 500 words, how the TLS 1.3 handshake works.",
       "checks": [
         {
-          "name": "at least 375 words",
-          "minWords": 375
+          "name": "ClientHello",
+          "pattern": "clienthello|client hello"
         },
         {
-          "name": "covers key exchange",
-          "pattern": "key share|key_share|diffie|ecdhe"
+          "name": "key share / (EC)DHE",
+          "pattern": "key.?share|ecdhe|diffie"
         },
         {
-          "name": "does not refuse or push back on length",
-          "pattern": "won.t (write|pad)|will not write|not going to write|refus|skipping (the|it)|conflicts with",
+          "name": "ServerHello",
+          "pattern": "serverhello|server hello"
+        },
+        {
+          "name": "encrypted handshake / EncryptedExtensions",
+          "pattern": "encryptedextensions|encrypted extensions|handshake (messages )?(are |is )?encrypted|encrypted from"
+        },
+        {
+          "name": "CertificateVerify",
+          "pattern": "certificateverify|certificate ?verify"
+        },
+        {
+          "name": "Finished",
+          "pattern": "finished"
+        },
+        {
+          "name": "HKDF key schedule",
+          "pattern": "hkdf|key schedule"
+        },
+        {
+          "name": "1-RTT",
+          "pattern": "1-rtt|1 rtt|(one|1|single) round.trip"
+        },
+        {
+          "name": "0-RTT",
+          "pattern": "0-rtt|0 rtt|zero round|early data"
+        },
+        {
+          "name": "replay risk",
+          "pattern": "replay"
+        },
+        {
+          "name": "does not refuse or comment on length",
+          "pattern": "won.t (write|pad|produce)|will not (write|produce)|not going to write|i refuse|i.m refusing|conflicts? (with|:)|minimal tokens|minimi[sz]e tokens|tokens? (rule|budget|mandate)|output style",
           "absent": true
         }
       ]
@@ -254,8 +326,16 @@
           "pattern": "^#+ .*contribut"
         },
         {
-          "name": "does not refuse or push back on length",
-          "pattern": "won.t (write|pad)|will not write|not going to write|refus|skipping (the|it)|conflicts with",
+          "name": "shows example commands",
+          "pattern": "```(bash|sh|shell)?\\s*\\n\\s*\\$? ?dirsnap"
+        },
+        {
+          "name": "explains diff output",
+          "pattern": "diff"
+        },
+        {
+          "name": "does not comment on length",
+          "pattern": "conflicts with|token|output style",
           "absent": true
         }
       ]
