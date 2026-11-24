@@ -68,6 +68,10 @@ Install writes a routing table into your project config (`CLAUDE.md`, `.opencode
 
 The fleet also ships 15 cognitive modules — loadable skills that inject a distilled thinking style, whether from a single agent or emergent across agents, into a single step of a workflow you already own. Install with `npx neurodiveragents install-skills <tool>`, then add one line to any skill step: "Load the `ndv-skeptical` skill." Catalog, composition patterns, and lifecycle: [docs/ndv-skills.md](docs/ndv-skills.md).
 
+## Output style
+
+Want ndv-honest's voice in every reply, not just when routed? Install it as a Claude Code output style, or paste it into a claude.ai / desktop custom style: [docs/output-style.md](docs/output-style.md).
+
 ## Why this exists
 
 Generic agents are trained to be agreeable — they hedge, soften, and balance, which reduces friction and signal alike. These agents are consistent instead: the same input produces the same uncompromising behavior, every time. The full argument lives in [docs/MANIFESTO.md](docs/MANIFESTO.md).
