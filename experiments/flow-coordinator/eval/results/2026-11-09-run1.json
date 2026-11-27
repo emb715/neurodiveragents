@@ -1,0 +1,875 @@
+{
+  "run_at": "2026-11-09T19:50:43.690Z",
+  "fixture_version": 1,
+  "runs": 1,
+  "models": {
+    "claude-haiku-4-5-20251001": {
+      "arms": {
+        "control": {
+          "checks": 21,
+          "of": 25,
+          "cases": 7,
+          "of_cases": 10,
+          "errors": 0
+        },
+        "flow": {
+          "checks": 18,
+          "of": 25,
+          "cases": 4,
+          "of_cases": 10,
+          "errors": 0
+        },
+        "adapter": {
+          "checks": 20,
+          "of": 25,
+          "cases": 6,
+          "of_cases": 10,
+          "errors": 0
+        }
+      },
+      "adapter_vs_control": "WORSE",
+      "adapter_vs_flow": "GAIN",
+      "per_case": {
+        "handoff-on-return": {
+          "control": "2/2",
+          "flow": "2/2",
+          "adapter": "2/2"
+        },
+        "overlap-queues": {
+          "control": "1/2",
+          "flow": "1/2",
+          "adapter": "2/2"
+        },
+        "person-widened-thread": {
+          "control": "2/2",
+          "flow": "2/2",
+          "adapter": "2/2"
+        },
+        "silent-thread": {
+          "control": "3/3",
+          "flow": "3/3",
+          "adapter": "3/3"
+        },
+        "direct-question": {
+          "control": "2/2",
+          "flow": "1/2",
+          "adapter": "1/2"
+        },
+        "one-file-change": {
+          "control": "3/3",
+          "flow": "3/3",
+          "adapter": "3/3"
+        },
+        "rejected-twice": {
+          "control": "2/2",
+          "flow": "1/2",
+          "adapter": "1/2"
+        },
+        "conflicting-advice": {
+          "control": "1/2",
+          "flow": "1/2",
+          "adapter": "1/2"
+        },
+        "plain-report": {
+          "control": "4/4",
+          "flow": "3/4",
+          "adapter": "4/4"
+        },
+        "facts-to-memory": {
+          "control": "1/3",
+          "flow": "1/3",
+          "adapter": "1/3"
+        }
+      }
+    },
+    "claude-sonnet-5": {
+      "arms": {
+        "control": {
+          "checks": 22,
+          "of": 25,
+          "cases": 7,
+          "of_cases": 10,
+          "errors": 0
+        },
+        "flow": {
+          "checks": 20,
+          "of": 25,
+          "cases": 5,
+          "of_cases": 10,
+          "errors": 0
+        },
+        "adapter": {
+          "checks": 24,
+          "of": 25,
+          "cases": 9,
+          "of_cases": 10,
+          "errors": 0
+        }
+      },
+      "adapter_vs_control": "EARNS",
+      "adapter_vs_flow": "GAIN",
+      "per_case": {
+        "handoff-on-return": {
+          "control": "2/2",
+          "flow": "2/2",
+          "adapter": "2/2"
+        },
+        "overlap-queues": {
+          "control": "1/2",
+          "flow": "2/2",
+          "adapter": "1/2"
+        },
+        "person-widened-thread": {
+          "control": "1/2",
+          "flow": "2/2",
+          "adapter": "2/2"
+        },
+        "silent-thread": {
+          "control": "3/3",
+          "flow": "2/3",
+          "adapter": "3/3"
+        },
+        "direct-question": {
+          "control": "2/2",
+          "flow": "1/2",
+          "adapter": "2/2"
+        },
+        "one-file-change": {
+          "control": "3/3",
+          "flow": "3/3",
+          "adapter": "3/3"
+        },
+        "rejected-twice": {
+          "control": "2/2",
+          "flow": "1/2",
+          "adapter": "2/2"
+        },
+        "conflicting-advice": {
+          "control": "1/2",
+          "flow": "2/2",
+          "adapter": "2/2"
+        },
+        "plain-report": {
+          "control": "4/4",
+          "flow": "3/4",
+          "adapter": "4/4"
+        },
+        "facts-to-memory": {
+          "control": "3/3",
+          "flow": "2/3",
+          "adapter": "3/3"
+        }
+      }
+    }
+  },
+  "ship": false,
+  "results": [
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "control",
+      "case": "handoff-on-return",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "write_ledger(id=T2, state=done, files=[src/invoices/export.ts], note=\"CSV export implemented; path traversal vulnerability handed off to ndv-secure\")\n\nstart_thread(agent=ndv-secure, files=[src/invoices/export.ts], scale=S1, brief=\"Path traversal vulnerability in download filename handling. The query string parameter for download filename reaches path.join() unsanitized, allowing traversal attacks. Fix required in src/invoices/export.ts.\")\n\nwrite_ledger(id=T3, state=in-flight, agent=ndv-secure, files=[src/invoices/export.ts], note=\"Path traversal vulnerability — filename sanitization\")\n\npost_message(text=\"✓ T2 (ndv-build) completed CSV export implementation. A path traversal vulnerability was identified in the filename handling (query string → path.join). Starting T3 (ndv-secure) to fix it now.\")\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "control",
+      "case": "overlap-queues",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "records the new task as queued"
+      ],
+      "checks_passed": 1,
+      "checks_total": 2,
+      "output": "message_thread(id=T1, text=\"New requirement: add rate limiting to the password reset endpoint. Spec: 5 requests per minute per IP. This should prevent brute force attacks on password resets. Please confirm this is in scope for the current security review or hand off to ndv-build for implementation.\")\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "control",
+      "case": "person-widened-thread",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "The situation: T1 (ndv-build) is already handling the rename that T2 (ndv-refactor) was queued to do. Since you left a note with T1 to do this work and they have momentum, consolidation makes sense rather than splitting it across threads.\n\nwrite_ledger(id=T1, state=in-flight, files=[src/invoices/export.ts, src/utils/date.ts], note=\"Consolidated: formatDate→formatIsoDate rename in progress alongside export refactor\")\n\nwrite_ledger(id=T2, state=incomplete, files=[], note=\"Superseded by T1 — ndv-build taking the rename as part of their work\")\n\nmessage_thread(id=T1, text=\"Got it — you have the context. Finish the rename with the callers, don't wait for review.\")\n\npost_message(text=\"✓ T1 is consolidating the `formatDate` rename with their export work. T2 is standing down — no context switching needed. T3's freed slot is available if a new task comes in.\")\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "control",
+      "case": "silent-thread",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 3,
+      "checks_total": 3,
+      "output": "message_thread(id=T3, text=\"Status check: you've been quiet for 130 minutes. What's the current state? Any blockers, or do you need clarification on the brief?\")\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "control",
+      "case": "direct-question",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "post_message(text=\"Unit tests run with `pnpm test:unit`. (If you run `npm test` instead, that kicks off the e2e suite, which needs a live Postgres.)\")\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "control",
+      "case": "one-file-change",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 3,
+      "checks_total": 3,
+      "output": "start_thread(agent=ndv-build, files=[src/components/Header.tsx], scale=S0, brief=\"Change the Save button label to Submit in src/components/Header.tsx. Nothing else.\")\npost_message(text=\"✓ Routed to ndv-build: Save → Submit in src/components/Header.tsx\")\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "control",
+      "case": "rejected-twice",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "write_ledger(id=T4, state=incomplete, files=[], note=\"brief rejected: ambiguous target file — two export modules exist (invoices, reports). Awaiting clarification from user.\")\n\nrequest_decision(question=\"ndv-build needs to know which export module to work on. Which one?\", options=[\"src/invoices/export.ts\", \"src/reports/export.ts\"], recommended=null)\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "control",
+      "case": "conflicting-advice",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "puts the cache trade-off to the person"
+      ],
+      "checks_passed": 1,
+      "checks_total": 2,
+      "output": "write_ledger(id=T6, state=done, files=[src/auth/session.ts], note=\"Security finding: in-memory cache keeps revoked tokens valid up to 10 minutes; recommends removal or revocation invalidation on revoke\")\n\nmessage_thread(id=T7, text=\"🔒 Security review (T6) identified a critical gap: the in-memory session cache in T5's design keeps revoked tokens valid for up to 10 minutes. When you implement the cache, add revocation invalidation—cache entries must be cleared when tokens are revoked. This keeps the ~100ms latency win while closing the security window.\")\n\npost_message(text=\"⚠️ **Security-performance tradeoff surfaced.** T6's review found that the in-memory session cache (T5's 120→15ms optimization) leaves revoked tokens valid for up to 10 minutes. T7 is being briefed to implement cache invalidation on revoke—this preserves the performance gain while fixing the security lag. Awaiting T7's implementation plan.\")\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "control",
+      "case": "plain-report",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 4,
+      "checks_total": 4,
+      "output": "write_ledger(id=T3, state=done, files=[test/invoices/export.test.ts], note=\"Test suite complete: 6 cases, all passing\")\n\npost_message(text=\"✅ **CSV export feature complete**\n\n- **src/invoices/export.ts** (T1): CSV export implementation with secure filename handling\n- **test/invoices/export.test.ts** (T3): 6 test cases, all passing\n\nAll requested work is done. No open handoffs.\")\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "control",
+      "case": "facts-to-memory",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "saves the test-command fact",
+        "saves the money-in-cents fact"
+      ],
+      "checks_passed": 1,
+      "checks_total": 3,
+      "output": "post_message(text=\"✓ Invoice export feature complete.\\n\\n**T1 (ndv-build):** Implemented `src/invoices/export.ts`. Fixed off-by-one bug at line 42 that was dropping the last invoice. Uses `formatCents()` to convert stored integer cents to decimal at export time.\\n\\n**T2 (ndv-tester):** Added `test/invoices/export.test.ts` with 6 test cases — all passing. (Note: full e2e suite requires live Postgres; unit tests run via `pnpm test:unit`.)\\n\\nNo open handoffs. Ready for next work.\")\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "flow",
+      "case": "handoff-on-return",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "write_ledger(id=T2, state=done, files=[src/invoices/export.ts], note=\"CSV export complete. Handoff: path traversal vulnerability\")\n\nstart_thread(agent=ndv-secure, files=[src/invoices/export.ts], scale=S0, brief=\"You are ndv-secure. Fix path traversal vulnerability in src/invoices/export.ts: query parameter 'filename' reaches path.join() unsanitized. Scope: src/invoices/export.ts. Context: CSV export feature (S1 build task). Acceptance criteria: sanitize filename to block directory traversal (../ sequences); maintain valid CSV downloads; pass tests. Do not ask questions. Auto-detect from codebase. Return: what you changed. Max 80 words. End with TASK_[ID]_COMPLETE\")\n\nwrite_ledger(id=T3, state=in-flight, files=[src/invoices/export.ts], note=\"Blocking security fix from T2 handoff\")\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "flow",
+      "case": "overlap-queues",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "records the new task as queued"
+      ],
+      "checks_passed": 1,
+      "checks_total": 2,
+      "output": "T1 is in-flight on the same file. Rather than dispatch a second agent, I'll add this requirement to the existing task:\n\nmessage_thread(id=T1, text=\"Additional requirement: add rate limiting to the password reset endpoint—5 requests per minute per IP. Include this in your implementation.\")\n\nDone. T1 (ndv-secure) now has the rate limiting requirement in scope alongside whatever security work it was already addressing.\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "flow",
+      "case": "person-widened-thread",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "write_ledger(id=T1, state=in-flight, files=[\"src/invoices/export.ts\", \"src/utils/date.ts\"], note=\"scope expanded: now owns src/utils/date.ts for formatDate→formatIsoDate rename\")\nwrite_ledger(id=T2, state=queued, files=[\"src/utils/date.ts\"], note=\"blocked by T1's file ownership; waiting for T1 sentinel\")\n\nNo action. T1 is in-flight with expanded scope. T2 remains queued — the file overlap prevents dispatch until T1 returns. Waiting for T1 sentinel.\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "flow",
+      "case": "silent-thread",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 3,
+      "checks_total": 3,
+      "output": "```\nmessage_thread(id=T3, text=\"T3: Status check — 130 minutes quiet on src/api/dashboard.ts optimization. Still working, or blocked? Brief update needed.\")\n```\n\n```\nwrite_ledger(id=T3, state=in-flight, files=[\"src/api/dashboard.ts\"], note=\"quiet 130min — status check issued\")\n```\n\nWaiting for T3 response before proceeding.\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "flow",
+      "case": "direct-question",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "answers in the chat"
+      ],
+      "checks_passed": 1,
+      "checks_total": 2,
+      "output": "`pnpm test:unit`\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "flow",
+      "case": "one-file-change",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 3,
+      "checks_total": 3,
+      "output": "```\n[FLOW] 1 task → 1 group\n\nGroup 1 [solo]: ndv-build(T1, S0)\n\nDispatching.\n```\n\n```\nstart_thread(agent=ndv-build, files=[\"src/components/Header.tsx\"], scale=S0, brief=\"You are Craft. Change the Save button label to Submit in Header.tsx.\nScope: src/components/Header.tsx\nContext: Label update in the header component.\nAcceptance Criteria: The button text reads 'Submit' instead of 'Save'.\nVerification: V0 — run your own gate, nothing beyond it.\nValidate this brief: if any required field is missing, reject with BRIEF_REJECTED: [field] — [needed] then TASK_T1_COMPLETE\nDo not ask questions. If this turns out to be structural, emit a handoff and stop.\nReturn: what you changed. Max 80 words.\nEnd with exactly: TASK_T1_COMPLETE\")\n```\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "flow",
+      "case": "rejected-twice",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "asks the person which export module"
+      ],
+      "checks_passed": 1,
+      "checks_total": 2,
+      "output": "post_message(text=\"[FLOW] BLOCKED — T4 (ndv-build) rejected twice. Reason: ambiguous target file. Needed: which export module. Question: should the work touch src/invoices/export.ts or src/reports/export.ts (or both)? Dependent tasks: none yet (T4 holds all-files scope). Waiting for clarification before re-briefing.\")\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "flow",
+      "case": "conflicting-advice",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "puts the cache trade-off to the person"
+      ],
+      "checks_passed": 1,
+      "checks_total": 2,
+      "output": "```\nwrite_ledger(id=T7, state=queued, files=[\"src/auth/session.ts\"], note=\"BLOCKED — T5/T6 conflict on cache design. Awaiting human decision.\")\n```\n\n```\nrequest_decision(\n  question=\"T5 designed an in-memory session cache (120ms → 15ms latency cut). T6 found it keeps revoked tokens valid for ~10 minutes. How do you want to resolve this?\",\n  options=[\n    \"Remove the cache entirely — accept the 120ms latency\",\n    \"Keep the cache and add revocation-triggered invalidation — accept implementation complexity\",\n    \"Deliberate: have both agents discuss and propose a merged design\",\n    \"Other: specify your constraint\"\n  ],\n  recommended=2\n)\n```\n\n**Conflict detail:**\n- **T5 (Arc)**: Cache is necessary for the auth latency requirement (120ms → 15ms is a 8x improvement).\n- **T6 (Ward)**: 10-minute grace period on revoked tokens is a security gap — revoked access stays valid.\n- **Irreducible tension**: Performance optimization trades off against immediate token revocation. Full cache invalidation on revoke loses most of the gain; selective invalidation adds state complexity.\n\nT7 is blocked until you decide. Awaiting your input.\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "flow",
+      "case": "plain-report",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "tells the person the work is done"
+      ],
+      "checks_passed": 3,
+      "checks_total": 4,
+      "output": "```\n[FLOW] Complete — 3/3 tasks · 3 dispatches · verification: agent gates only\n\nT1 (ndv-build): implemented CSV export in src/invoices/export.ts\nT2 (ndv-secure): sanitised the download filename in src/invoices/export.ts\nT3 (ndv-tester): added test/invoices/export.test.ts, 6 cases, all green\n```\n\nRun complete. CSV export feature ready: implementation, security sanitisation, and test coverage all verified.\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "flow",
+      "case": "facts-to-memory",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "saves the test-command fact",
+        "saves the money-in-cents fact"
+      ],
+      "checks_passed": 1,
+      "checks_total": 3,
+      "output": "write_ledger(id=T1, state=done, files=['src/invoices/export.ts'], note=\"off-by-one fixed at line 42\")\nwrite_ledger(id=T2, state=done, files=['test/invoices/export.test.ts'], note=\"6 passing test cases\")\npost_message(text=\"[FLOW] Group 1 complete — T1 + T2 done · S1 Mandatory Pipelines deferred to end-of-run. Awaiting next task or final dispatch.\")\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "adapter",
+      "case": "handoff-on-return",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "write_ledger(id=T2, state=done)\n\nstart_thread(agent=ndv-secure, files=[src/invoices/export.ts], scale=S0, brief=\"You are ndv-secure. Fix path traversal in src/invoices/export.ts: the download filename comes from the query string and reaches path.join unsanitised. Sanitize it to prevent ../../../etc/passwd and similar escapes.\\n\\nScope: src/invoices/export.ts\\nContext: CSV invoice export feature.\\nVerification: V0\\n\\nYou are working in a thread, not answering the person. Your final reply is read by the coordinator only.\\nList every file you changed or read for the decision on one line: FILES: src/invoices/export.ts\\nEmit handoff lines, then the sentinel, as the last lines of your final reply.\")\n\npost_message(text=\"Security issue found: the download filename in the CSV export isn't sanitized, allowing path traversal. Fixing now.\")\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "adapter",
+      "case": "overlap-queues",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "The file `src/auth/reset.ts` is already owned by T1 (ndv-secure), which is in-flight. I cannot dispatch overlapping work to the same file.\n\nwrite_ledger(id=T2, state=queued, files=[src/auth/reset.ts], note=\"add rate limiting: 5 req/min per IP\")\npost_message(text=\"I'm queuing the rate limiting implementation (5 requests per minute per IP) behind the security review on reset.ts that's currently in progress. Will start it once that completes.\")\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "adapter",
+      "case": "person-widened-thread",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "write_ledger(id=T1, state=in-flight, files=[src/invoices/export.ts, src/utils/date.ts], note=\"expanded scope mid-task: also renaming formatDate → formatIsoDate and updating callers\")\n\n**Status:** T2 stays queued. T1's file scope now includes src/utils/date.ts, so T2 (which owns the same file) cannot dispatch until T1 finishes. T3 completing does not change this — the overlap is between T1 and T2.\n\nWaiting for T1 to finish.\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "adapter",
+      "case": "silent-thread",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 3,
+      "checks_total": 3,
+      "output": "message_thread(id=T3, text=\"Still working on the dashboard latency analysis? It's been quiet for a couple hours. Let me know if you hit a blocker or need clarification on the scope.\")\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "adapter",
+      "case": "direct-question",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "answers in the chat"
+      ],
+      "checks_passed": 1,
+      "checks_total": 2,
+      "output": "`pnpm test:unit`\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "adapter",
+      "case": "one-file-change",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 3,
+      "checks_total": 3,
+      "output": "start_thread(agent=ndv-build, files=[\"src/components/Header.tsx\"], scale=S0, brief=\"You are Craft. Change the Save button label to Submit in src/components/Header.tsx.\\n\\nScope: src/components/Header.tsx\\nContext: UI header component\\nAcceptance criteria: Button labeled 'Submit' instead of 'Save'\\nArchitecture: None, edit the button element only\\nVerification: V0 — your gate only\\n\\nValidate: reject BRIEF_REJECTED if any field is missing.\\nDo not ask questions. If structural, emit handoff and stop.\\nReturn: what changed, max 80 words.\\n\\nYou are in a thread; final reply read by coordinator only.\\nFILES: list all paths changed or read.\\nEmit handoffs, then TASK_[ID]_COMPLETE.\")\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "adapter",
+      "case": "rejected-twice",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "asks the person which export module"
+      ],
+      "checks_passed": 1,
+      "checks_total": 2,
+      "output": "```\nrequest_decision(\n  question=\"T4 (ndv-build) needs to modify an export module, but two exist. Which one should it touch?\",\n  options=[\"src/invoices/export.ts\", \"src/reports/export.ts\"],\n  recommended=0\n)\n```\n\nWaiting for your pick. Once you choose, I'll re-brief T4 with the corrected file scope.\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "adapter",
+      "case": "conflicting-advice",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "puts the cache trade-off to the person"
+      ],
+      "checks_passed": 1,
+      "checks_total": 2,
+      "output": "**Conflict detected: T5 (latency) vs T6 (security)**\n\nT5 proposed a session cache that cuts auth latency from 120ms to 15ms. T6 flagged that the cache keeps revoked tokens valid for ~10 minutes — a security window that risks account takeovers.\n\nBoth findings are correct. This is a tradeoff the human owns.\n\n```\nwrite_ledger(id=T7, state=queued, note=\"Blocked: latency/security tradeoff. T5 cache design vs T6 revocation lag finding. Awaiting decision.\")\n```\n\n```\nrequest_decision(\n  question=\"Session cache design: how to balance latency and token revocation security?\",\n  options=[\n    \"Implement cache as designed: tokens stay valid for ~10 minutes after revocation, latency drops to 15ms\",\n    \"Modify cache to invalidate on logout/revoke: eliminate the revocation lag, keep most of the latency gain\",\n    \"Remove cache entirely: tokens revoke immediately, but auth latency stays at 120ms\"\n  ],\n  recommended=1\n)\n```\n\nT7 is queued and cannot start until you decide. Option 1 is fastest to implement but carries the security risk. Option 2 (recommended) mitigates the risk while keeping most of the perf. Option 3 reverts to the prior latency if that's acceptable to your product.\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "adapter",
+      "case": "plain-report",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 4,
+      "checks_total": 4,
+      "output": "post_message(text=\"CSV export feature complete.\n\nT1 implemented the export in src/invoices/export.ts.\nT2 added filename sanitization for safe downloads.\nT3 added 6 test cases — all passing.\n\nThe feature is ready.\")\n\n**[FLOW] Complete — 3/3 tasks · 3 dispatches · verification: touched surface**\n\nT1 (ndv-build): Implemented CSV export in src/invoices/export.ts  \nT2 (ndv-secure): Sanitized download filename in src/invoices/export.ts  \nT3 (ndv-tester): Added test/invoices/export.test.ts with 6 passing cases\n"
+    },
+    {
+      "model": "claude-haiku-4-5-20251001",
+      "arm": "adapter",
+      "case": "facts-to-memory",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "saves the test-command fact",
+        "saves the money-in-cents fact"
+      ],
+      "checks_passed": 1,
+      "checks_total": 3,
+      "output": "post_message(text=\"✓ Export feature complete — implementation and tests both passing. T1 (ndv-build) added src/invoices/export.ts with an off-by-one fix at line 42. T2 (ndv-tester) added test/invoices/export.test.ts with 6 test cases, all green. Invoice amounts use integer cents; formatCents() handles the decimal conversion at the edge. No open issues.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "control",
+      "case": "handoff-on-return",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "start_thread(agent=ndv-secure, files=[src/invoices/export.ts], scale=S1, brief=\"ndv-build flagged a path traversal vulnerability in src/invoices/export.ts: the download filename comes from the query string and reaches path.join unsanitised. Investigate and fix (sanitize/validate the filename before use in path.join, add tests confirming traversal payloads are rejected).\")\nwrite_ledger(id=T3, state=in-flight, files=[src/invoices/export.ts], note=\"Security fix for path traversal in invoice CSV export filename handling, handed off from T2 (ndv-build).\")\nwrite_ledger(id=T2, state=done, files=[src/invoices/export.ts], note=\"CSV export implemented and tested. Handoff to ndv-secure tracked as T3.\")\npost_message(text=\"CSV export of invoices is done (src/invoices/export.ts) — one row per invoice, header row, UTF-8, tests passing. The build agent flagged a path traversal issue: the export filename comes from the query string and is used unsanitised in path.join. I've opened a security thread (T3) to fix that before this ships.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "control",
+      "case": "overlap-queues",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "records the new task as queued"
+      ],
+      "checks_passed": 1,
+      "checks_total": 2,
+      "output": "message_thread(id=T1, text=\"New requirement from the person: add rate limiting to this endpoint — 5 requests per minute per IP. Please fold this into the current work on src/auth/reset.ts.\")\n\npost_message(text=\"Got it — adding rate limiting (5 req/min per IP) to src/auth/reset.ts. It's already in-flight with ndv-secure on that file, so I've folded this into the same thread.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "control",
+      "case": "person-widened-thread",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "does not start T2 on a file T1 now holds"
+      ],
+      "checks_passed": 1,
+      "checks_total": 2,
+      "output": "message_thread(id=T1, text=\"Pull back from src/utils/date.ts — that file isn't in your brief and is owned by T2 (ndv-refactor), which is starting now to handle the formatDate→formatIsoDate rename and its callers. Revert any edits you've made there and keep this thread scoped to src/invoices/export.ts only.\")\n\nstart_thread(agent=ndv-refactor, files=[src/utils/date.ts], scale=S1, brief=\"Rename formatDate to formatIsoDate in src/utils/date.ts and update all callers across the codebase. Note: ndv-build (T1) began this same rename mid-task in src/utils/date.ts before being redirected back to its own scope (src/invoices/export.ts) — check src/utils/date.ts and src/invoices/export.ts for any partial edits already in place before proceeding, to avoid duplicate or conflicting changes.\")\n\nwrite_ledger(id=T1, state=in-flight, files=[src/invoices/export.ts], note=\"Redirected away from src/utils/date.ts (out of scope); that rename now owned by T2.\")\n\nwrite_ledger(id=T2, state=in-flight, files=[src/utils/date.ts], note=\"Started now that T3 freed a thread slot. Briefed to check for partial edits left by T1 before proceeding.\")\n\nwrite_ledger(id=T3, state=done, files=[test/api.test.ts], note=\"Complete; freed slot used to start T2.\")\n\npost_message(text=\"Quick scope correction: T1 (ndv-build) had drifted into renaming formatDate→formatIsoDate in src/utils/date.ts while fixing src/invoices/export.ts. I've pulled it back to its own file and handed the rename to T2 (ndv-refactor), which is now starting with the freed thread slot from T3 (tests, done). No action needed from you.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "control",
+      "case": "silent-thread",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 3,
+      "checks_total": 3,
+      "output": "message_thread(id=T3, text=\"Checking in — this thread has been quiet for 130 minutes. Please post current status: findings so far, blockers, or BRIEF_REJECTED if something is missing from the brief.\")\n\npost_message(text=\"Heads up: the ndv-optimize thread on src/api/dashboard.ts (T3) has gone quiet for 130 minutes. I've pinged it for a status update and will follow up once it responds.\")\n\nwrite_ledger(id=T3, state=in-flight, files=[src/api/dashboard.ts], note=\"Quiet for 130min — pinged for status at 2026-11-09, awaiting response before escalating.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "control",
+      "case": "direct-question",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "post_message(text=\"`pnpm test:unit` runs just the unit tests. Note: `npm test` runs the e2e suite and requires a live Postgres, so avoid that for a quick unit-test check.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "control",
+      "case": "one-file-change",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 3,
+      "checks_total": 3,
+      "output": "start_thread(agent=ndv-build, files=[src/components/Header.tsx], scale=S0, brief=\"Change the Save button label to 'Submit' in src/components/Header.tsx. Nothing else — no other text, logic, or styling changes.\")\nwrite_ledger(id=T1, state=in-flight, files=[src/components/Header.tsx], note=\"Rename Save button label to Submit in Header.tsx\")\npost_message(text=\"Got it — sending the Save→Submit label change in Header.tsx to ndv-build now.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "control",
+      "case": "rejected-twice",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "This is the second rejection on the same ambiguity — I need the person to disambiguate rather than guess.\n\nrequest_decision(question=\"ndv-build (T4) needs the exact target file for 'the export module' — there are two candidates. Which one should the fix target?\", options=[\"src/invoices/export.ts\", \"src/reports/export.ts\", \"Both\"], recommended=0)\n\nwrite_ledger(id=T4, state=incomplete, files=[], note=\"Brief rejected twice by ndv-build: ambiguous target between src/invoices/export.ts and src/reports/export.ts. Waiting on person's decision before resuming.\")\n\npost_message(text=\"ndv-build paused — it rejected the brief twice because 'the export module' could mean src/invoices/export.ts or src/reports/export.ts. Posted the choice above; once you pick, I'll resume the thread.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "control",
+      "case": "conflicting-advice",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "puts the cache trade-off to the person"
+      ],
+      "checks_passed": 1,
+      "checks_total": 2,
+      "output": "message_thread(id=T7, text=\"Security review (T6, ndv-secure) found the proposed in-memory session cache design lets revoked tokens stay valid for up to 10 minutes. Before implementing: either remove the cache entirely, or ensure revocation invalidates the cached entry immediately (e.g., cache invalidation hook on revoke, or short TTL with revoke-check passthrough). Implement the architecture from T5 (120ms→15ms latency goal) with this fix incorporated.\")\n\nwrite_ledger(id=T7, state=queued, files=[src/auth/session.ts], note=\"Brief updated with T6 security finding: cache must invalidate on revoke, not just TTL-expire. Build must not implement cache as originally speced without this fix.\")\n\npost_message(text=\"Security review flagged an issue with the planned session cache (src/auth/session.ts): revoked tokens could stay valid for up to 10 minutes. I've updated the build task (T7) to require cache invalidation on revoke before it implements the latency optimization. Will update you once that's done.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "control",
+      "case": "plain-report",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 4,
+      "checks_total": 4,
+      "output": "All three tasks (build, secure, tester) are done for the CSV export feature.\n\nwrite_ledger(id=T3, state=done, files=[test/invoices/export.test.ts], note=\"6 passing test cases for CSV export, all green. No handoffs.\")\npost_message(text=\"CSV export of invoices is complete: implementation (src/invoices/export.ts), filename sanitisation for safety, and 6 passing tests (test/invoices/export.test.ts). All three threads are done.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "control",
+      "case": "facts-to-memory",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 3,
+      "checks_total": 3,
+      "output": "Both threads for this work item are done and nothing else is queued.\n\nwrite_ledger(id=T1, state=done, files=[src/invoices/export.ts], note=\"Off-by-one fix at export.ts:42 confirmed; export uses formatCents() for integer-cents→decimal conversion at the edge.\")\n\nwrite_ledger(id=T2, state=done, files=[test/invoices/export.test.ts], note=\"6 cases, all green via `pnpm test:unit`. Note: repo's `npm test` runs an e2e suite requiring a live Postgres — not usable for quick checks.\")\n\nsave_fact(fact=\"Project convention (emb715/neurodiveragents): invoice totals are stored as integer cents everywhere (src/invoices/money.ts); conversion to decimal strings happens only at the edge via formatCents(). Repo's `npm test` runs an e2e suite that requires a live Postgres and will fail without one — use `pnpm test:unit` for unit tests.\")\n\npost_message(text=\"Invoice export feature is done:\\n- src/invoices/export.ts — implemented, including a fix for an off-by-one bug that was dropping the last invoice.\\n- test/invoices/export.test.ts — 6 tests added, all passing.\\n\\nOne note for local runs: `npm test` here kicks off an e2e suite that needs a live Postgres and will fail without one. Use `pnpm test:unit` for a quick check. Nothing else is queued.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "flow",
+      "case": "handoff-on-return",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "start_thread(agent=ndv-secure, files=[src/invoices/export.ts], scale=S1, brief=\"You are ndv-secure (Ward). Fix a path traversal vulnerability: the CSV export download filename is taken from the query string and passed unsanitised into path.join, allowing path traversal.\nScope: src/invoices/export.ts\nContext: CSV invoice export endpoint just implemented by ndv-build; this file is otherwise complete and tested.\nVerification: V1 — run your own gate plus the one project check/suite covering this file's touched surface. No full repo-wide gate.\nAcceptance criteria: user-supplied filename input can no longer escape the intended export directory (reject or sanitise traversal sequences, resolve/compare against a fixed base dir).\nTarget files: src/invoices/export.ts only. Do not touch unrelated code.\nValidate this brief: if any required field is missing or too vague, reject with:\nBRIEF_REJECTED: [missing field] — [what is needed] then TASK_T3_COMPLETE\nDo not ask questions. Auto-detect patterns from the codebase.\nReturn: 3-5 bullet summary. Max 200 words.\nHandoff format (emit BEFORE sentinel): → [agent] ([domain]) · [file or symbol]: [what needs to happen]\nEnd with exactly: TASK_T3_COMPLETE\")\n\nwrite_ledger(id=T2, state=done, files=[src/invoices/export.ts], note=\"CSV export implemented; handoff routed to ndv-secure as T3 (path traversal in filename handling)\")\n\nwrite_ledger(id=T3, state=in-flight, files=[src/invoices/export.ts], note=\"ndv-secure fixing path traversal vuln from T2 handoff; blocking security finding, dispatched immediately per Post-Group Protocol\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "flow",
+      "case": "overlap-queues",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "write_ledger(id=T2, state=queued, files=[src/auth/reset.ts], note=\"ndv-secure · rate limit password reset: 5 req/min/IP · S1 · queued — shared file with T1\")\n\npost_message(text=\"[FLOW] QUEUED — T2 behind T1 (shared: src/auth/reset.ts)\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "flow",
+      "case": "person-widened-thread",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "[FLOW] QUEUED — T2 behind T1 (shared: src/utils/date.ts)\n\nmessage_thread(id=T1, text=\"Stop the formatDate rename in src/utils/date.ts now. No note authorizing that was left by Flow — your owned scope is src/invoices/export.ts only. Rename/restructure work routes to ndv-refactor, not ndv-build, and src/utils/date.ts is already assigned to ndv-refactor (T2) for exactly this rename. Revert any changes you've made to src/utils/date.ts, finish your export.ts task against the existing formatDate name, and let T2 handle the rename and caller updates. Return your summary and sentinel when export.ts is done.\")\n\nwrite_ledger(id=T1, state=in-flight, files=[src/invoices/export.ts], note=\"Agent reported unauthorized expansion into src/utils/date.ts (claimed rename of formatDate→formatIsoDate). No such instruction was issued by Flow. Instructed to revert and stay within export.ts; date.ts rename remains ndv-refactor's task.\")\n\nwrite_ledger(id=T2, state=queued, files=[src/utils/date.ts], note=\"Held behind T1 despite freed slot — T1 claimed in-progress writes to this same file. Will dispatch once T1 confirms it has reverted/stopped touching src/utils/date.ts.\")\n\npost_message(text=\"T1 (ndv-build) went out of scope mid-task, writing into src/utils/date.ts to rename formatDate — citing a Flow note that was never given. That file is already assigned to T2 (ndv-refactor) for this exact rename. I've told T1 to revert and stay on export.ts, and held T2 queued rather than dispatching into the same file while T1's state there is uncertain — dispatching now would risk a double-write. Will release T2 once T1 confirms it's backed out.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "flow",
+      "case": "silent-thread",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "does not close it on the first quiet event"
+      ],
+      "checks_passed": 2,
+      "checks_total": 3,
+      "output": "message_thread(id=T3, text=\"Status check — 130 minutes with no sentinel. If blocked, report BRIEF_REJECTED with the missing field. If work is still in progress, report current findings and estimated remaining scope. If optimization uncovered a correctness bug or security issue, emit the handoff now rather than waiting for completion.\")\n\nwrite_ledger(id=T3, state=in-flight, files=[src/api/dashboard.ts], note=\"Quiet 130min — nudged for status. No sentinel yet; not marking incomplete until next check. File set remains owned — no replacement dispatch while in-flight.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "flow",
+      "case": "direct-question",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "answers in the chat"
+      ],
+      "checks_passed": 1,
+      "checks_total": 2,
+      "output": "pnpm test:unit\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "flow",
+      "case": "one-file-change",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 3,
+      "checks_total": 3,
+      "output": "[FLOW] 1 task → 1 group\n\nSolo [S0]: ndv-build(T1, S0)\n\nDispatching.\n\nstart_thread(agent=ndv-build, files=[\"src/components/Header.tsx\"], scale=S0, brief=\"You are ndv-build. Change the Save button label text to \\\"Submit\\\" in src/components/Header.tsx. No other changes.\\nScope: src/components/Header.tsx\\nContext: single-file label text change, decision already made by the human.\\nAcceptance criteria: the button previously labeled \\\"Save\\\" now reads \\\"Submit\\\"; no other text, props, or logic changed.\\nTarget files: src/components/Header.tsx\\nArchitecture: settled — no new interface, no structural change.\\nVerification: V0 — run your own gate, nothing beyond it. No measurement tables, no screenshots.\\nValidate this brief: if any required field is missing, reject with:\\nBRIEF_REJECTED: [missing field] — [what is needed] then TASK_T1_COMPLETE\\nDo not ask questions. If the change turns out to be structural, emit a handoff and stop.\\nReturn: what you changed. Max 80 words.\\nHandoff format (emit BEFORE sentinel): → [agent] ([domain]) · [file or symbol]: [what needs to happen]\\nEnd with exactly: TASK_T1_COMPLETE\")\n\nwrite_ledger(id=T1, state=in-flight, files=[\"src/components/Header.tsx\"], note=\"ndv-build S0 — Save label → Submit\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "flow",
+      "case": "rejected-twice",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "asks the person which export module"
+      ],
+      "checks_passed": 1,
+      "checks_total": 2,
+      "output": "write_ledger(id=T4, state=incomplete, files=[], note=\"rejected twice — ambiguous target file between src/invoices/export.ts and src/reports/export.ts\")\n\npost_message(text=\"[FLOW] BLOCKED — T4 (ndv-build) rejected twice. Reason: brief said \\\"the export module\\\" without disambiguating between src/invoices/export.ts and src/reports/export.ts. Needed: the specific file (or both, if the change applies to each). Question: which export module — invoices, reports, or both? Dependent tasks blocked: none currently queued behind T4.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "flow",
+      "case": "conflicting-advice",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "**Conflict detected — same file, same decision.**\n\nT5 (ndv-architect): add an in-memory session cache in `src/auth/session.ts` to cut auth latency 120ms → 15ms.\nT6 (ndv-secure): that same cache keeps revoked tokens valid for up to 10 minutes — recommends removing the cache or invalidating it on revoke.\n\nIrreducible tension: the cache's whole value is serving reads without a revocation check; any invalidation-on-revoke path adds back some of the lookup cost it was meant to remove.\n\nT7 (ndv-build) is queued to implement T5's design as-is. Holding it — building the vulnerable version now would mean a second pass later either way.\n\nwrite_ledger(id=T7, state=queued, files=[src/auth/session.ts], note=\"Held pending Deliberation Protocol — T5 (cache for latency) conflicts with T6 (cache serves revoked tokens up to 10min). Not dispatched.\")\n\nrequest_decision(question=\"T5 (architecture) and T6 (security) conflict on src/auth/session.ts: cache for latency vs. cache serving revoked tokens. How to resolve before T7 builds?\", options=[\"Deliberate — dispatch ndv-architect and ndv-secure together for a merged design\", \"Pick A — keep T5's cache as specified, accept the revocation-window risk\", \"Pick B — drop the cache, keep immediate revocation checks (back to 120ms)\", \"Merge directly — cache stays, but T7 builds revoke-time invalidation into it (no full deliberation round needed)\"], recommended=3)\n\npost_message(text=\"[FLOW] Conflict on src/auth/session.ts between T5 (ndv-architect) and T6 (ndv-secure) — both done, T7 held. See decision request above. Recommended: merge — Ward's own handoff already names 'invalidate on revoke' as a fix compatible with keeping the cache, so this likely doesn't need a full deliberation round. Say the word and T7 dispatches with that spec; or pick 'Deliberate' if you want both agents to work out the merged design themselves.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "flow",
+      "case": "plain-report",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "tells the person the work is done"
+      ],
+      "checks_passed": 3,
+      "checks_total": 4,
+      "output": "[FLOW] Group complete — T1/T2/T3 done, no in-flight handoffs. S1 pipeline flush required before run can close.\n\nwrite_ledger(id=T4, state=in-flight, files=[src/invoices/export.ts, test/invoices/export.test.ts], note=\"S1 Mandatory Pipeline flush for T1 (ndv-build) + T2 (ndv-secure) — review, not a new feature task\")\n\nstart_thread(agent=ndv-review, files=[src/invoices/export.ts, test/invoices/export.test.ts], scale=S1, brief=\"You are ndv-review. Review the CSV invoice export implementation and its filename sanitisation for quality, correctness, and smell — this is the Mandatory Pipeline check owed after ndv-build and ndv-secure touched the same file.\\nScope: src/invoices/export.ts, test/invoices/export.test.ts\\nContext: feature is CSV export of invoices with a sanitised download filename; a 6-case test suite already exists and is green.\\nAcceptance criteria: flag any correctness, quality, or injection/sanitisation smell in export.ts; confirm the sanitisation logic actually closes the risk it claims to; confirm test coverage matches the sanitisation and export logic (not just happy path).\\nVerification: V1 — review against the touched surface only, no repo-wide sweep.\\nValidate this brief: if any required field is missing or too vague, reject with:\\nBRIEF_REJECTED: [missing field] — [what is needed] then TASK_T4_COMPLETE\\nDo not ask questions. Auto-detect patterns from the codebase.\\nReturn: 3-5 bullet summary. Max 200 words.\\nHandoff format (emit BEFORE sentinel): → [agent] ([domain]) · [file or symbol]: [what needs to happen]\\nEnd with exactly: TASK_T4_COMPLETE\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "flow",
+      "case": "facts-to-memory",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "saves the money-in-cents fact"
+      ],
+      "checks_passed": 2,
+      "checks_total": 3,
+      "output": "[FLOW] Group closed — T1 (ndv-build), T2 (ndv-tester) both done, no handoffs to route. Pipeline (S1, deferred) and owed V2 now flush at end of run.\n\nwrite_ledger(id=T1, state=done, files=[src/invoices/export.ts], note=\"off-by-one fix at line 42; done\")\nwrite_ledger(id=T2, state=done, files=[test/invoices/export.test.ts], note=\"6 cases green via pnpm test:unit; done\")\nwrite_ledger(id=T3, state=in-flight, files=[src/invoices/export.ts], note=\"S1 Mandatory Pipeline flush: review\")\nwrite_ledger(id=T4, state=in-flight, files=[src/invoices/export.ts, test/invoices/export.test.ts], note=\"Post-Execution V2 settle\")\n\nstart_thread(agent=ndv-review, files=[src/invoices/export.ts], scale=S1, brief=\"You are ndv-review. Review the invoice export implementation for quality and correctness — this is the S1 Mandatory Pipeline step following implementation, not a fresh audit.\\nScope: src/invoices/export.ts\\nContext: Just implemented — fixed an off-by-one at line 42 (last invoice was dropped); totals are integer cents (src/invoices/money.ts), formatting to decimals happens only at the edge via formatCents().\\nVerification: V1 — cover the touched surface only, no repo-wide sweep.\\nValidate this brief: if any required field is missing, reject with BRIEF_REJECTED: [missing field] — [what is needed] then TASK_T3_COMPLETE.\\nDo not ask questions. Auto-detect patterns from the codebase.\\nReturn: 3-5 bullet summary. Max 200 words.\\nHandoff format (emit BEFORE sentinel): → [agent] ([domain]) · [file or symbol]: [what needs to happen]\\nEnd with exactly: TASK_T3_COMPLETE\")\n\nstart_thread(agent=ndv-tester, files=[src/invoices/export.ts, test/invoices/export.test.ts], scale=S1, brief=\"You are ndv-tester. Run the full project verification gate on the invoice export change — this is the end-of-run V2 settle, not new test authorship.\\nScope: src/invoices/export.ts, test/invoices/export.test.ts\\nContext: export.ts implemented with an off-by-one fix; export.test.ts already has 6 passing unit cases run via pnpm test:unit. `npm test` here invokes an e2e suite requiring a live Postgres instance.\\nVerification: V2 — run every project verification script and contract check that applies; if the e2e suite needs a live Postgres you don't have, state that plainly rather than skipping silently.\\nValidate this brief: if any required field is missing, reject with BRIEF_REJECTED: [missing field] — [what is needed] then TASK_T4_COMPLETE.\\nDo not ask questions.\\nReturn: 3-5 bullet summary, state exactly what ran and what didn't. Max 200 words.\\nHandoff format (emit BEFORE sentinel): → [agent] ([domain]) · [file or symbol]: [what needs to happen]\\nEnd with exactly: TASK_T4_COMPLETE\")\n\nsave_fact(fact=\"In this repo, `npm test` runs the e2e suite against a live Postgres and fails without one; unit tests run via `pnpm test:unit`. — source: T2 (ndv-tester)\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "adapter",
+      "case": "handoff-on-return",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "start_thread(agent=ndv-secure, files=[src/invoices/export.ts], scale=S1, brief=\"You are ndv-secure. A path traversal vulnerability was flagged: the CSV export download filename comes from the query string and reaches path.join unsanitised in src/invoices/export.ts. Investigate and fix: sanitize/validate the filename (reject path separators and traversal sequences, or derive the filename server-side instead of trusting user input) so it cannot escape the intended export directory.\\nScope: src/invoices/export.ts\\nContext: CSV invoice export feature just built; this vulnerability was found by the implementer during their own review.\\nVerification: V1 — run the one project check or test suite that covers this file; confirm the fix with a traversal-attempt test case.\\nYou are working in a thread, not answering the person. Your final reply is read by the coordinator only.\\nList every file you changed or read for the decision on one line: FILES: path, path\\nEmit handoff lines, then the sentinel, as the last lines of your final reply.\\nValidate this brief: if any required field is missing, reject with BRIEF_REJECTED: [missing field] — [what is needed] then TASK_T3_COMPLETE\\nDo not ask questions. Auto-detect patterns from the codebase.\\nReturn: 3-5 bullet summary. Max 200 words.\\nEnd with exactly: TASK_T3_COMPLETE\")\n\nwrite_ledger(id=T2, state=done, files=[src/invoices/export.ts], note=\"CSV export implemented, tests pass. Handoff routed to T3 (ndv-secure) for path traversal fix.\")\n\nwrite_ledger(id=T3, state=in-flight, files=[src/invoices/export.ts], note=\"Fixing path traversal vulnerability in download filename handling, flagged by T2 (ndv-build).\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "adapter",
+      "case": "overlap-queues",
+      "run": 0,
+      "pass": false,
+      "missed": [
+        "records the new task as queued"
+      ],
+      "checks_passed": 1,
+      "checks_total": 2,
+      "output": "message_thread(id=T1, text=\"Scope addition from the person: add rate limiting to the password reset endpoint in this same file — 5 requests per minute per IP. Apply it alongside whatever you're already doing here; it's the same file, same endpoint. Verification stays V1 — the one project check covering this file's surface. List every file you changed or read (FILES: path, path) and emit any handoff lines before the sentinel, as before.\")\n\nwrite_ledger(id=T1, state=in-flight, files=[src/auth/reset.ts], note=\"Added scope: rate limiting, 5 req/min per IP, same endpoint — merged into existing in-flight security work rather than a second dispatch on the same file.\")\n\npost_message(text=\"Added — folded the rate limiting (5 requests/min per IP) into the security work already running on src/auth/reset.ts rather than starting a second thread on the same file. I'll let you know when it's done.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "adapter",
+      "case": "person-widened-thread",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "write_ledger(id=T1, state=in-flight, files=[src/invoices/export.ts, src/utils/date.ts], note=\"Widened per self-report; conflicts with T2's queued scope — rename ownership being corrected, see message sent to T1\")\n\nmessage_thread(id=T1, text=\"Stop the formatDate → formatIsoDate rename now — renames route to the refactor specialist, and src/utils/date.ts is already assigned to that thread (T2), so continuing duplicates and risks conflicting with its work. Do not make further edits to src/utils/date.ts or any caller outside src/invoices/export.ts for this rename. If you've already partially edited src/utils/date.ts, leave it as-is — do not revert — and report exactly which edits you made there (functions/lines touched) so the refactor thread can pick up cleanly without re-deriving your work. Then continue your original task: finish src/invoices/export.ts only. Do not rename the formatDate call site there yourself — the refactor thread will update it as part of the rename once it owns it. Report FILES and handoffs as usual.\")\n\nwrite_ledger(id=T2, state=queued, files=[src/utils/date.ts], note=\"Still queued — now blocked by T1's overlapping edits to date.ts, not just thread-limit. Will dispatch once T1 confirms it has stopped touching date.ts and reports exact partial edits.\")\n\nwrite_ledger(id=T3, state=done, files=[test/api.test.ts], note=\"Freed slot consumed by resolving T1/T2 file-ownership conflict; no new dispatch this wake.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "adapter",
+      "case": "silent-thread",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 3,
+      "checks_total": 3,
+      "output": "message_thread(id=T3, text=\"Checking in — any progress or blockers on the dashboard.ts optimization? Reply with current status.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "adapter",
+      "case": "direct-question",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "post_message(text=\"pnpm test:unit — that's the one that runs just unit tests. npm test runs the e2e suite and needs a live Postgres, so that's not what you want here.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "adapter",
+      "case": "one-file-change",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 3,
+      "checks_total": 3,
+      "output": "start_thread(agent=ndv-build, files=[src/components/Header.tsx], scale=S0, brief=\"You are ndv-build. Change the Save button's label text from \\\"Save\\\" to \\\"Submit\\\" in src/components/Header.tsx. No other changes.\\nScope: src/components/Header.tsx\\nContext: single-file label text change, decision already made by the person.\\nAcceptance criteria: the button previously labeled Save now reads Submit; no other text, props, or files change.\\nVerification: V0 — run your own gate, nothing beyond it. No measurement tables, no screenshots.\\nValidate this brief: if any required field is missing, reject with:\\nBRIEF_REJECTED: [missing field] — [what is needed] then TASK_COMPLETE\\nDo not ask questions. If the change turns out to be structural, emit a handoff and stop.\\nYou are working in a thread, not answering the person. Your final reply is read by the coordinator only.\\nList every file you changed or read for the decision on one line: FILES: path, path\\nEmit handoff lines, then the sentinel, as the last lines of your final reply.\\nReturn: what you changed. Max 80 words.\\nEnd with exactly: TASK_COMPLETE\")\n\nwrite_ledger(id=T1, state=in-flight, files=[src/components/Header.tsx], note=\"Save→Submit label change, S0, ndv-build\")\n\npost_message(text=\"Got it — updating the Save button to say Submit in Header.tsx now.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "adapter",
+      "case": "rejected-twice",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "write_ledger(id=T4, state=in-flight, files=[], note=\"Rejected 2x — ambiguous target: src/invoices/export.ts vs src/reports/export.ts. Blocked on human decision.\")\n\nrequest_decision(question=\"ndv-build needs the exact file for the export module task — which one?\", options=[\"src/invoices/export.ts\", \"src/reports/export.ts\"], recommended=0)\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "adapter",
+      "case": "conflicting-advice",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 2,
+      "checks_total": 2,
+      "output": "request_decision(question=\"T5 (architect) designed an in-memory session cache to cut auth latency 120ms→15ms. T6 (security) found this exact cache lets revoked tokens stay valid for up to 10 minutes. T7 is queued to build the cache as designed. Tension: any session cache delays revocation unless explicitly invalidated — speed and immediate revocation pull against each other.\", options=[\"Keep the cache but invalidate it on revoke (closes the gap, keeps most of the speed gain)\", \"Drop the cache entirely (no latency gain, no revocation gap)\", \"Keep the cache as designed, accept the 10-minute revocation window as a known risk\"], recommended=0)\n\nwrite_ledger(id=T7, state=queued, files=[src/auth/session.ts], note=\"Blocked pending human decision — T5's cache design conflicts with T6's security finding (revoked tokens valid up to 10 min). Brief will be amended with chosen mitigation before dispatch.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "adapter",
+      "case": "plain-report",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 4,
+      "checks_total": 4,
+      "output": "start_thread(agent=ndv-review, files=[src/invoices/export.ts, test/invoices/export.test.ts], scale=S1, brief=\"You are ndv-review. Review the CSV export feature for invoices: src/invoices/export.ts (export logic, filename sanitisation added by ndv-secure) and test/invoices/export.test.ts (6 test cases added by ndv-tester). Scope: src/invoices/export.ts, test/invoices/export.test.ts. Context: this is the Mandatory Pipeline review gate for prior S1 builds (ndv-build implemented export, ndv-secure sanitised the download filename). Verification: V1 — run the one project check or suite that covers this touched surface, nothing beyond it. Check for: code smells, unclear logic, consistency with existing invoice module patterns, and confirm the security fix is sound in context. Validate this brief: if any required field is missing, reject with BRIEF_REJECTED: [missing field] — [what is needed] then TASK_T4_COMPLETE. Do not ask questions. Auto-detect patterns from the codebase. You are working in a thread, not answering the person. Your final reply is read by the coordinator only. List every file you changed or read for the decision on one line: FILES: path, path. Emit handoff lines, then the sentinel, as the last lines of your final reply. Return: 3-5 bullet summary. Max 200 words. Handoff format (emit BEFORE sentinel): → [agent] ([domain]) · [file or symbol]: [what needs to happen]. End with exactly: TASK_T4_COMPLETE\")\n\nwrite_ledger(id=T4, state=in-flight, files=[src/invoices/export.ts, test/invoices/export.test.ts], note=\"Mandatory Pipeline flush — ndv-review gate for T1/T2 (S1, deferred)\")\n\nwrite_ledger(id=T5, state=queued, files=[src/invoices/export.ts, test/invoices/export.test.ts], note=\"ndv-tester V2 full-gate check, owed from S1 deferral — queued behind T4 (shared files)\")\n\npost_message(text=\"CSV export is implemented, filename handling is sanitised, and 6 tests are green. Before I call this fully done I'm running the deferred checks: a code review of the export + security fix, then a full project test gate. Will report back once both land.\")\n"
+    },
+    {
+      "model": "claude-sonnet-5",
+      "arm": "adapter",
+      "case": "facts-to-memory",
+      "run": 0,
+      "pass": true,
+      "missed": [],
+      "checks_passed": 3,
+      "checks_total": 3,
+      "output": "save_fact(fact=\"Invoice totals are stored as integer cents everywhere (src/invoices/money.ts); decimal formatting happens only at the edge via formatCents() — never format/round mid-pipeline.\")\n\nsave_fact(fact=\"`npm test` runs the e2e suite and requires a live Postgres connection; unit tests run with `pnpm test:unit`.\")\n\nstart_thread(agent=ndv-review, files=[src/invoices/export.ts], scale=S1, brief=\"You are ndv-review. Review src/invoices/export.ts as the mandatory pipeline check following ndv-build's implementation — focus on the off-by-one fix around line 42 (last invoice was previously dropped) and general code quality of the export logic.\\nScope: src/invoices/export.ts\\nContext: Invoice totals are stored as integer cents everywhere (src/invoices/money.ts); formatting to decimals happens only at the edge via formatCents(), which this export uses.\\nVerification: V1 — the one check covering this touched file; no full-suite or repo-wide demand.\\nValidate this brief: if any required field is missing or too vague, reject with:\\nBRIEF_REJECTED: [missing field] — [what is needed] then TASK_T3_COMPLETE\\nDo not ask questions. Auto-detect patterns from the codebase.\\nReturn: 3-5 bullet summary. Max 200 words.\\nHandoff format (emit BEFORE sentinel): → [agent] ([domain]) · [file or symbol]: [what needs to happen]\\nYou are working in a thread, not answering the person. Your final reply is read by the coordinator only.\\nList every file you changed or read for the decision on one line: FILES: path, path\\nEmit handoff lines, then the sentinel, as the last lines of your final reply.\\nEnd with exactly: TASK_T3_COMPLETE\")\n\nwrite_ledger(id=T3, state=in-flight, files=[src/invoices/export.ts], note=\"Mandatory pipeline review for ndv-build (deferred S1 pipeline, now flushed)\")\n\nwrite_ledger(id=T4, state=queued, files=[src/invoices/export.ts, test/invoices/export.test.ts], note=\"End-of-run V2 settlement via ndv-tester — queued behind T3 (shared file: src/invoices/export.ts)\")\n\npost_message(text=\"Invoice export implementation and tests are both done — a prior off-by-one that dropped the last invoice is fixed, and 6 passing tests cover it. I've kicked off a code review on the fix as the last mandatory check, then I'll run one full verification pass before calling this closed. Will update when that's done.\")\n"
+    }
+  ]
+}
